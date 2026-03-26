@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEAB Grade Processor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Using ExcelJS for styling and merging support -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <!-- Keeping SheetJS for initial fast parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 font-sans pb-20">
+
+    <div class="max-w-5xl mx-auto py-10 px-4">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-slate-900 mb-2">CEAB Grade Processor</h1>
+            <p class="text-slate-600 text-lg">Clean Brightspace exports and generate accreditation statistics.</p>
+        </header>
+
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+            <!-- Step 1: File Selection -->
+            <div class="p-8 border-b border-slate-100">
+                <h2 class="text-lg font-semibold mb-4 flex items-center">
+                    <span class="bg-blue-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm mr-2">1</span>
+                    Load Grade List
+                </h2>
+                <div 
+                    id="dropZone"
+                    class="border-2 border-dashed border-slate-300 rounded-xl p-10 text-center hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group"
+                >
+                    <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
+                    <div class="flex flex-col items-center">
+                        <svg class="w-12 h-12 text-slate-400 group-hover:text-blue-500 mb-4 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        <p id="fileNameDisplay" class="text-slate-600 font-medium">Click to select or drag and drop an Excel file</p>
+                        <p class="text-slate-400 text-sm mt-1">Assignment names will be cleaned (Metadata and "Points Grade" removed)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Column Selection -->
+            <div id="columnSection" class="p-8 border-b border-slate-100 bg-slate-50 opacity-50 pointer-events-none transition-all">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold flex items-center">
+                        <span class="bg-blue-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm mr-2">2</span>
+                        Select Columns to Process
+                    </h2>
+                    <div class="space-x-2">
+                        <button id="btnSelectAll" class="text-sm text-blue-600 hover:underline font-medium">Select All</button>
+                        <button id="btnSelectNone" class="text-sm text-slate-500 hover:underline font-medium">Clear</button>
+                    </div>
+                </div>
+                <div id="columnList" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-80 overflow-y-auto custom-scrollbar p-1">
+                    <!-- Checkboxes will be injected here -->
+                </div>
+            </div>
+
+            <!-- Step 3: Action -->
+            <div class="p-6 bg-slate-50 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div id="statusMessage" class="text-sm font-medium text-slate-500 italic">
+                    Waiting for input file...
+                </div>
+                <button 
+                    id="btnCalculate"
+                    disabled
+                    class="w-full md:w-auto px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:bg-blue-700 disabled:bg-slate-300 disabled:shadow-none transition-all transform active:scale-95 flex items-center justify-center"
+                >
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Process & Export Excel
+                </button>
+            </div>
+        </div>
+
+        <!-- Logic/Process Explanation -->
+        <div class="mt-12">
+            <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Data Processing Workflow
+            </h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="text-blue-600 font-bold text-xs uppercase tracking-widest mb-2">Step 1: Cleanup</div>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        Detects assignment metadata (MaxPoints, Weight). Strips "Points Grade" suffix and everything after "&lt;" to provide clean names like <strong>"Test 1"</strong> instead of full system strings.
+                    </p>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="text-blue-600 font-bold text-xs uppercase tracking-widest mb-2">Step 2: Conversion</div>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        Creates new columns adjacent to selections. Calculates <strong>Percent Equivalent</strong> using <code class="bg-slate-100 px-1 font-mono text-xs">ROUNDUP((Score/Max)*100, 0)</code> for every student entry.
+                    </p>
+                </div>
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <div class="text-blue-600 font-bold text-xs uppercase tracking-widest mb-2">Step 3: Accreditation</div>
+                    <p class="text-sm text-slate-600 leading-relaxed">
+                        Appends CEAB-compliant statistics (DNME, Marginal, ME, EE) at the bottom using live Excel formulas. Applies <strong>Navy/White</strong> and <strong>Yellow</strong> branding with auto-fitted columns.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let workbookData = [];
+        let headers = [];
+        let headersMax = {};
+        let selectedColumns = new Set();
+        let originalFileName = "";
+
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        const columnSection = document.getElementById('columnSection');
+        const columnList = document.getElementById('columnList');
+        const btnCalculate = document.getElementById('btnCalculate');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // Helper to clean header names
+        function getCleanName(h) {
+            if (!h) return "";
+            let s = String(h);
+
+            // Specific shortenings for Final Grade columns
+            if (s.includes("Calculated Final Grade Numerator")) return "Calc. Final";
+            if (s.includes("Calculated Final Grade Denominator")) return "Calc. Denom";
+            if (s.includes("Adjusted Final Grade Numerator")) return "Adj. Final";
+            if (s.includes("Adjusted Final Grade Denominator")) return "Adj. Denom";
+
+            // 1. Remove the <...> part entirely
+            if (s.includes("<")) {
+                s = s.split("<")[0].trim();
+            }
+            // 2. Remove "Points Grade" suffix specifically
+            s = s.replace(/points grade/gi, "").trim();
+            // 3. Shorten any remaining "Denominator" terms
+            s = s.replace(/denominator/gi, "Denom").trim();
+            
+            return s;
+        }
+
+        dropZone.onclick = () => fileInput.click();
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('border-blue-500', 'bg-blue-50'); };
+        dropZone.ondragleave = () => { dropZone.classList.remove('border-blue-500', 'bg-blue-50'); };
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-500', 'bg-blue-50');
+            const file = e.dataTransfer.files[0];
+            if (file) handleFile(file);
+        };
+        fileInput.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        };
+
+        document.getElementById('btnSelectAll').onclick = () => {
+            document.querySelectorAll('.col-checkbox').forEach(cb => { cb.checked = true; selectedColumns.add(cb.value); });
+            updateUI();
+        };
+        document.getElementById('btnSelectNone').onclick = () => {
+            document.querySelectorAll('.col-checkbox').forEach(cb => { cb.checked = false; });
+            selectedColumns.clear();
+            updateUI();
+        };
+
+        btnCalculate.onclick = processAndExport;
+
+        async function handleFile(file) {
+            originalFileName = file.name;
+            fileNameDisplay.textContent = file.name;
+            statusMessage.textContent = "Parsing file...";
+            
+            try {
+                const data = await file.arrayBuffer();
+                const wb = XLSX.read(data);
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                workbookData = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+                
+                if (workbookData.length === 0) throw new Error("File is empty");
+
+                headers = workbookData[0];
+                parseHeaders();
+                renderColumnSelection();
+                
+                columnSection.classList.remove('opacity-50', 'pointer-events-none');
+                statusMessage.textContent = "Select assignments to continue.";
+                updateUI();
+            } catch (err) {
+                statusMessage.textContent = "Error loading file.";
+                alert("Error: " + err.message);
+            }
+        }
+
+        function parseHeaders() {
+            headersMax = {};
+            headers.forEach(h => {
+                if (!h) return;
+                const hStr = String(h);
+                let max = null;
+
+                if (hStr.includes("<")) {
+                    const parts = hStr.split(/\s+/);
+                    parts.forEach(p => {
+                        if (p.includes("MaxPoints:")) {
+                            const val = parseFloat(p.replace("MaxPoints:", "").replace(/[<>]/g, ""));
+                            if (!isNaN(val)) max = val;
+                        }
+                    });
+                } else if (hStr.includes("Calculated Final Grade Numerator") || hStr.includes("Adjusted Final Grade Numerator")) {
+                    max = 100;
+                }
+                
+                if (max !== null) headersMax[hStr] = max;
+            });
+        }
+
+        function renderColumnSelection() {
+            columnList.innerHTML = '';
+            headers.forEach(h => {
+                if (!h || headersMax[h] === undefined) return;
+                
+                const wrapper = document.createElement('label');
+                wrapper.className = "flex items-start p-3 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors select-none";
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = "checkbox";
+                checkbox.className = "col-checkbox mt-1 mr-3 w-4 h-4 text-blue-600 rounded border-slate-300";
+                checkbox.value = h;
+                checkbox.onchange = (e) => {
+                    if (e.target.checked) selectedColumns.add(h);
+                    else selectedColumns.delete(h);
+                    updateUI();
+                };
+
+                const text = document.createElement('span');
+                text.className = "text-sm text-slate-700 font-medium break-words";
+                text.textContent = `${getCleanName(h)} (Max: ${headersMax[h]})`;
+
+                wrapper.appendChild(checkbox);
+                wrapper.appendChild(text);
+                columnList.appendChild(wrapper);
+            });
+        }
+
+        function updateUI() {
+            btnCalculate.disabled = selectedColumns.size === 0;
+            if (selectedColumns.size > 0) {
+                statusMessage.textContent = `${selectedColumns.size} column(s) selected. Ready to export.`;
+            }
+        }
+
+        async function processAndExport() {
+            statusMessage.textContent = "Formatting and auto-sizing...";
+            
+            const excelWorkbook = new ExcelJS.Workbook();
+            const worksheet = excelWorkbook.addWorksheet('CEAB Data');
+
+            const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF000080' } };
+            const headerFont = { name: 'Segoe UI', size: 9, color: { argb: 'FFFFFFFF' }, bold: true };
+            const highlightFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFF00' } };
+            
+            // 1. Build Header Row
+            const headerRowData = [];
+            const colInfo = []; 
+
+            headers.forEach((h, i) => {
+                const cleanName = getCleanName(h);
+                headerRowData.push(cleanName);
+                colInfo.push({ header: h, isOriginal: true, originalIdx: i });
+                
+                if (selectedColumns.has(h)) {
+                    headerRowData.push(`${cleanName} %`);
+                    colInfo.push({ header: h, isOriginal: false, originalIdx: i });
+                }
+            });
+
+            const row1 = worksheet.addRow(headerRowData);
+            row1.eachCell((cell) => {
+                cell.fill = headerFill;
+                cell.font = headerFont;
+            });
+
+            // 2. Add Data Rows
+            const dataRows = workbookData.slice(1);
+            dataRows.forEach((rowData) => {
+                const newRowData = [];
+                colInfo.forEach(info => {
+                    const val = rowData[info.originalIdx];
+                    if (info.isOriginal) {
+                        newRowData.push(val);
+                    } else {
+                        if (val === null || val === undefined || isNaN(parseFloat(val))) {
+                            newRowData.push(null);
+                        } else {
+                            const max = headersMax[info.header];
+                            const percent = Math.ceil((parseFloat(val) / max) * 100);
+                            newRowData.push(percent);
+                        }
+                    }
+                });
+                const addedRow = worksheet.addRow(newRowData);
+                colInfo.forEach((info, idx) => {
+                    if (!info.isOriginal) addedRow.getCell(idx + 1).fill = highlightFill;
+                });
+            });
+
+            const lastDataRowNumber = worksheet.rowCount;
+
+            // 3. Add Summary Rows
+            worksheet.addRow([]); worksheet.addRow([]);
+
+            const stats = [
+                { label: "Average", type: 'avg' },
+                { label: "DNME Count (<50%)", type: 'dnme' },
+                { label: "Marginal Count (>=50% and <60%)", type: 'marginal' },
+                { label: "ME Count (>=60% and <80%)", type: 'me' },
+                { label: "EE Count (>=80%)", type: 'ee' },
+                { label: "Total Count", type: 'total' }
+            ];
+
+            const ITEM_SPAN = 4;
+
+            stats.forEach(stat => {
+                const statRow = worksheet.addRow([]);
+                const labelCell = statRow.getCell(1);
+                labelCell.value = stat.label;
+                labelCell.fill = headerFill;
+                labelCell.font = headerFont;
+                worksheet.mergeCells(statRow.number, 1, statRow.number, ITEM_SPAN);
+
+                colInfo.forEach((info, idx) => {
+                    const colNumber = idx + 1;
+                    if (colNumber > ITEM_SPAN && !info.isOriginal) {
+                        const cell = statRow.getCell(colNumber);
+                        const colLetter = worksheet.getColumn(colNumber).letter;
+                        
+                        if (stat.type === 'avg') {
+                            cell.value = { formula: `ROUNDUP(AVERAGE(${colLetter}2:${colLetter}${lastDataRowNumber}), 0)` };
+                        } else if (stat.type === 'dnme') {
+                            cell.value = { formula: `COUNTIF(${colLetter}2:${colLetter}${lastDataRowNumber}, "<50")` };
+                        } else if (stat.type === 'marginal') {
+                            cell.value = { formula: `COUNTIFS(${colLetter}2:${colLetter}${lastDataRowNumber}, ">=50", ${colLetter}2:${colLetter}${lastDataRowNumber}, "<60")` };
+                        } else if (stat.type === 'me') {
+                            cell.value = { formula: `COUNTIFS(${colLetter}2:${colLetter}${lastDataRowNumber}, ">=60", ${colLetter}2:${colLetter}${lastDataRowNumber}, "<80")` };
+                        } else if (stat.type === 'ee') {
+                            cell.value = { formula: `COUNTIF(${colLetter}2:${colLetter}${lastDataRowNumber}, ">=80")` };
+                        } else if (stat.type === 'total') {
+                            cell.value = { formula: `COUNT(${colLetter}2:${colLetter}${lastDataRowNumber})` };
+                        }
+                        
+                        cell.fill = highlightFill;
+                        cell.font = { bold: true };
+                    }
+                });
+            });
+
+            // 4. Improved Auto-size columns logic
+            worksheet.columns.forEach((column, colIdx) => {
+                let maxCharLength = 0;
+                column.eachCell({ includeEmpty: true }, (cell) => {
+                    // Only consider headers and student data rows for column width.
+                    if (cell.row <= lastDataRowNumber) {
+                        const val = cell.value;
+                        let len = 0;
+                        if (val !== null && val !== undefined) {
+                            len = val.toString().length;
+                        }
+                        if (len > maxCharLength) maxCharLength = len;
+                    }
+                });
+                const baseWidth = maxCharLength + 3; 
+                column.width = Math.min(Math.max(baseWidth, 10), 50);
+            });
+
+            // 5. Finalize and Download
+            const buffer = await excelWorkbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = originalFileName.replace(/\.[^/.]+$/, "") + "_CEAB_Processed.xlsx";
+            anchor.click();
+            window.URL.revokeObjectURL(url);
+            
+            statusMessage.textContent = "Done! Processed file downloaded.";
+        }
+    </script>
+</body>
+</html>
