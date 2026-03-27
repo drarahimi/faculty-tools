@@ -237,6 +237,7 @@
 
         function renderColumnSelection() {
             columnList.innerHTML = '';
+            selectedColumns.clear(); // Clear previous state to prevent carryover between file uploads
             headers.forEach(h => {
                 if (!h || headersMax[h] === undefined) return;
                 
@@ -247,6 +248,11 @@
                 checkbox.type = "checkbox";
                 checkbox.className = "col-checkbox mt-1 mr-3 w-4 h-4 text-blue-600 rounded border-slate-300";
                 checkbox.value = h;
+                
+                // Automatically check the box and add it to selected columns by default
+                checkbox.checked = true;
+                selectedColumns.add(h);
+
                 checkbox.onchange = (e) => {
                     if (e.target.checked) selectedColumns.add(h);
                     else selectedColumns.delete(h);
@@ -274,7 +280,12 @@
             statusMessage.textContent = "Formatting and auto-sizing...";
             
             const excelWorkbook = new ExcelJS.Workbook();
-            const worksheet = excelWorkbook.addWorksheet('CEAB Data');
+            // ADDED: { views: [{ state: 'frozen', ySplit: 1 }] } to freeze the top row
+            const worksheet = excelWorkbook.addWorksheet('CEAB Data', {
+                views: [
+                    { state: 'frozen', ySplit: 1 }
+                ]
+            });
 
             const headerFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF000080' } };
             const headerFont = { name: 'Segoe UI', size: 9, color: { argb: 'FFFFFFFF' }, bold: true };
@@ -389,8 +400,10 @@
                         if (len > maxCharLength) maxCharLength = len;
                     }
                 });
-                const baseWidth = maxCharLength + 3; 
-                column.width = Math.min(Math.max(baseWidth, 10), 50);
+                // Tighter fit adjustments: Only add 1 character length for minimal padding 
+                // and lower the minimum boundary to 5.
+                const baseWidth = maxCharLength + 1; 
+                column.width = Math.min(Math.max(baseWidth, 5), 50);
             });
 
             // 5. Finalize and Download
