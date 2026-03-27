@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UWindsor Grad Committee Selector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        uwinBlue: '#005596',
+                        uwinGold: '#FFCE00'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+    <!-- TensorFlow.js and Universal Sentence Encoder for Semantic Matching -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/universal-sentence-encoder"></script>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col font-sans overflow-hidden">
+
+    <!-- Navbar -->
+    <nav class="bg-uwinBlue text-white p-4 shadow-md flex justify-between items-center z-20 relative">
+        <div class="flex items-center gap-3">
+            <svg class="w-8 h-8 text-uwinGold" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72l5 2.73 5-2.73v3.72z"/></svg>
+            <h1 class="text-2xl font-bold tracking-tight">Graduate Committee Selector</h1>
+        </div>
+        <div class="text-sm font-medium opacity-90">Faculty of Engineering Tool</div>
+    </nav>
+
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Left Sidebar: Controls -->
+        <div class="w-full md:w-1/3 lg:w-1/4 bg-white border-r shadow-xl flex flex-col z-10 overflow-y-auto">
+            
+            <!-- Step 1: Data Loader -->
+            <div class="p-5 border-b border-gray-200 bg-gray-50">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-base font-bold text-gray-800">1. Load Faculty Database</h2>
+                    <span id="dbSizeBadge" class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full">0 Loaded</span>
+                </div>
+                <p class="text-xs text-gray-500 mb-3 leading-tight">Load data from the UWindsor directory to power the recommendations.</p>
+                
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <button onclick="fetchFaculty('MAME')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 text-sm font-semibold py-1.5 px-3 rounded shadow-sm transition">Fetch MAME</button>
+                    <button onclick="fetchFaculty('CEE')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 text-sm font-semibold py-1.5 px-3 rounded shadow-sm transition">Fetch CEE</button>
+                    <button onclick="fetchFaculty('ECE')" class="bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 text-sm font-semibold py-1.5 px-3 rounded shadow-sm transition">Fetch ECE</button>
+                    <button onclick="fetchFaculty('All')" class="bg-uwinGold hover:bg-yellow-500 text-black text-sm font-bold py-1.5 px-3 rounded shadow-sm transition">Load ALL</button>
+                </div>
+
+                <button onclick="viewDirectory()" class="w-full bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 text-sm font-bold py-2 px-3 rounded shadow-sm transition mb-3 flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    View All Loaded Faculty
+                </button>
+
+                <!-- Status & Progress -->
+                <div class="flex flex-col gap-1">
+                    <div class="flex items-center justify-between text-xs font-medium">
+                        <span id="statusText" class="text-gray-500">Database empty.</span>
+                        <span id="loadingIndicator" class="hidden text-uwinBlue font-bold animate-pulse">Scraping...</span>
+                    </div>
+                    <div id="progressContainer" class="hidden w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                        <div id="progressBar" class="bg-uwinBlue h-1.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between items-center mt-1">
+                        <span id="errorDetails" class="text-xs font-semibold text-red-600 hidden"></span>
+                        <span id="progressText" class="text-[10px] font-medium text-gray-400 hidden ml-auto">0 / 0 pages</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Student Parameters -->
+            <div class="p-5 flex-1 flex flex-col">
+                <h2 class="text-base font-bold text-gray-800 mb-4">2. Student Parameters</h2>
+                
+                <label class="block text-sm font-bold text-gray-700 mb-1">Student Department</label>
+                <select id="studentDept" class="w-full border border-gray-300 rounded p-2 text-sm mb-4 focus:ring-uwinBlue focus:border-uwinBlue">
+                    <option value="MAME">Mechanical, Automotive & Materials (MAME)</option>
+                    <option value="CEE">Civil & Environmental (CEE)</option>
+                    <option value="ECE">Electrical & Computer (ECE)</option>
+                </select>
+
+                <label class="block text-sm font-bold text-gray-700 mb-1">Degree Program</label>
+                <select id="degreeType" class="w-full border border-gray-300 rounded p-2 text-sm mb-4 focus:ring-uwinBlue focus:border-uwinBlue">
+                    <option value="PHD">Ph.D. Dissertation</option>
+                    <option value="MASC">Master's Thesis</option>
+                    <option value="MENG">Master's Major Paper</option>
+                </select>
+
+                <label class="block text-sm font-bold text-gray-700 mb-1">Thesis Topic / Keywords</label>
+                <textarea id="thesisTopic" rows="4" class="w-full border border-gray-300 rounded p-2 text-sm mb-4 focus:ring-uwinBlue focus:border-uwinBlue" placeholder="e.g., machine learning, structural analysis, materials science, artificial intelligence..."></textarea>
+
+                <div class="flex items-start mb-6">
+                    <div class="flex items-center h-5">
+                        <input id="useAI" type="checkbox" class="w-4 h-4 text-uwinBlue border-gray-300 rounded focus:ring-uwinBlue bg-gray-50 cursor-pointer">
+                    </div>
+                    <div class="ml-2 text-sm">
+                        <label for="useAI" class="font-bold text-gray-700 cursor-pointer">Use AI Semantic Match</label>
+                        <p class="text-[11px] text-gray-500 font-normal leading-tight mt-0.5">Downloads ~30MB TensorFlow model on first run to understand context & synonyms.</p>
+                    </div>
+                </div>
+
+                <button id="generateBtn" onclick="generateCommittee()" class="w-full bg-uwinBlue hover:bg-blue-800 text-white font-bold py-3 px-4 rounded shadow-md transition-colors mt-auto text-sm flex items-center justify-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed">
+                    <svg id="generateIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    <span id="generateText">Generate Suggested Committee</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Content: Results Area -->
+        <div class="flex-1 bg-gray-100 p-6 md:p-8 overflow-y-auto relative" id="mainArea">
+            
+            <!-- Rules Reference Snippet -->
+            <div class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+                <h2 class="text-lg font-bold text-uwinBlue mb-3 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-uwinGold" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                    UWindsor Committee Formation Rules
+                </h2>
+                <ul class="text-sm text-gray-700 list-disc pl-5 space-y-1.5">
+                    <li><strong>Ph.D. Dissertation:</strong> Min 4 members. Supervisor (Internal), 2 Program Readers (Internal), 1 Outside Program Reader (External).</li>
+                    <li><strong>Master's Thesis:</strong> Min 3 members. Supervisor (Internal), 2 Readers (Internal or External).</li>
+                    <li><strong>Master's Major Paper:</strong> Min 2 members. Supervisor (Internal), 1 Program Reader (Internal).</li>
+                </ul>
+                <p class="text-[11px] text-gray-500 mt-3 pt-3 border-t border-gray-100">
+                    * The algorithm filters candidates internally/externally based on the selected Student Department and scores them against topic keywords.
+                </p>
+            </div>
+
+            <!-- Welcome Placeholder -->
+            <div id="welcomeScreen" class="flex flex-col items-center justify-center h-64 opacity-60">
+                <svg class="w-20 h-20 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                <h2 class="text-xl font-bold text-gray-600">No Committee Generated Yet</h2>
+                <p class="text-sm text-gray-500 mt-2">Load the faculty database, enter student parameters, and click Generate.</p>
+            </div>
+
+            <!-- Results Container -->
+            <div id="committeeResults" class="hidden flex-col gap-5 pb-10">
+                <!-- Javascript will inject cards here -->
+            </div>
+
+            <!-- Directory Container -->
+            <div id="directoryResults" class="hidden flex-col gap-4 pb-10">
+                <!-- Javascript will inject directory here -->
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-800 text-white px-4 py-2 rounded shadow-lg transition-opacity opacity-0 pointer-events-none duration-300 z-50"></div>
+
+    <script>
+        // Data Structures
+        const DEPT_URLS = {
+            MAME: "https://www.uwindsor.ca/engineering/mame/tags/mame",
+            CEE: "https://www.uwindsor.ca/engineering/civil/tags/faculty",
+            ECE: "https://www.uwindsor.ca/engineering/electrical/tags/faculty"
+        };
+
+        // Global Faculty Database
+        let globalFacultyList = [];
+        let aiModel = null; // Holds the TensorFlow USE model
+
+        // UI Elements
+        const statusText = document.getElementById('statusText');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorDetails = document.getElementById('errorDetails');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const dbSizeBadge = document.getElementById('dbSizeBadge');
+        const toast = document.getElementById('toast');
+        
+        let totalRequests = 0;
+        let completedRequests = 0;
+
+        function updateProgress() {
+            completedRequests++;
+            const percentage = (completedRequests / totalRequests) * 100;
+            progressBar.style.width = `${percentage}%`;
+            progressText.textContent = `${completedRequests} / ${totalRequests} pages`;
+        }
+
+        // Robust Proxy Fetcher
+        async function fetchWithProxy(url) {
+            const proxies = [
+                (u) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+                (u) => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+                (u) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
+            ];
+
+            let lastErrorMsg = "";
+            let failedCount = 0;
+
+            for (const proxyFn of proxies) {
+                try {
+                    const proxyUrl = proxyFn(url);
+                    const bustUrl = proxyUrl + (proxyUrl.includes('?') ? '&' : '?') + 'cb=' + new Date().getTime();
+                    
+                    const response = await fetch(bustUrl, {
+                        method: 'GET',
+                        headers: { 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' }
+                    });
+                    
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    
+                    if (proxyUrl.includes('allorigins.win/get')) {
+                        const data = await response.json();
+                        if (data.contents) return data.contents;
+                    } else {
+                        const text = await response.text();
+                        if (text && text.length > 500) return text; 
+                    }
+                } catch (e) {
+                    console.warn(`Proxy failed:`, e);
+                    lastErrorMsg = e.message;
+                    failedCount++;
+                }
+            }
+
+            if (failedCount === proxies.length) {
+                throw new Error("Network blocked. Please disable Adblockers and try again.");
+            }
+        }
+
+        async function fetchFaculty(departmentKey) {
+            errorDetails.classList.add('hidden');
+            loadingIndicator.classList.remove('hidden');
+            statusText.textContent = `Fetching ${departmentKey}...`;
+            statusText.classList.remove('text-red-600');
+            statusText.classList.add('text-gray-600');
+            
+            const keysToFetch = departmentKey === 'All' ? ['MAME', 'CEE', 'ECE'] : [departmentKey];
+
+            totalRequests = keysToFetch.length * 5; 
+            completedRequests = 0;
+            progressContainer.classList.remove('hidden');
+            progressText.classList.remove('hidden');
+            progressBar.style.width = '0%';
+            progressText.textContent = `0 / ${totalRequests} pages`;
+
+            try {
+                const departmentPromises = keysToFetch.map(key => scrapeFacultyInfo(DEPT_URLS[key], key));
+                const results = await Promise.all(departmentPromises);
+                const fetchedFaculties = results.flat();
+
+                // Merge into Global List (preventing exact duplicates by Name)
+                let newCount = 0;
+                for (const faculty of fetchedFaculties) {
+                    if (!globalFacultyList.some(f => f.Name === faculty.Name)) {
+                        globalFacultyList.push(faculty);
+                        newCount++;
+                    }
+                }
+
+                statusText.textContent = `Added ${newCount} profiles.`;
+                dbSizeBadge.textContent = `${globalFacultyList.length} Loaded`;
+                showToast(`Successfully loaded ${departmentKey} faculty!`);
+
+            } catch (error) {
+                console.error("Scraping error:", error);
+                statusText.textContent = `Failed!`;
+                statusText.classList.add('text-red-600');
+                errorDetails.textContent = error.message;
+                errorDetails.classList.remove('hidden');
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    progressText.classList.add('hidden');
+                }, 1000);
+            }
+        }
+
+        async function scrapeFacultyInfo(baseUrl, deptKey) {
+            const pagePromises = [];
+
+            for (let page = 0; page < 5; page++) {
+                const targetUrl = `${baseUrl}?page=${page}`;
+                const pagePromise = fetchWithProxy(targetUrl)
+                    .then(pageContent => parseFacultyHtml(pageContent, deptKey))
+                    .catch(e => {
+                        console.error(`Failed to fetch page ${page} of ${baseUrl}`, e);
+                        return []; 
+                    })
+                    .finally(() => updateProgress());
+
+                pagePromises.push(pagePromise);
+            }
+
+            const pagesResults = await Promise.all(pagePromises);
+            return pagesResults.flat();
+        }
+
+        function parseFacultyHtml(pageContent, deptKey) {
+            const facultyList = [];
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(pageContent, "text/html");
+
+            const facultyNodes = doc.querySelectorAll('#block-system-main article');
+            if (!facultyNodes || facultyNodes.length === 0) return facultyList;
+
+            facultyNodes.forEach(node => {
+                const nameNode = node.querySelector('header h2 a');
+                const name = nameNode ? nameNode.innerText.trim() : '';
+                const profileurl = nameNode ? "https://www.uwindsor.ca" + nameNode.getAttribute('href') : '';
+
+                const imageNode = node.querySelector('div div div p img, div div img, div img');
+                const imageurl = imageNode ? "https://www.uwindsor.ca" + imageNode.getAttribute('src') : 'Not Found';
+
+                const bodyNode = node.querySelector('div.field-item.even');
+                const bodyText = bodyNode ? bodyNode.innerText : '';
+                const lines = bodyText.replace(/&nbsp;/g, " ").split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+                let position = "", email = "", phone = "", office = "", researchInterests = "";
+                let foundphone = false, foundinterests = false;
+
+                for (const line of lines) {
+                    if (line.includes("@")) { email = line; foundphone = true; }
+                    else if (line.includes("ext.")) { phone = line; foundphone = true; }
+                    else if (line.startsWith("Office:")) { office = line.replace("Office:", "").trim(); foundphone = true; }
+                    
+                    if (!foundphone) position += line + " ";
+                    if (foundinterests) researchInterests += line.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").trim() + " ";
+                    if (line.includes("Research Interests")) foundinterests = true;
+                }
+
+                facultyList.push({
+                    Name: name,
+                    Department: deptKey, // Track department affiliation!
+                    Position: position.trim(),
+                    ProfileUrl: profileurl,
+                    ImageUrl: imageurl,
+                    Email: email,
+                    Phone: phone,
+                    Office: office,
+                    ResearchInterests: researchInterests.trim(),
+                });
+            });
+
+            return facultyList;
+        }
+
+        // --- ML & Math Logic --- //
+        function cosineSimilarity(a, b) {
+            let dotProduct = 0, normA = 0, normB = 0;
+            for (let i = 0; i < a.length; i++) {
+                dotProduct += a[i] * b[i];
+                normA += a[i] * a[i];
+                normB += b[i] * b[i];
+            }
+            return normA === 0 || normB === 0 ? 0 : dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+        }
+
+        // --- Committee Generation Logic --- //
+
+        async function generateCommittee() {
+            if (globalFacultyList.length === 0) {
+                alert("Please load the Faculty Database (Step 1) before generating a committee.");
+                return;
+            }
+
+            const studentDept = document.getElementById('studentDept').value;
+            const degreeType = document.getElementById('degreeType').value;
+            const rawTopic = document.getElementById('thesisTopic').value;
+            const useAI = document.getElementById('useAI').checked;
+            
+            const btnText = document.getElementById('generateText');
+            const btnIcon = document.getElementById('generateIcon');
+            const generateBtn = document.getElementById('generateBtn');
+
+            let scoredFaculty = [];
+
+            if (useAI) {
+                // --- ML Semantic Matching Path ---
+                try {
+                    // Update UI to show downloading/processing state
+                    generateBtn.disabled = true;
+                    btnText.textContent = aiModel ? "Analyzing Semantics..." : "Downloading AI Model (~30MB)...";
+                    btnIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />`;
+                    btnIcon.classList.add('animate-spin');
+
+                    // Load Universal Sentence Encoder (only downloads once per page load)
+                    if (!aiModel) {
+                        aiModel = await use.load();
+                    }
+
+                    // Prepare strings for embedding
+                    const facultyDocs = globalFacultyList.map(f => `${f.ResearchInterests} ${f.Position} ${f.Department}`.trim() || "Engineering");
+                    const allStrings = [rawTopic || "Engineering", ...facultyDocs];
+                    
+                    // Run model to extract feature embeddings
+                    const embeddings = await aiModel.embed(allStrings);
+                    const embeddingsArray = await embeddings.array();
+                    
+                    const topicVector = embeddingsArray[0];
+                    
+                    // Calculate Cosine Similarity for each faculty member
+                    scoredFaculty = globalFacultyList.map((f, i) => {
+                        const facultyVector = embeddingsArray[i + 1];
+                        const similarity = cosineSimilarity(topicVector, facultyVector);
+                        const score = Math.max(0, Math.round(similarity * 100)); // Convert to 0-100% score
+                        return { ...f, matchScore: score, scoreType: 'AI Match' };
+                    });
+
+                } catch (err) {
+                    console.error("AI Model Error:", err);
+                    alert("Failed to load AI model. Check console for details. Falling back to keyword search.");
+                    document.getElementById('useAI').checked = false;
+                    generateBtn.disabled = false;
+                    btnText.textContent = "Generate Suggested Committee";
+                    btnIcon.classList.remove('animate-spin');
+                    btnIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>`;
+                    return; 
+                } finally {
+                    // Reset Button UI
+                    generateBtn.disabled = false;
+                    btnText.textContent = "Generate Suggested Committee";
+                    btnIcon.classList.remove('animate-spin');
+                    btnIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>`;
+                }
+            } else {
+                // --- Basic Keyword Path (Fallback) ---
+                const keywords = rawTopic.toLowerCase().match(/\b\w{3,}\b/g) || [];
+
+                scoredFaculty = globalFacultyList.map(f => {
+                    let score = 0;
+                    let searchStr = `${f.ResearchInterests} ${f.Position} ${f.Name}`.toLowerCase();
+                    keywords.forEach(kw => {
+                        if (searchStr.includes(kw)) score += 1;
+                    });
+                    return { ...f, matchScore: score, scoreType: 'Keyword Hits' };
+                });
+            }
+
+            // Sort by score descending
+            scoredFaculty.sort((a, b) => b.matchScore - a.matchScore);
+
+            // Segment by department
+            const internalFaculty = scoredFaculty.filter(f => f.Department === studentDept);
+            const externalFaculty = scoredFaculty.filter(f => f.Department !== studentDept);
+
+            // Validation Checks
+            if (internalFaculty.length < 3) {
+                alert(`Not enough faculty loaded for the student's department (${studentDept}). Please fetch ${studentDept} data.`);
+                return;
+            }
+            if (degreeType === 'PHD' && externalFaculty.length < 1) {
+                alert(`Ph.D. degree requires an Outside Program Reader. Please fetch data from a DIFFERENT department (or click Load ALL).`);
+                return;
+            }
+
+            let committeeGroups = [];
+
+            // Apply Rules Based on Degree Type & Provide Options
+            if (degreeType === 'PHD') {
+                committeeGroups.push({
+                    title: 'Supervisor Options (Internal) - Select 1',
+                    desc: 'Must be from the student\'s program.',
+                    type: 'Internal',
+                    members: internalFaculty.slice(0, 3)
+                });
+                committeeGroups.push({
+                    title: 'Program Reader Options (Internal) - Select 2',
+                    desc: 'Must be from the student\'s program.',
+                    type: 'Internal',
+                    members: internalFaculty.slice(0, 5)
+                });
+                committeeGroups.push({
+                    title: 'Outside Program Reader Options (External) - Select 1',
+                    desc: 'Must be from a different department.',
+                    type: 'External',
+                    members: externalFaculty.slice(0, 4)
+                });
+            } 
+            else if (degreeType === 'MASC') {
+                committeeGroups.push({
+                    title: 'Supervisor Options (Internal) - Select 1',
+                    desc: 'Must be from the student\'s program.',
+                    type: 'Internal',
+                    members: internalFaculty.slice(0, 3)
+                });
+                committeeGroups.push({
+                    title: 'Program Reader Options (Internal) - Select 1 or 2',
+                    desc: 'Needs at least one internal reader.',
+                    type: 'Internal',
+                    members: internalFaculty.slice(0, 5)
+                });
+                if (externalFaculty.length > 0) {
+                    committeeGroups.push({
+                        title: 'Outside Reader Options (External) - Optional',
+                        desc: 'The 3rd committee member can be an external reader.',
+                        type: 'External',
+                        members: externalFaculty.slice(0, 3)
+                    });
+                }
+            } 
+            else if (degreeType === 'MENG') {
+                committeeGroups.push({
+                    title: 'Supervisor Options (Internal) - Select 1',
+                    desc: 'Must be from the student\'s program.',
+                    type: 'Internal',
+                    members: internalFaculty.slice(0, 3)
+                });
+                committeeGroups.push({
+                    title: 'Program Reader Options (Internal) - Select 1',
+                    desc: 'Must be from the student\'s program.',
+                    type: 'Internal',
+                    members: internalFaculty.slice(0, 4)
+                });
+            }
+
+            renderCommitteeUI(committeeGroups, rawTopic);
+        }
+
+        function renderCommitteeUI(groups, topic) {
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('directoryResults').classList.add('hidden');
+            const resultsDiv = document.getElementById('committeeResults');
+            resultsDiv.classList.remove('hidden');
+            
+            // Add Header
+            resultsDiv.innerHTML = `
+                <div class="border-b-2 border-uwinBlue pb-2 mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800">Suggested Committee Options</h2>
+                    <p class="text-sm text-gray-600 mt-1">Topic: <em>${topic || "No specific topic provided"}</em></p>
+                </div>
+            `;
+
+            groups.forEach(group => {
+                const isExternal = group.type === 'External';
+                const roleBadgeColor = isExternal ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800';
+                
+                resultsDiv.innerHTML += `
+                    <div class="mt-6 mb-3">
+                        <div class="flex items-baseline gap-3 mb-1">
+                            <h3 class="text-xl font-bold text-gray-800">${group.title}</h3>
+                            <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded ${roleBadgeColor}">${group.type}</span>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-3">${group.desc}</p>
+                        <div class="flex flex-col gap-4">
+                            ${group.members.map(member => createFacultyCard(member, true)).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function viewDirectory() {
+            if (globalFacultyList.length === 0) {
+                alert("Please load the Faculty Database first.");
+                return;
+            }
+
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('committeeResults').classList.add('hidden');
+            const dirDiv = document.getElementById('directoryResults');
+            dirDiv.classList.remove('hidden');
+
+            // Sort alphabetically by name
+            const sortedFaculty = [...globalFacultyList].sort((a, b) => a.Name.localeCompare(b.Name));
+
+            dirDiv.innerHTML = `
+                <div class="border-b-2 border-uwinBlue pb-2 mb-4 flex justify-between items-end">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Faculty Directory</h2>
+                        <p class="text-sm text-gray-600 mt-1">Showing all ${sortedFaculty.length} loaded profiles.</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 gap-4">
+                    ${sortedFaculty.map(member => createFacultyCard(member, false)).join('')}
+                </div>
+            `;
+        }
+
+        function createFacultyCard(member, showScore) {
+            return `
+                <div class="flex flex-col md:flex-row bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                    ${showScore ? `
+                    <div class="w-full md:w-32 bg-gray-50 border-b md:border-b-0 md:border-r border-gray-200 p-4 flex flex-col justify-center items-center shrink-0">
+                        <span class="text-[10px] text-gray-500 font-bold block uppercase tracking-wide">${member.scoreType}</span>
+                        <span class="text-2xl font-black ${member.matchScore > 0 ? 'text-green-600' : 'text-gray-400'}">
+                            ${member.matchScore}${member.scoreType === 'AI Match' ? '%' : ''}
+                        </span>
+                    </div>
+                    ` : ''}
+                    <div class="p-5 flex gap-5 w-full">
+                        <div class="shrink-0 hidden sm:block">
+                            <img src="${member.ImageUrl}" class="w-20 h-28 object-cover rounded shadow-sm border border-gray-100" 
+                                onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdib3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjUwIiB5PSI1MCIgZm9udC1mYW1pbHk9ImFyaWFsIiBmb250LXNpemU9IjEyIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iI2FhYSI+Tm8gSW1hZ2U8L3RleHQ+PC9zdmc+'" alt="${member.Name}">
+                        </div>
+                        <div class="flex-1 flex flex-col justify-center min-w-0">
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-lg font-bold text-uwinBlue truncate"><a href="${member.ProfileUrl}" target="_blank" class="hover:underline">${member.Name}</a></h3>
+                                <span class="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded border">${member.Department}</span>
+                            </div>
+                            <p class="text-sm font-semibold text-gray-700 mt-0.5">${member.Position}</p>
+                            
+                            <div class="mt-2 text-sm text-gray-600 line-clamp-2">
+                                <strong class="text-gray-800">Interests:</strong> ${member.ResearchInterests || "Not specified"}
+                            </div>
+                            
+                            <div class="mt-3 flex flex-wrap gap-4 text-xs font-medium text-gray-500">
+                                ${member.Email ? `<span class="flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>${member.Email}</span>` : ''}
+                                ${member.Phone ? `<span class="flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>${member.Phone}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
