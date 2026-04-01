@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAME Curriculum Map - UWindsor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Base transitions */
+        .course-card {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        /* State Classes (Added via JS) */
+        /* Core Course Default */
+        .card-core { background-color: #ffffff; border-color: #cbd5e1; color: #334155; }
+        .card-core:hover { border-color: #64748b; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+
+        /* Option-Specific Course Default */
+        .card-option { background-color: #f3e8ff; border-color: #d8b4fe; color: #4c1d95; }
+        .card-option:hover { border-color: #c084fc; box-shadow: 0 4px 6px -1px rgba(107, 33, 168, 0.1); }
+
+        /* Generic Elective Default */
+        .card-elective { background-color: #f8fafc; border-color: #94a3b8; border-style: dashed; color: #475569; }
+        .card-elective:hover { border-color: #64748b; border-style: solid; }
+        
+        /* Hover State (The node currently being hovered) */
+        .card-hovered { background-color: #2563eb !important; border-color: #1d4ed8 !important; border-style: solid !important; color: white !important; transform: translateY(-2px) scale(1.02); z-index: 10; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
+        .card-hovered .text-sub { color: #bfdbfe !important; }
+        .card-hovered .text-main { color: white !important; }
+        
+        /* Prerequisite Highlight */
+        .card-prereq { background-color: #fff7ed !important; border-color: #f97316 !important; border-style: solid !important; box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.4) !important; z-index: 5; }
+        .card-prereq .text-sub { color: #c2410c !important; }
+        .card-prereq .text-main { color: #7c2d12 !important; }
+
+        /* Dependent/Unlock Highlight */
+        .card-dependent { background-color: #ecfdf5 !important; border-color: #10b981 !important; border-style: solid !important; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4) !important; z-index: 5; }
+        .card-dependent .text-sub { color: #047857 !important; }
+        .card-dependent .text-main { color: #064e3b !important; }
+
+        /* Dimmed State (Nodes not involved in the hover chain) */
+        .card-dimmed { opacity: 0.35; filter: grayscale(60%); }
+
+        /* Custom horizontal scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { height: 12px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; border: 2px solid #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .custom-scrollbar { scrollbar-width: thin; scrollbar-color: #cbd5e1 #f1f5f9; }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header & Navigation -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm shrink-0">
+        <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-slate-900 rounded-lg text-white shrink-0">
+                        <!-- Proper Engineering Gear Logo -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-900 leading-tight">MAME Integrated Program Flow</h1>
+                        <p class="text-sm text-slate-500 font-medium">UWindsor Mechanical Engineering • Core & Option Tracks</p>
+                    </div>
+                </div>
+                
+                <!-- Track Selector -->
+                <div class="w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 no-scrollbar">
+                    <div class="flex items-center bg-slate-100 p-1 rounded-lg min-w-max" id="track-selector">
+                        <button onclick="setProgram('general')" data-track="general" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all bg-white shadow-sm text-slate-900">
+                            General Program
+                        </button>
+                        <button onclick="setProgram('aerospace')" data-track="aerospace" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-600 hover:text-slate-900">
+                            Aerospace Option
+                        </button>
+                        <button onclick="setProgram('automotive')" data-track="automotive" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-600 hover:text-slate-900">
+                            Automotive Option
+                        </button>
+                        <button onclick="setProgram('materials')" data-track="materials" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-600 hover:text-slate-900">
+                            Materials Option
+                        </button>
+                        <button onclick="setProgram('environmental')" data-track="environmental" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-600 hover:text-slate-900">
+                            Environmental Option
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 w-full mx-auto p-4 sm:p-6 lg:p-8 overflow-x-auto custom-scrollbar relative bg-slate-50">
+        
+        <!-- Legend -->
+        <div class="flex flex-wrap gap-4 mb-8 bg-white/80 backdrop-blur-md p-3 rounded-xl border border-slate-200 shadow-sm w-fit sticky left-0 z-10">
+            <div class="flex items-center gap-2 text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                <div class="w-3.5 h-3.5 rounded-sm bg-white border-2 border-slate-300"></div> Core
+            </div>
+            <div class="flex items-center gap-2 text-xs font-semibold text-purple-700 uppercase tracking-wide">
+                <div class="w-3.5 h-3.5 rounded-sm bg-purple-100 border-2 border-purple-400"></div> Option Track
+            </div>
+            <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                <div class="w-3.5 h-3.5 rounded-sm bg-slate-50 border-2 border-slate-400 border-dashed"></div> Elective
+            </div>
+            <div class="w-px h-4 bg-slate-300 mx-2"></div>
+            <div class="flex items-center gap-2 text-xs font-semibold text-orange-600 uppercase tracking-wide">
+                <div class="w-3.5 h-3.5 rounded-full bg-orange-100 border-2 border-orange-400"></div> Prerequisite
+            </div>
+            <div class="flex items-center gap-2 text-xs font-semibold text-emerald-600 uppercase tracking-wide">
+                <div class="w-3.5 h-3.5 rounded-full bg-emerald-100 border-2 border-emerald-400"></div> Unlocks
+            </div>
+        </div>
+
+        <!-- Dynamic Curriculum Board -->
+        <div id="board-container" class="flex gap-4 min-w-max pb-16 items-start">
+            <!-- Columns injected via JS -->
+        </div>
+    </main>
+
+    <!-- Context Modal -->
+    <div id="modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200" onclick="closeModal()">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200" id="modal-content" onclick="event.stopPropagation()">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <span id="modal-badge" class="inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider mb-2"></span>
+                        <h3 id="modal-title" class="text-xl font-bold text-slate-900 leading-tight">Course Title</h3>
+                        <p id="modal-subtitle" class="text-sm font-semibold text-slate-500 mt-1">ID • Term</p>
+                    </div>
+                </div>
+                
+                <div class="my-6 space-y-4">
+                    <!-- Course Summary Section -->
+                    <div id="modal-summary" class="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        Course description goes here...
+                    </div>
+
+                    <div class="pt-2">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Direct Prerequisites</h4>
+                        <div id="modal-prereqs" class="flex flex-wrap gap-2">
+                            <!-- Prereqs injected via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end border-t border-slate-100 pt-4">
+                    <button onclick="closeModal()" class="px-6 py-2 bg-slate-100 text-slate-700 text-sm font-bold rounded-lg hover:bg-slate-200 transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * UNIFIED CURRICULUM DATA MODEL
+         * Programs array dictates which track(s) a course appears in. 'all' means it appears in every track.
+         * Type dictates the visual styling (core, option, elective).
+         */
+        const allCourses = [
+            // --- TERM 1 (Fall Y1) ---
+            { id: "GENG-1101", term: 1, title: "Engineering I", type: "core", programs: ["all"], prereqs: [], summary: "Introduction to engineering design, problem-solving, teamwork, and the engineering profession." },
+            { id: "GENG-1102", term: 1, title: "Engineering Graphics", type: "core", programs: ["all"], prereqs: [], summary: "Principles of engineering graphics, technical drawing, and 3D CAD tools for design visualization." },
+            { id: "MATH-1720", term: 1, title: "Differential Calculus", type: "core", programs: ["all"], prereqs: [], summary: "Limits, derivatives, and applications of differentiation relevant to engineering." },
+            { id: "MATH-1270", term: 1, title: "Linear Algebra", type: "core", programs: ["all"], prereqs: [], summary: "Systems of linear equations, matrices, determinants, and vector spaces." },
+            { id: "PHYS-1400", term: 1, title: "Introductory Physics I", type: "core", programs: ["all"], prereqs: [], summary: "Mechanics, kinematics, and dynamics forming the basis of engineering physics." },
+
+            // --- TERM 2 (Winter Y1) ---
+            { id: "GENG-1110", term: 2, title: "Engineering Mechanics I", type: "core", programs: ["all"], prereqs: ["PHYS-1400", "MATH-1720"], summary: "Statics of particles, rigid bodies, trusses, frames, and machines." },
+            { id: "GENG-1201", term: 2, title: "Cornerstone Design", type: "core", programs: ["all"], prereqs: ["GENG-1101", "GENG-1102"], summary: "Team-based cornerstone engineering design project with hands-on application." },
+            { id: "GENG-1202", term: 2, title: "Intro Electrical & Comp Eng", type: "core", programs: ["all"], prereqs: [], summary: "Fundamentals of electrical circuits, electronics, and basic computing concepts." },
+            { id: "MATH-1730", term: 2, title: "Integral Calculus", type: "core", programs: ["all"], prereqs: ["MATH-1720"], summary: "Techniques of integration, applications of the definite integral, and infinite series." },
+            { id: "CHEM-1103", term: 2, title: "Topics in General Chemistry", type: "core", programs: ["all"], prereqs: [], summary: "Chemical principles relevant to engineering materials, thermochemistry, and electrochemistry." },
+
+            // --- TERM 3 (Fall Y2) ---
+            { id: "GENG-2101", term: 3, title: "Engineering II", type: "core", programs: ["all"], prereqs: [], summary: "Further development of engineering design methodologies, communication, and professional skills." },
+            { id: "MATH-2780", term: 3, title: "Vector Calculus", type: "core", programs: ["all"], prereqs: ["MATH-1730"], summary: "Calculus of vector functions, partial derivatives, and multiple integrals in diverse coordinate systems." },
+            { id: "GENG-2102", term: 3, title: "Programming and Algorithms", type: "core", programs: ["all"], prereqs: [], summary: "Introduction to structured programming, algorithmic logic, and numerical problem solving." },
+            { id: "PHYS-2100", term: 3, title: "Topics in Physics", type: "core", programs: ["all"], prereqs: ["PHYS-1400"], summary: "Oscillations, wave motion, electromagnetism, and introductory modern physics." },
+            { id: "GENG-2190", term: 3, title: "Engineering Materials Fund.", type: "core", programs: ["all"], prereqs: [], summary: "Microstructure, phase diagrams, properties, and applications of metals, polymers, and ceramics." },
+            { id: "MECH-2210", term: 3, title: "Dynamics", type: "core", programs: ["all"], prereqs: ["GENG-1110"], summary: "Kinematics and kinetics of particles and rigid bodies using Newton-Euler equations and energy methods." },
+
+            // --- TERM 4 (Winter Y2) ---
+            { id: "GENG-2201", term: 4, title: "Engineering Design II", type: "core", programs: ["all"], prereqs: ["GENG-1201"], summary: "Second-year comprehensive engineering design project emphasizing teamwork and methodology." },
+            { id: "MATH-2790", term: 4, title: "Differential Equations", type: "core", programs: ["all"], prereqs: ["MATH-1730"], summary: "First and higher order ordinary differential equations and Laplace transforms." },
+            { id: "GENG-2220", term: 4, title: "Probability and Statistics", type: "core", programs: ["all"], prereqs: ["MATH-1720"], summary: "Statistical methods, probability theory, distributions, and experimental data analysis." },
+            { id: "MECH-2230", term: 4, title: "Adv Engineering and Design", type: "core", programs: ["all"], prereqs: [], summary: "Advanced techniques in engineering design, graphical analysis, and tolerancing." },
+            { id: "GENG-2180", term: 4, title: "Mechanics of Deformable Bodies", type: "core", programs: ["all"], prereqs: ["GENG-1110", "MATH-1720"], summary: "Stress, strain, and deformation of solid materials under axial, torsional, and flexural loading." },
+            { id: "COMP-1", term: 4, title: "Complementary Studies", type: "elective", programs: ["all"], prereqs: [], summary: "Elective course covering humanities, social sciences, or business to broaden societal perspectives." },
+
+            // --- TERM 5 (Fall Y3) ---
+            { id: "GENG-3130", term: 5, title: "Engineering Economics", type: "core", programs: ["all"], prereqs: [], summary: "Principles of engineering economics, cost analysis, time value of money, and financial decision making." },
+            { id: "MECH-3211", term: 5, title: "Stress Analysis", type: "core", programs: ["all"], prereqs: ["GENG-2180", "MATH-2790"], summary: "Advanced stress analysis, combined loading, failure theories, and structural components." },
+            { id: "MECH-3212", term: 5, title: "Thermodynamics", type: "core", programs: ["all"], prereqs: [], summary: "First and second laws of thermodynamics, thermodynamic properties, and introductory power cycles." },
+            { id: "MECH-3223", term: 5, title: "Machine Dynamics", type: "core", programs: ["all"], prereqs: ["MECH-2210"], summary: "Kinematic and dynamic analysis of planar mechanisms, cams, and gear trains." },
+            { id: "MECH-3233", term: 5, title: "Fluid Mechanics I", type: "core", programs: ["all"], prereqs: ["PHYS-2100"], summary: "Fluid properties, statics, kinematics, and conservation laws of fluid dynamics." },
+            { id: "COMP-2", term: 5, title: "Complementary Studies", type: "elective", programs: ["all"], prereqs: [], summary: "Second elective course covering humanities, social sciences, or business." },
+
+            // --- TERM 6 (Summer Y3) - Core base + Option Specific additions ---
+            { id: "GENG-3201", term: 6, title: "Engineering Design III", type: "core", programs: ["all"], prereqs: ["GENG-2201"], summary: "Third-year engineering design project emphasizing system-level integration and open-ended problem solving." },
+            { id: "MECH-3217", term: 6, title: "Applied Thermodynamics", type: "core", programs: ["all"], prereqs: ["MECH-3212"], summary: "Thermodynamics of gas mixtures, combustion, refrigeration, and advanced power cycles." },
+            { id: "MECH-3220", term: 6, title: "Fluid Mechanics II", type: "core", programs: ["all"], prereqs: ["MECH-3233"], summary: "Advanced fluid mechanics, navier-stokes equations, boundary layers, and compressible flow." },
+            { id: "MECH-3228", term: 6, title: "Heat Transfer", type: "core", programs: ["all"], prereqs: ["MATH-2790"], summary: "Principles of conduction, convection, and radiation heat transfer with practical applications." },
+            { id: "MECH-4259", term: 6, title: "Computer Aided Engineering", type: "core", programs: ["all"], prereqs: ["MECH-3211"], summary: "Introduction to finite element analysis (FEA) and computer-aided engineering (CAE) software tools." },
+            
+            // Track Additions
+            { id: "MECH-3670", term: 6, title: "Aerospace Eng. Fundamentals", type: "option", programs: ["aerospace"], prereqs: ["MATH-2780", "MATH-2790"], summary: "Introduction to aerodynamics, propulsion, and general aerospace vehicle performance." },
+            { id: "MECH-3430", term: 6, title: "Automotive Eng. Fundamentals", type: "option", programs: ["automotive"], prereqs: ["MECH-2210"], summary: "Introduction to automotive engineering, vehicle dynamics, architecture, and systems." },
+            { id: "MECH-3830", term: 6, title: "Materials Eng. Fundamentals", type: "option", programs: ["materials"], prereqs: ["GENG-2190"], summary: "Advanced principles of materials engineering, crystallography, and failure analysis." },
+            { id: "ENVE-3620", term: 6, title: "Air Pollution Control", type: "option", programs: ["environmental"], prereqs: [], summary: "Principles, design, and regulatory aspects of air pollution control systems." },
+
+            // --- TERM 7 (Winter Y4) ---
+            { id: "MECH-4200A", term: 7, title: "Capstone Design Project A", type: "core", programs: ["all"], prereqs: [], summary: "First phase of the culminating engineering design project. Requires problem definition, planning, and initial conceptual design." },
+            { id: "MECH-3224", term: 7, title: "Engineering Measurements", type: "core", programs: ["all"], prereqs: ["GENG-2102"], summary: "Measurement theory, sensors, data acquisition, signal processing, and experimental uncertainty." },
+            { id: "MECH-4221", term: 7, title: "Machine Design", type: "core", programs: ["all"], prereqs: ["MECH-3223", "MECH-3211"], summary: "Design and analysis of machine elements such as gears, bearings, shafts, and fasteners." },
+            
+            // General Electives
+            { id: "TECH-1", term: 7, title: "Technical Elective I", type: "elective", programs: ["general"], prereqs: [], summary: "First technical elective to broaden engineering knowledge in specialized fields." },
+            { id: "TECH-2", term: 7, title: "Technical Elective II", type: "elective", programs: ["general"], prereqs: [], summary: "Second technical elective to broaden engineering knowledge in specialized fields." },
+            
+            // Aerospace 
+            { id: "MECH-4670", term: 7, title: "Aerospace Propulsion", type: "option", programs: ["aerospace"], prereqs: ["MECH-3217", "MECH-3220", "MECH-3670"], summary: "Design and analysis of aerospace propulsion systems, including gas turbines, jet engines, and rockets." },
+            { id: "MECH-3671", term: 7, title: "Aerospace Materials & Mfg.", type: "option", programs: ["aerospace"], prereqs: ["MECH-3670"], summary: "Materials selection and specialized manufacturing processes specific to aerospace components." },
+            { id: "MECH-4673", term: 7, title: "Aerospace Structures", type: "option", programs: ["aerospace"], prereqs: ["MECH-3211"], summary: "Analysis, design, and fatigue testing of aerospace structures under varied flight loads." },
+            
+            // Automotive
+            { id: "MECH-4463", term: 7, title: "Vehicle Dynamics", type: "option", programs: ["automotive"], prereqs: ["MECH-3430"], summary: "In-depth analysis of vehicle ride, handling, cornering, and braking performance." },
+            { id: "MECH-4467", term: 7, title: "Vehicle Thermal Mgmt.", type: "option", programs: ["automotive"], prereqs: ["MECH-3217", "MECH-3228", "MECH-3233"], summary: "Thermal management strategies for vehicle powertrains, cabins, and battery systems." },
+            
+            // Materials
+            { id: "MECH-4832", term: 7, title: "Modern Steels", type: "option", programs: ["materials"], prereqs: ["MECH-3830"], summary: "Metallurgy, processing, and properties of modern advanced high-strength steels." },
+            { id: "MECH-4834", term: 7, title: "Polymers", type: "option", programs: ["materials"], prereqs: ["MECH-3830"], summary: "Structure, processing, and application engineering of polymer materials." },
+            
+            // Environmental
+            { id: "ENVE-4810", term: 7, title: "Sustainability in Eng.", type: "option", programs: ["environmental"], prereqs: [], summary: "Application of sustainability principles, life-cycle analysis, and green design in engineering." },
+            { id: "ENVE-4820", term: 7, title: "Hydrogeological Engineering", type: "option", programs: ["environmental"], prereqs: [], summary: "Principles of groundwater flow, well hydraulics, and contaminant transport modeling." },
+
+            // --- TERM 8 (Summer Y4) ---
+            { id: "MECH-3221", term: 8, title: "Control Theory", type: "core", programs: ["all"], prereqs: ["MATH-2780", "MATH-2790"], summary: "Mathematical modeling, analysis, and design of dynamic feedback control systems." },
+            { id: "MECH-4211", term: 8, title: "Deformation & Fracture", type: "core", programs: ["all"], prereqs: ["MECH-3211", "MECH-3223"], summary: "Mechanisms of deformation, fatigue, creep, and fracture mechanics in engineering materials." },
+            { id: "MECH-4200B", term: 8, title: "Capstone Design Project B", type: "core", programs: ["all"], prereqs: ["MECH-4200A"], summary: "Final phase of the capstone project. Requires detailed design, prototyping, testing, and final presentation." },
+            
+            // General Electives
+            { id: "TECH-3", term: 8, title: "Technical Elective III", type: "elective", programs: ["general"], prereqs: [], summary: "Third technical elective to broaden engineering knowledge in specialized fields." },
+            { id: "TECH-4", term: 8, title: "Technical Elective IV", type: "elective", programs: ["general"], prereqs: [], summary: "Fourth technical elective to broaden engineering knowledge in specialized fields." },
+            
+            // Aerospace
+            { id: "MECH-4671", term: 8, title: "Aerodynamics & Performance", type: "option", programs: ["aerospace"], prereqs: ["MECH-3220", "MECH-3670"], summary: "Advanced study of airfoil theory, wing aerodynamics, and flight performance characteristics." },
+            { id: "MECH-4672", term: 8, title: "Flight Dynamics", type: "option", programs: ["aerospace"], prereqs: ["MECH-3670"], summary: "Equations of motion, stability, control, and dynamic response of flight vehicles." },
+            
+            // Automotive
+            { id: "MECH-4465", term: 8, title: "Internal Combustion Engines", type: "option", programs: ["automotive"], prereqs: ["MECH-3217", "MECH-3220"], summary: "Thermodynamics, design, and operation of spark-ignition and compression-ignition internal combustion engines." },
+            { id: "MECH-4469", term: 8, title: "Sustainable Propulsion", type: "option", programs: ["automotive"], prereqs: ["MECH-3217"], summary: "Electric, hybrid-electric, fuel cell, and alternative sustainable vehicle propulsion architectures." },
+            
+            // Materials
+            { id: "MECH-4831", term: 8, title: "Light Alloys", type: "option", programs: ["materials"], prereqs: ["MECH-3830"], summary: "Metallurgy and applications of lightweight structural alloys such as aluminum, magnesium, and titanium." },
+            { id: "MECH-4835", term: 8, title: "Composites", type: "option", programs: ["materials"], prereqs: ["MECH-3830"], summary: "Mechanics, manufacturing processes, and structural design using composite materials." },
+            
+            // Environmental
+            { id: "ENVE-4460", term: 8, title: "Enviro Effects & Control of Noise", type: "option", programs: ["environmental"], prereqs: [], summary: "Acoustics theory, environmental noise assessment, regulation, and mitigation strategies." },
+            { id: "ENVE-4610", term: 8, title: "Water Quality Modeling", type: "option", programs: ["environmental"], prereqs: [], summary: "Mathematical modeling of water quality and pollutant transport in natural and engineered systems." },
+        ];
+
+        let currentProgram = 'general';
+        let activeCourses = [];
+        let allDOMCards = [];
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            setProgram('general');
+        });
+
+        function setProgram(programKey) {
+            currentProgram = programKey;
+            
+            // Filter unified array: keep "all" and keep specific selected track
+            activeCourses = allCourses.filter(c => 
+                c.programs.includes('all') || c.programs.includes(programKey)
+            );
+            
+            // Update UI Track Tabs
+            document.querySelectorAll('.track-btn').forEach(btn => {
+                if (btn.dataset.track === programKey) {
+                    btn.className = 'track-btn px-4 py-2 text-sm font-bold rounded-md transition-all bg-white shadow-sm text-slate-900 ring-1 ring-slate-200';
+                } else {
+                    btn.className = 'track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-200/50';
+                }
+            });
+
+            renderBoard();
+        }
+
+        function renderBoard() {
+            const container = document.getElementById('board-container');
+            container.innerHTML = '';
+            
+            // 8 standard academic terms
+            const terms = [1, 2, 3, 4, 5, 6, 7, 8];
+            const termNames = ["Fall Y1", "Winter Y1", "Fall Y2", "Winter Y2", "Fall Y3", "Summer Y3", "Winter Y4", "Summer Y4"];
+
+            terms.forEach((termIndex, i) => {
+                const coursesInTerm = activeCourses.filter(c => c.term === termIndex);
+                
+                const colDiv = document.createElement('div');
+                colDiv.className = 'w-56 flex flex-col gap-3 shrink-0';
+                
+                // Column Header
+                colDiv.innerHTML = `
+                    <div class="flex flex-col items-start mb-1 pb-3 border-b-2 border-slate-200">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Term ${termIndex}</span>
+                        <span class="text-sm font-bold text-slate-800">${termNames[i]}</span>
+                        <span class="text-[10px] text-slate-500 mt-0.5">${coursesInTerm.length} Courses</span>
+                    </div>
+                `;
+
+                // Render specific courses
+                coursesInTerm.forEach(course => {
+                    const card = document.createElement('button');
+                    
+                    // Determine base CSS class based on course type
+                    let typeClass = "card-core";
+                    let titleColor = "text-slate-800";
+                    let subColor = "text-slate-500";
+                    
+                    if (course.type === 'option') {
+                        typeClass = "card-option border-2";
+                        titleColor = "text-purple-900";
+                        subColor = "text-purple-600";
+                    } else if (course.type === 'elective') {
+                        typeClass = "card-elective";
+                        titleColor = "text-slate-700";
+                        subColor = "text-slate-400";
+                    }
+
+                    card.className = `course-card ${typeClass} relative flex flex-col p-3.5 rounded-xl border text-left w-full h-full min-h-[5.5rem] justify-center`;
+                    card.dataset.id = course.id;
+                    card.dataset.type = course.type;
+                    
+                    const hasPrereqs = course.prereqs && course.prereqs.length > 0;
+                    const hintDot = hasPrereqs ? `<div class="absolute top-2 right-2 flex gap-0.5 hint-dot transition-opacity"><div class="w-1.5 h-1.5 rounded-full bg-slate-300"></div></div>` : '';
+
+                    card.innerHTML = `
+                        <span class="text-sub text-[10px] font-bold uppercase tracking-wider mb-1 ${subColor} transition-colors">${course.id}</span>
+                        <span class="text-main text-sm font-semibold leading-tight ${titleColor} transition-colors">${course.title}</span>
+                        ${hintDot}
+                    `;
+
+                    // Interaction Events
+                    card.addEventListener('mouseenter', () => handleHoverState(course.id));
+                    card.addEventListener('mouseleave', () => resetHoverState());
+                    card.addEventListener('click', () => openModal(course));
+
+                    colDiv.appendChild(card);
+                });
+
+                container.appendChild(colDiv);
+            });
+
+            // Cache DOM nodes for super fast graph traversal styling
+            allDOMCards = Array.from(document.querySelectorAll('.course-card'));
+        }
+
+        // --- Interaction Logic (Graph Traversal) ---
+        function getPrereqsRecursive(courseId, visited = new Set()) {
+            if (visited.has(courseId)) return visited;
+            visited.add(courseId);
+            const course = activeCourses.find(c => c.id === courseId);
+            if (course && course.prereqs) {
+                course.prereqs.forEach(pr => {
+                    // Only traverse if the prereq exists in the current active track
+                    if(activeCourses.some(c => c.id === pr)) {
+                        getPrereqsRecursive(pr, visited)
+                    }
+                });
+            }
+            return visited;
+        }
+
+        function getDependentsRecursive(courseId, visited = new Set()) {
+            if (visited.has(courseId)) return visited;
+            visited.add(courseId);
+            activeCourses.forEach(c => {
+                if (c.prereqs && c.prereqs.includes(courseId)) {
+                    getDependentsRecursive(c.id, visited);
+                }
+            });
+            return visited;
+        }
+
+        function handleHoverState(hoveredId) {
+            const allPrereqs = getPrereqsRecursive(hoveredId);
+            allPrereqs.delete(hoveredId);
+            
+            const allDependents = getDependentsRecursive(hoveredId);
+            allDependents.delete(hoveredId);
+
+            allDOMCards.forEach(card => {
+                const id = card.dataset.id;
+                const type = card.dataset.type;
+                const hint = card.querySelector('.hint-dot');
+                
+                // Clear all dynamic classes
+                card.classList.remove('card-core', 'card-option', 'card-elective', 'card-hovered', 'card-prereq', 'card-dependent', 'card-dimmed');
+                if(hint) hint.style.opacity = '0';
+
+                // Apply Graph State Classes
+                if (id === hoveredId) {
+                    card.classList.add('card-hovered');
+                } else if (allPrereqs.has(id)) {
+                    card.classList.add('card-prereq');
+                } else if (allDependents.has(id)) {
+                    card.classList.add('card-dependent');
+                } else {
+                    card.classList.add('card-dimmed');
+                    // Restore original base style so dimmed looks correct
+                    if (type === 'option') card.classList.add('card-option');
+                    else if (type === 'elective') card.classList.add('card-elective');
+                    else card.classList.add('card-core');
+                    if(hint) hint.style.opacity = '1';
+                }
+            });
+        }
+
+        function resetHoverState() {
+            allDOMCards.forEach(card => {
+                const type = card.dataset.type;
+                card.classList.remove('card-hovered', 'card-prereq', 'card-dependent', 'card-dimmed');
+                
+                // Restore defaults
+                if (type === 'option') card.classList.add('card-option');
+                else if (type === 'elective') card.classList.add('card-elective');
+                else card.classList.add('card-core');
+                
+                const hint = card.querySelector('.hint-dot');
+                if(hint) hint.style.opacity = '1';
+            });
+        }
+
+        // --- Modal Logic ---
+        function openModal(course) {
+            document.getElementById('modal-title').textContent = course.title;
+            const termNames = ["Fall Y1", "Winter Y1", "Fall Y2", "Winter Y2", "Fall Y3", "Summer Y3", "Winter Y4", "Summer Y4"];
+            document.getElementById('modal-subtitle').textContent = `${course.id} • Term ${course.term} (${termNames[course.term - 1]})`;
+            document.getElementById('modal-summary').textContent = course.summary;
+            
+            const badge = document.getElementById('modal-badge');
+            if (course.type === 'core') {
+                badge.textContent = "Core Requirement";
+                badge.className = "inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider mb-2 bg-slate-100 text-slate-600";
+            } else if (course.type === 'option') {
+                badge.textContent = "Option Track Requirement";
+                badge.className = "inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider mb-2 bg-purple-100 text-purple-700";
+            } else {
+                badge.textContent = "Free Elective";
+                badge.className = "inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider mb-2 bg-slate-100 text-slate-500 border border-dashed border-slate-300";
+            }
+
+            const prereqContainer = document.getElementById('modal-prereqs');
+            prereqContainer.innerHTML = '';
+            
+            if (course.prereqs && course.prereqs.length > 0) {
+                course.prereqs.forEach(p => {
+                    const span = document.createElement('span');
+                    span.className = 'px-3 py-1.5 bg-orange-50 border border-orange-200 text-orange-800 text-xs font-bold rounded-md';
+                    span.textContent = p;
+                    prereqContainer.appendChild(span);
+                });
+            } else {
+                prereqContainer.innerHTML = `<p class="text-sm font-medium text-slate-400 italic">No formal prerequisites</p>`;
+            }
+
+            const overlay = document.getElementById('modal-overlay');
+            const content = document.getElementById('modal-content');
+            
+            overlay.classList.remove('hidden');
+            // Trigger reflow
+            void overlay.offsetWidth; 
+            overlay.classList.remove('opacity-0');
+            content.classList.remove('scale-95');
+        }
+
+        function closeModal() {
+            const overlay = document.getElementById('modal-overlay');
+            const content = document.getElementById('modal-content');
+            
+            overlay.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+            }, 200);
+        }
+    </script>
+</body>
+</html>
