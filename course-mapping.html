@@ -29,15 +29,25 @@
         .card-hovered .text-sub { color: #bfdbfe !important; }
         .card-hovered .text-main { color: white !important; }
         
-        /* Prerequisite Highlight */
-        .card-prereq { background-color: #fff7ed !important; border-color: #f97316 !important; border-style: solid !important; box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.4) !important; z-index: 5; }
-        .card-prereq .text-sub { color: #c2410c !important; }
-        .card-prereq .text-main { color: #7c2d12 !important; }
+        /* Direct Prerequisite Highlight */
+        .card-prereq-direct { background-color: #fff7ed !important; border-color: #f97316 !important; border-style: solid !important; box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.4) !important; z-index: 5; }
+        .card-prereq-direct .text-sub { color: #c2410c !important; }
+        .card-prereq-direct .text-main { color: #7c2d12 !important; }
 
-        /* Dependent/Unlock Highlight */
-        .card-dependent { background-color: #ecfdf5 !important; border-color: #10b981 !important; border-style: solid !important; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4) !important; z-index: 5; }
-        .card-dependent .text-sub { color: #047857 !important; }
-        .card-dependent .text-main { color: #064e3b !important; }
+        /* Indirect Prerequisite Highlight */
+        .card-prereq-indirect { background-color: #fffbeb !important; border-color: #f59e0b !important; border-style: dashed !important; box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important; z-index: 4; }
+        .card-prereq-indirect .text-sub { color: #b45309 !important; }
+        .card-prereq-indirect .text-main { color: #78350f !important; }
+
+        /* Direct Dependent/Unlock Highlight */
+        .card-dependent-direct { background-color: #ecfdf5 !important; border-color: #10b981 !important; border-style: solid !important; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4) !important; z-index: 5; }
+        .card-dependent-direct .text-sub { color: #047857 !important; }
+        .card-dependent-direct .text-main { color: #064e3b !important; }
+
+        /* Indirect Dependent/Unlock Highlight */
+        .card-dependent-indirect { background-color: #f0fdfa !important; border-color: #14b8a6 !important; border-style: dashed !important; box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2) !important; z-index: 4; }
+        .card-dependent-indirect .text-sub { color: #0f766e !important; }
+        .card-dependent-indirect .text-main { color: #134e4a !important; }
 
         /* Dimmed State (Nodes not involved in the hover chain) */
         .card-dimmed { opacity: 0.35; filter: grayscale(60%); }
@@ -75,19 +85,19 @@
                 <!-- Track Selector -->
                 <div class="w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 no-scrollbar">
                     <div class="flex items-center bg-slate-100 p-1 rounded-lg min-w-max" id="track-selector">
-                        <button onclick="setProgram('general')" data-track="general" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all bg-white shadow-sm text-slate-900">
+                        <button onclick="setProgram('general')" data-track="general" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all bg-white shadow-sm text-slate-900 ring-1 ring-slate-200">
                             General Program
                         </button>
-                        <button onclick="setProgram('aerospace')" data-track="aerospace" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-600 hover:text-slate-900">
+                        <button onclick="setProgram('aerospace')" data-track="aerospace" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-200/50">
                             Aerospace Option
                         </button>
-                        <button onclick="setProgram('automotive')" data-track="automotive" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-600 hover:text-slate-900">
+                        <button onclick="setProgram('automotive')" data-track="automotive" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-200/50">
                             Automotive Option
                         </button>
-                        <button onclick="setProgram('materials')" data-track="materials" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-600 hover:text-slate-900">
+                        <button onclick="setProgram('materials')" data-track="materials" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-200/50">
                             Materials Option
                         </button>
-                        <button onclick="setProgram('environmental')" data-track="environmental" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-600 hover:text-slate-900">
+                        <button onclick="setProgram('environmental')" data-track="environmental" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-200/50">
                             Environmental Option
                         </button>
                     </div>
@@ -111,11 +121,21 @@
                 <div class="w-3.5 h-3.5 rounded-sm bg-slate-50 border-2 border-slate-400 border-dashed"></div> Elective
             </div>
             <div class="w-px h-4 bg-slate-300 mx-2"></div>
+            
             <div class="flex items-center gap-2 text-xs font-semibold text-orange-600 uppercase tracking-wide">
-                <div class="w-3.5 h-3.5 rounded-full bg-orange-100 border-2 border-orange-400"></div> Prerequisite
+                <div class="w-3.5 h-3.5 rounded-full bg-orange-100 border-2 border-orange-400"></div> Direct Prereq
             </div>
+            <div class="flex items-center gap-2 text-xs font-semibold text-amber-500 uppercase tracking-wide">
+                <div class="w-3.5 h-3.5 rounded-full bg-amber-50 border-2 border-amber-400 border-dashed"></div> Indirect Prereq
+            </div>
+            
+            <div class="w-px h-4 bg-slate-300 mx-2"></div>
+            
             <div class="flex items-center gap-2 text-xs font-semibold text-emerald-600 uppercase tracking-wide">
-                <div class="w-3.5 h-3.5 rounded-full bg-emerald-100 border-2 border-emerald-400"></div> Unlocks
+                <div class="w-3.5 h-3.5 rounded-full bg-emerald-100 border-2 border-emerald-400"></div> Direct Unlock
+            </div>
+            <div class="flex items-center gap-2 text-xs font-semibold text-teal-600 uppercase tracking-wide">
+                <div class="w-3.5 h-3.5 rounded-full bg-teal-50 border-2 border-teal-400 border-dashed"></div> Indirect Unlock
             </div>
         </div>
 
@@ -397,28 +417,67 @@
         }
 
         function handleHoverState(hoveredId) {
+            const hoveredCourse = activeCourses.find(c => c.id === hoveredId);
+            if (!hoveredCourse) return;
+
+            // --- PREREQUISITES LOGIC ---
+            const directPrereqs = new Set(hoveredCourse.prereqs || []);
+            
             const allPrereqs = getPrereqsRecursive(hoveredId);
             allPrereqs.delete(hoveredId);
-            
+
+            const indirectPrereqs = new Set();
+            allPrereqs.forEach(id => {
+                if (!directPrereqs.has(id)) {
+                    indirectPrereqs.add(id);
+                }
+            });
+
+            // --- DEPENDENTS/UNLOCKS LOGIC ---
+            const directDependents = new Set();
+            activeCourses.forEach(c => {
+                if (c.prereqs && c.prereqs.includes(hoveredId)) {
+                    directDependents.add(c.id);
+                }
+            });
+
             const allDependents = getDependentsRecursive(hoveredId);
             allDependents.delete(hoveredId);
 
+            const indirectDependents = new Set();
+            allDependents.forEach(id => {
+                if (!directDependents.has(id)) {
+                    indirectDependents.add(id);
+                }
+            });
+
+            // Apply Classes
             allDOMCards.forEach(card => {
                 const id = card.dataset.id;
                 const type = card.dataset.type;
                 const hint = card.querySelector('.hint-dot');
                 
                 // Clear all dynamic classes
-                card.classList.remove('card-core', 'card-option', 'card-elective', 'card-hovered', 'card-prereq', 'card-dependent', 'card-dimmed');
+                card.classList.remove(
+                    'card-core', 'card-option', 'card-elective', 'card-hovered', 
+                    'card-prereq-direct', 'card-prereq-indirect', 
+                    'card-dependent-direct', 'card-dependent-indirect', 
+                    'card-dimmed'
+                );
+                
                 if(hint) hint.style.opacity = '0';
 
-                // Apply Graph State Classes
+                // Apply Graph State Classes based on node relationship
                 if (id === hoveredId) {
                     card.classList.add('card-hovered');
-                } else if (allPrereqs.has(id)) {
-                    card.classList.add('card-prereq');
-                } else if (allDependents.has(id)) {
-                    card.classList.add('card-dependent');
+                } else if (directPrereqs.has(id)) {
+                    card.classList.add('card-prereq-direct');
+                } else if (indirectPrereqs.has(id)) {
+                    card.classList.add('card-prereq-indirect');
+                } else if (directDependents.has(id)) {
+                    card.classList.add('card-dependent-direct');
+                } else if (indirectDependents.has(id)) {
+                    card.classList.add('card-dependent-indirect');
                 } else {
                     card.classList.add('card-dimmed');
                     // Restore original base style so dimmed looks correct
@@ -433,9 +492,16 @@
         function resetHoverState() {
             allDOMCards.forEach(card => {
                 const type = card.dataset.type;
-                card.classList.remove('card-hovered', 'card-prereq', 'card-dependent', 'card-dimmed');
                 
-                // Restore defaults
+                // Remove all interactive classes
+                card.classList.remove(
+                    'card-hovered', 
+                    'card-prereq-direct', 'card-prereq-indirect', 
+                    'card-dependent-direct', 'card-dependent-indirect', 
+                    'card-dimmed'
+                );
+                
+                // Restore defaults based on node type
                 if (type === 'option') card.classList.add('card-option');
                 else if (type === 'elective') card.classList.add('card-elective');
                 else card.classList.add('card-core');
