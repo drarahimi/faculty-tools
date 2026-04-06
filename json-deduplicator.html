@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Deduplicator Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .drag-active {
+            border-color: #3b82f6 !important;
+            background-color: #eff6ff !important;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen font-sans flex flex-col antialiased">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-slate-200 py-6 mb-8">
+        <div class="max-w-4xl mx-auto px-4 flex items-center justify-center space-x-3">
+            <div class="bg-blue-600 text-white p-2 rounded-lg shadow-sm">
+                <i class="fa-solid fa-file-code text-xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-800 tracking-tight">JSON Deduplicator</h1>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-3xl mx-auto w-full px-4 flex-grow mb-12">
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+            
+            <div class="p-8">
+                <div class="text-center mb-8">
+                    <h2 class="text-lg font-semibold text-slate-700">Clean up your JSON arrays</h2>
+                    <p class="text-slate-500 mt-1 text-sm">Upload a JSON file containing an array. We'll deeply compare each element, remove duplicates, and give you a clean file to download.</p>
+                </div>
+
+                <!-- Upload Area -->
+                <div id="upload-section" class="transition-all duration-300">
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-300 rounded-xl p-10 text-center cursor-pointer hover:bg-slate-50 transition-colors flex flex-col items-center justify-center group">
+                        <div class="h-16 w-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+                        </div>
+                        <p class="text-slate-600 font-medium mb-1">Click to browse or drag and drop your file here</p>
+                        <p class="text-slate-400 text-sm mb-4">Must be a valid .json file</p>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg shadow-sm transition-colors shadow-blue-500/30">
+                            Select File
+                        </button>
+                        <input type="file" id="file-input" accept=".json,application/json" class="hidden">
+                    </div>
+                </div>
+
+                <!-- Loading Area -->
+                <div id="loading-section" class="hidden text-center py-12">
+                    <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-500 mb-4"></i>
+                    <p class="text-slate-600 font-medium text-lg">Processing your JSON...</p>
+                    <p class="text-slate-400 text-sm mt-1">Deeply analyzing elements for uniqueness</p>
+                </div>
+
+                <!-- Error Area -->
+                <div id="error-section" class="hidden bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+                    <div class="text-red-500 text-3xl mb-3"><i class="fa-solid fa-circle-exclamation"></i></div>
+                    <h3 class="text-red-800 font-semibold mb-1">Processing Failed</h3>
+                    <p id="error-message" class="text-red-600 text-sm mb-4"></p>
+                    <button onclick="resetApp()" class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-lg shadow-sm transition-colors text-sm">
+                        Try Again
+                    </button>
+                </div>
+
+                <!-- Report & Download Area -->
+                <div id="result-section" class="hidden fade-in">
+                    <div class="bg-green-50 border border-green-200 rounded-xl p-6 mb-6">
+                        <div class="flex items-center justify-center text-green-600 mb-4">
+                            <i class="fa-solid fa-circle-check text-4xl"></i>
+                        </div>
+                        <h3 class="text-center text-green-800 text-lg font-bold mb-6">Deduplication Complete!</h3>
+                        
+                        <div class="grid grid-cols-3 gap-4 mb-6">
+                            <div class="bg-white rounded-lg p-4 border border-green-100 shadow-sm text-center">
+                                <p class="text-slate-500 text-xs font-semibold uppercase tracking-wide mb-1">Original Items</p>
+                                <p id="stat-original-count" class="text-2xl font-bold text-slate-800">-</p>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-green-100 shadow-sm text-center">
+                                <p class="text-slate-500 text-xs font-semibold uppercase tracking-wide mb-1">Unique Items</p>
+                                <p id="stat-new-count" class="text-2xl font-bold text-blue-600">-</p>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 border border-green-100 shadow-sm text-center relative overflow-hidden">
+                                <div class="absolute -right-2 -bottom-2 opacity-10">
+                                    <i class="fa-solid fa-trash text-5xl text-red-500"></i>
+                                </div>
+                                <p class="text-slate-500 text-xs font-semibold uppercase tracking-wide mb-1 relative z-10">Removed</p>
+                                <p id="stat-removed-count" class="text-2xl font-bold text-red-500 relative z-10">-</p>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-sm text-slate-600 bg-white/60 p-3 rounded-lg border border-green-200/50">
+                            <div><i class="fa-solid fa-weight-hanging mr-2"></i>Original Size: <span id="stat-original-size" class="font-medium"></span></div>
+                            <div><i class="fa-solid fa-arrow-right mx-2 text-slate-400"></i></div>
+                            <div>New Size: <span id="stat-new-size" class="font-medium"></span></div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <button id="download-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg shadow-sm transition-colors shadow-blue-500/30 flex justify-center items-center">
+                            <i class="fa-solid fa-download mr-2"></i> Download Clean JSON
+                        </button>
+                        <button onclick="resetApp()" class="sm:w-auto w-full bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium py-3 px-6 rounded-lg shadow-sm transition-colors flex justify-center items-center">
+                            <i class="fa-solid fa-rotate-left mr-2"></i> Process Another
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="text-center mt-6 text-slate-400 text-sm">
+            <p><i class="fa-solid fa-lock mr-1"></i> Processing happens entirely in your browser. No data is uploaded to any server.</p>
+        </div>
+    </main>
+
+    <script>
+        // DOM Elements
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const uploadSection = document.getElementById('upload-section');
+        const loadingSection = document.getElementById('loading-section');
+        const errorSection = document.getElementById('error-section');
+        const resultSection = document.getElementById('result-section');
+        const errorMessage = document.getElementById('error-message');
+        const downloadBtn = document.getElementById('download-btn');
+
+        // Global state for processed file
+        let finalJsonContent = null;
+        let originalFileName = "";
+
+        // Deterministic Stringifier for Deep Object Comparison
+        // This ensures {a:1, b:2} and {b:2, a:1} are recognized as identical
+        function deterministicStringify(obj) {
+            if (typeof obj !== 'object' || obj === null) {
+                return JSON.stringify(obj);
+            }
+            if (Array.isArray(obj)) {
+                return '[' + obj.map(item => deterministicStringify(item)).join(',') + ']';
+            }
+            
+            const keys = Object.keys(obj).sort();
+            const elements = keys.map(key => {
+                return JSON.stringify(key) + ':' + deterministicStringify(obj[key]);
+            });
+            return '{' + elements.join(',') + '}';
+        }
+
+        // Format Bytes utility
+        function formatBytes(bytes, decimals = 2) {
+            if (!+bytes) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+        }
+
+        // View Management
+        function showView(viewName) {
+            uploadSection.classList.add('hidden');
+            loadingSection.classList.add('hidden');
+            errorSection.classList.add('hidden');
+            resultSection.classList.add('hidden');
+
+            if (viewName === 'upload') uploadSection.classList.remove('hidden');
+            if (viewName === 'loading') loadingSection.classList.remove('hidden');
+            if (viewName === 'error') errorSection.classList.remove('hidden');
+            if (viewName === 'result') resultSection.classList.remove('hidden');
+        }
+
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            showView('error');
+        }
+
+        function resetApp() {
+            fileInput.value = '';
+            finalJsonContent = null;
+            originalFileName = "";
+            showView('upload');
+        }
+
+        // File Processing Logic
+        function handleFile(file) {
+            if (!file) return;
+            
+            if (file.type !== 'application/json' && !file.name.toLowerCase().endsWith('.json')) {
+                showError("Please upload a valid .json file.");
+                return;
+            }
+
+            originalFileName = file.name;
+            showView('loading');
+
+            // Use timeout to allow UI to render loading state before heavy processing locks the main thread
+            setTimeout(() => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const content = e.target.result;
+                        const originalSize = content.length; // Approximate bytes using string length
+                        
+                        const parsedData = JSON.parse(content);
+
+                        if (!Array.isArray(parsedData)) {
+                            showError("The root element of the JSON file must be an Array (e.g., [ {...}, {...} ]).");
+                            return;
+                        }
+
+                        const originalCount = parsedData.length;
+                        
+                        // Deduplication Logic
+                        const uniqueSet = new Set();
+                        const deduplicatedArray = [];
+
+                        for (let i = 0; i < parsedData.length; i++) {
+                            const item = parsedData[i];
+                            const hash = deterministicStringify(item);
+                            
+                            if (!uniqueSet.has(hash)) {
+                                uniqueSet.add(hash);
+                                deduplicatedArray.push(item);
+                            }
+                        }
+
+                        const newCount = deduplicatedArray.length;
+                        const duplicatesRemoved = originalCount - newCount;
+
+                        // Create clean output
+                        finalJsonContent = JSON.stringify(deduplicatedArray, null, 2);
+                        const newSize = finalJsonContent.length;
+
+                        // Update DOM with report statistics
+                        document.getElementById('stat-original-count').textContent = originalCount.toLocaleString();
+                        document.getElementById('stat-new-count').textContent = newCount.toLocaleString();
+                        document.getElementById('stat-removed-count').textContent = duplicatesRemoved.toLocaleString();
+                        
+                        document.getElementById('stat-original-size').textContent = formatBytes(originalSize);
+                        document.getElementById('stat-new-size').textContent = formatBytes(newSize);
+
+                        showView('result');
+
+                    } catch (err) {
+                        console.error(err);
+                        showError("Invalid JSON syntax: " + err.message);
+                    }
+                };
+                reader.onerror = () => {
+                    showError("Error reading the file.");
+                }
+                reader.readAsText(file);
+            }, 100);
+        }
+
+        // Download Action
+        downloadBtn.addEventListener('click', () => {
+            if (!finalJsonContent) return;
+            
+            const blob = new Blob([finalJsonContent], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            
+            const baseName = originalFileName.replace(/\.[^/.]+$/, ""); // Strip extension
+            a.download = `${baseName}_deduplicated.json`;
+            a.href = url;
+            
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // Event Listeners for File Input & Drag and Drop
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-active');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-active');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-active');
+            
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        // Initial setup
+        resetApp();
+    </script>
+</body>
+</html>

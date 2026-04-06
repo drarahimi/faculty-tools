@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bib Cleaner - Tidy your LaTeX bibliographies</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- JSZip for bundling TeX files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <!-- Chart.js for Statistics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for textareas and pre */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e293b; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #475569; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #64748b; 
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-900">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900 leading-tight">Bib Cleaner Pro</h1>
+                    <p class="text-xs text-slate-500">Tidy, update, and standardize LaTeX bibliographies</p>
+                </div>
+            </div>
+            <div>
+                <a href="#" onclick="window.location.reload()" class="text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors">Reset App</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-8">
+        
+        <!-- Left Column: Inputs & Options -->
+        <div class="w-full md:w-5/12 flex flex-col gap-6">
+            
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-semibold text-slate-900 mb-4 flex items-center">
+                    <span class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-2">1</span>
+                    Upload Master Bib
+                </h2>
+                <div class="mt-2 flex justify-center rounded-xl border border-dashed border-slate-300 px-6 py-6 hover:bg-slate-50 transition-colors relative">
+                    <div class="text-center">
+                        <svg class="mx-auto h-8 w-8 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <div class="mt-4 flex text-sm leading-6 text-slate-600 justify-center">
+                            <label for="bib-upload" class="relative cursor-pointer rounded-md bg-transparent font-semibold text-indigo-600 hover:text-indigo-500">
+                                <span>Upload a file</span>
+                                <input id="bib-upload" name="bib-upload" type="file" accept=".bib" class="sr-only">
+                            </label>
+                            <p class="pl-1">or drag and drop</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="bib-file-name" class="hidden mt-3 text-sm text-emerald-600 font-medium flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <span>file.bib selected</span>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-semibold text-slate-900 mb-4 flex items-center">
+                    <span class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-2">2</span>
+                    Upload TeX Files
+                </h2>
+                <div class="mt-2 flex justify-center rounded-xl border border-dashed border-slate-300 px-6 py-6 hover:bg-slate-50 transition-colors relative">
+                    <div class="text-center">
+                        <svg class="mx-auto h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                        </svg>
+                        <div class="mt-4 flex text-sm leading-6 text-slate-600 justify-center">
+                            <label for="tex-upload" class="relative cursor-pointer rounded-md bg-transparent font-semibold text-indigo-600 hover:text-indigo-500">
+                                <span>Upload files</span>
+                                <input id="tex-upload" name="tex-upload" type="file" multiple accept=".tex" class="sr-only">
+                            </label>
+                            <p class="pl-1">or drag and drop</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="tex-files-list" class="hidden mt-3 text-sm text-emerald-600 font-medium flex flex-col gap-1 max-h-24 overflow-y-auto">
+                    <!-- populated via js -->
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-semibold text-slate-900 mb-4 flex items-center">
+                    <span class="bg-indigo-100 text-indigo-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold mr-2">3</span>
+                    Processing Options
+                </h2>
+                <div class="space-y-3 text-sm text-slate-700">
+                    <label class="flex items-start space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="opt-blanks" checked class="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        <span><strong class="font-medium text-slate-900">Remove excessive blank lines</strong><br><span class="text-slate-500 text-xs">Cleans up spacing between entries.</span></span>
+                    </label>
+                    <label class="flex items-start space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="opt-format" checked class="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        <span><strong class="font-medium text-slate-900">Format & Indent</strong><br><span class="text-slate-500 text-xs">Standardizes inner fields to 2-space indents.</span></span>
+                    </label>
+                    <label class="flex items-start space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="opt-dedupe" class="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        <span><strong class="font-medium text-slate-900">Merge Duplicates</strong><br><span class="text-slate-500 text-xs">Finds duplicate entries (by DOI or Title+Year) and routes their TeX citations to a single entry.</span></span>
+                    </label>
+                    <label class="flex items-start space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="opt-deleted" checked class="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        <span><strong class="font-medium text-slate-900">Provide Deleted Entries file</strong><br><span class="text-slate-500 text-xs">Allows downloading discarded entries separately.</span></span>
+                    </label>
+                    <div class="h-px bg-slate-100 my-2"></div>
+                    <label class="flex items-start space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="opt-doi" class="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        <span><strong class="font-medium text-slate-900">Update via Crossref API</strong><br><span class="text-slate-500 text-xs">Fetches clean metadata for any entry containing a DOI. (May take a moment).</span></span>
+                    </label>
+                    <label class="flex items-start space-x-3 cursor-pointer group">
+                        <input type="checkbox" id="opt-keys" class="mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        <span><strong class="font-medium text-slate-900">Standardize Citekeys</strong><br><span class="text-slate-500 text-xs">Renames keys to 'AuthorYearTitle' and provides updated TeX files for download.</span></span>
+                    </label>
+                </div>
+            </div>
+
+            <button id="clean-btn" disabled class="w-full flex justify-center items-center py-4 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all duration-200 transform active:scale-[0.98]">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                <span id="btn-text">Clean Bibliography</span>
+            </button>
+        </div>
+
+        <!-- Right Column: Results & Preview -->
+        <div class="w-full md:w-7/12 flex flex-col h-full">
+            <div id="welcome-state" class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 h-full flex flex-col items-center justify-center text-center min-h-[600px]">
+                <div class="bg-slate-100 p-4 rounded-full mb-4">
+                    <svg class="w-12 h-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                <h3 class="text-lg font-medium text-slate-900 mb-2">Awaiting Files</h3>
+                <p class="text-slate-500 max-w-sm mb-6">Upload your master `.bib` file and your `.tex` document(s) on the left to extract a clean, minimal bibliography.</p>
+                <div class="flex gap-2 text-xs text-slate-400 bg-slate-50 px-4 py-2 rounded-lg border border-slate-100">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>All processing happens securely in your browser.</span>
+                </div>
+            </div>
+
+            <div id="results-state" class="hidden flex-col h-full gap-4">
+                
+                <!-- Main Stats Row -->
+                <div class="grid grid-cols-4 gap-3">
+                    <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center justify-center text-center">
+                        <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Total Entries</span>
+                        <span id="stat-total" class="text-2xl font-bold text-slate-800">0</span>
+                    </div>
+                    <div class="bg-emerald-50 p-3 rounded-xl shadow-sm border border-emerald-100 flex flex-col items-center justify-center text-center">
+                        <span class="text-emerald-700 text-[10px] font-bold uppercase tracking-wider mb-1">Kept</span>
+                        <span id="stat-kept" class="text-2xl font-bold text-emerald-600">0</span>
+                    </div>
+                    <div class="bg-indigo-50 p-3 rounded-xl shadow-sm border border-indigo-100 flex flex-col items-center justify-center text-center">
+                        <span class="text-indigo-700 text-[10px] font-bold uppercase tracking-wider mb-1">Merged</span>
+                        <span id="stat-merged" class="text-2xl font-bold text-indigo-600">0</span>
+                    </div>
+                    <div class="bg-rose-50 p-3 rounded-xl shadow-sm border border-rose-100 flex flex-col items-center justify-center text-center">
+                        <span class="text-rose-700 text-[10px] font-bold uppercase tracking-wider mb-1">Removed</span>
+                        <span id="stat-removed" class="text-2xl font-bold text-rose-600">0</span>
+                    </div>
+                </div>
+
+                <!-- Academic Meta Stats Row -->
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center justify-center text-center">
+                        <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Oldest Ref</span>
+                        <span id="stat-oldest" class="text-lg font-semibold text-slate-700">-</span>
+                    </div>
+                    <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center justify-center text-center">
+                        <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">Newest Ref</span>
+                        <span id="stat-newest" class="text-lg font-semibold text-slate-700">-</span>
+                    </div>
+                    <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center justify-center text-center">
+                        <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider mb-1">DOI Coverage</span>
+                        <span id="stat-doi" class="text-lg font-semibold text-slate-700">0%</span>
+                    </div>
+                </div>
+
+                <!-- Missing Tags Warning -->
+                <div id="missing-tags-alert" class="hidden bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl shadow-sm">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-amber-800">Missing Citations Detected</h3>
+                            <div class="mt-1 text-xs text-amber-700">
+                                <p>Found in TeX but missing from master .bib:</p>
+                                <ul id="missing-tags-list" class="list-disc pl-5 mt-1 font-mono space-y-0.5"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Content Area: Tabs -->
+                <div class="bg-slate-900 rounded-2xl shadow-sm border border-slate-700 overflow-hidden flex flex-col flex-grow min-h-[450px]">
+                    
+                    <!-- Tabs Header -->
+                    <div class="bg-slate-800 border-b border-slate-700 px-4 py-3 flex justify-between items-center flex-wrap gap-2">
+                        <div class="flex space-x-1">
+                            <button id="tab-bibtex" class="px-3 py-1.5 text-sm font-semibold text-white bg-slate-700 rounded-md shadow-sm transition-colors flex items-center">
+                                <svg class="w-4 h-4 mr-1.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                                new.bib
+                            </button>
+                            <button id="tab-stats" class="px-3 py-1.5 text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 bg-transparent rounded-md transition-colors flex items-center">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                Statistics
+                            </button>
+                        </div>
+                        <div id="bibtex-actions" class="flex flex-wrap space-x-2">
+                            <button id="copy-btn" class="text-slate-300 hover:text-white p-1.5 rounded-md hover:bg-slate-700 transition-colors" title="Copy to clipboard">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            </button>
+                            <button id="download-deleted-btn" class="hidden inline-flex items-center px-2.5 py-1.5 border border-slate-600 text-[11px] font-medium rounded shadow-sm text-slate-300 bg-slate-800 hover:bg-slate-700 hover:text-white transition-colors">
+                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                Deleted
+                            </button>
+                            <button id="download-tex-btn" class="hidden inline-flex items-center px-2.5 py-1.5 border border-indigo-500/30 text-[11px] font-medium rounded shadow-sm text-indigo-300 bg-indigo-900/30 hover:bg-indigo-900/50 hover:text-white transition-colors">
+                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                Updated TeX (ZIP)
+                            </button>
+                            <button id="download-btn" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-[11px] font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-500 transition-colors">
+                                <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Download Bib
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Pane: Code View -->
+                    <pre id="pane-bibtex" class="w-full flex-grow p-4 font-mono text-sm m-0 overflow-y-auto custom-scrollbar text-slate-300"><code id="output-area" class="w-full h-full block bg-transparent"></code></pre>
+                    
+                    <!-- Pane: Statistics View -->
+                    <div id="pane-stats" class="hidden w-full flex-grow p-6 bg-slate-50 overflow-y-auto custom-scrollbar text-slate-800">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Type Chart -->
+                            <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h4 class="font-bold text-slate-700 text-sm uppercase tracking-wider">Entry Types</h4>
+                                    <button id="dl-type-chart" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 border border-indigo-200 hover:bg-indigo-50 px-2 py-1 rounded transition-colors flex items-center">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> PNG
+                                    </button>
+                                </div>
+                                <div class="relative flex-grow min-h-[250px] flex justify-center items-center">
+                                    <canvas id="typeChart"></canvas>
+                                </div>
+                            </div>
+                            <!-- Year Chart -->
+                            <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h4 class="font-bold text-slate-700 text-sm uppercase tracking-wider">Publication Years</h4>
+                                    <button id="dl-year-chart" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 border border-indigo-200 hover:bg-indigo-50 px-2 py-1 rounded transition-colors flex items-center">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> PNG
+                                    </button>
+                                </div>
+                                <div class="relative flex-grow min-h-[250px] flex justify-center items-center">
+                                    <canvas id="yearChart"></canvas>
+                                </div>
+                            </div>
+                            <!-- Authors Chart -->
+                            <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h4 class="font-bold text-slate-700 text-sm uppercase tracking-wider">Top Authors</h4>
+                                    <button id="dl-author-chart" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 border border-indigo-200 hover:bg-indigo-50 px-2 py-1 rounded transition-colors flex items-center">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> PNG
+                                    </button>
+                                </div>
+                                <div class="relative flex-grow min-h-[250px] flex justify-center items-center">
+                                    <canvas id="authorChart"></canvas>
+                                </div>
+                            </div>
+                            <!-- Venues Chart -->
+                            <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h4 class="font-bold text-slate-700 text-sm uppercase tracking-wider">Top Venues / Journals</h4>
+                                    <button id="dl-venue-chart" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 border border-indigo-200 hover:bg-indigo-50 px-2 py-1 rounded transition-colors flex items-center">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> PNG
+                                    </button>
+                                </div>
+                                <div class="relative flex-grow min-h-[250px] flex justify-center items-center">
+                                    <canvas id="venueChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Logic Script -->
+    <script>
+        // State
+        let masterBibFile = null;
+        let texFiles = [];
+        let cleanBibContent = "";
+        let deletedBibContent = "";
+        let updatedTexFilesData = [];
+        
+        let typeChartInstance = null;
+        let yearChartInstance = null;
+        let authorChartInstance = null;
+        let venueChartInstance = null;
+
+        // DOM Elements
+        const bibInput = document.getElementById('bib-upload');
+        const texInput = document.getElementById('tex-upload');
+        const bibFileName = document.getElementById('bib-file-name');
+        const texFilesList = document.getElementById('tex-files-list');
+        const cleanBtn = document.getElementById('clean-btn');
+        const btnText = document.getElementById('btn-text');
+        
+        const welcomeState = document.getElementById('welcome-state');
+        const resultsState = document.getElementById('results-state');
+        
+        const statTotal = document.getElementById('stat-total');
+        const statKept = document.getElementById('stat-kept');
+        const statMerged = document.getElementById('stat-merged');
+        const statRemoved = document.getElementById('stat-removed');
+        
+        const statOldest = document.getElementById('stat-oldest');
+        const statNewest = document.getElementById('stat-newest');
+        const statDoi = document.getElementById('stat-doi');
+        
+        const missingTagsAlert = document.getElementById('missing-tags-alert');
+        const missingTagsList = document.getElementById('missing-tags-list');
+        
+        const outputArea = document.getElementById('output-area');
+        const downloadBtn = document.getElementById('download-btn');
+        const downloadDeletedBtn = document.getElementById('download-deleted-btn');
+        const downloadTexBtn = document.getElementById('download-tex-btn');
+        const copyBtn = document.getElementById('copy-btn');
+
+        // Tabs DOM
+        const tabBibtex = document.getElementById('tab-bibtex');
+        const tabStats = document.getElementById('tab-stats');
+        const paneBibtex = document.getElementById('pane-bibtex');
+        const paneStats = document.getElementById('pane-stats');
+        const bibtexActions = document.getElementById('bibtex-actions');
+
+        // Tabs Logic
+        function switchTab(tab) {
+            if (tab === 'bibtex') {
+                tabBibtex.className = "px-3 py-1.5 text-sm font-semibold text-white bg-slate-700 rounded-md shadow-sm transition-colors flex items-center";
+                tabStats.className = "px-3 py-1.5 text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 bg-transparent rounded-md transition-colors flex items-center";
+                paneBibtex.classList.remove('hidden');
+                bibtexActions.classList.remove('hidden');
+                paneStats.classList.add('hidden');
+            } else {
+                tabStats.className = "px-3 py-1.5 text-sm font-semibold text-white bg-slate-700 rounded-md shadow-sm transition-colors flex items-center";
+                tabBibtex.className = "px-3 py-1.5 text-sm font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 bg-transparent rounded-md transition-colors flex items-center";
+                paneStats.classList.remove('hidden');
+                paneBibtex.classList.add('hidden');
+                bibtexActions.classList.add('hidden');
+            }
+        }
+        tabBibtex.addEventListener('click', () => switchTab('bibtex'));
+        tabStats.addEventListener('click', () => switchTab('stats'));
+
+        // File Selection Handlers
+        bibInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                masterBibFile = e.target.files[0];
+                bibFileName.innerHTML = `<svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span class="truncate">${masterBibFile.name}</span>`;
+                bibFileName.classList.remove('hidden');
+                checkReadiness();
+            }
+        });
+
+        texInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                texFiles = Array.from(e.target.files);
+                texFilesList.innerHTML = '';
+                texFiles.forEach(file => {
+                    const el = document.createElement('div');
+                    el.className = "flex items-center truncate";
+                    el.innerHTML = `<svg class="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span class="truncate">${file.name}</span>`;
+                    texFilesList.appendChild(el);
+                });
+                texFilesList.classList.remove('hidden');
+                checkReadiness();
+            }
+        });
+
+        function checkReadiness() {
+            if (masterBibFile && texFiles.length > 0) {
+                cleanBtn.disabled = false;
+            } else {
+                cleanBtn.disabled = true;
+            }
+        }
+
+        // Action Handlers
+        cleanBtn.addEventListener('click', async () => {
+            cleanBtn.disabled = true;
+            const originalBtnHTML = cleanBtn.innerHTML;
+            cleanBtn.innerHTML = `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span id="btn-text">Processing...</span>`;
+
+            try {
+                const options = {
+                    removeBlanks: document.getElementById('opt-blanks').checked,
+                    format: document.getElementById('opt-format').checked,
+                    dedupe: document.getElementById('opt-dedupe').checked,
+                    deleted: document.getElementById('opt-deleted').checked,
+                    doi: document.getElementById('opt-doi').checked,
+                    keys: document.getElementById('opt-keys').checked
+                };
+
+                // Read all files
+                const bibText = await readFile(masterBibFile);
+                const texTextsArray = await Promise.all(texFiles.map(file => readFile(file)));
+                
+                // Map TeX content to filename for later updates
+                let texFilesContent = texFiles.map((f, i) => ({ name: f.name, content: texTextsArray[i] }));
+
+                // 1. Extract Tags from TeX
+                const usedTags = extractTagsFromTex(texTextsArray);
+
+                // 2. Process Bib File
+                const result = await processBibtexAsync(bibText, usedTags, options);
+                
+                cleanBibContent = result.cleanText;
+                deletedBibContent = result.deletedText;
+                
+                // 3. Clean up extra blank lines if requested
+                if (options.removeBlanks) {
+                    cleanBibContent = cleanBibContent.replace(/\n{3,}/g, '\n\n').trim() + '\n';
+                    deletedBibContent = deletedBibContent.replace(/\n{3,}/g, '\n\n').trim() + '\n';
+                }
+
+                // 4. Update TeX Files if keys changed OR duplicates were merged
+                updatedTexFilesData = [];
+                if ((options.keys || result.mergedCitations > 0) && Object.keys(result.keyMapping).length > 0) {
+                    updatedTexFilesData = texFilesContent.map(file => {
+                        let newContent = file.content;
+                        for (const [oldKey, newKey] of Object.entries(result.keyMapping)) {
+                            // Replace keys only matching exact word boundaries to prevent partial matches
+                            const reg = new RegExp(`\\b${escapeRegExp(oldKey)}\\b`, 'g');
+                            newContent = newContent.replace(reg, newKey);
+                        }
+                        return { name: file.name, content: newContent };
+                    });
+                }
+
+                // 5. Update UI
+                welcomeState.classList.add('hidden');
+                resultsState.classList.remove('hidden');
+                resultsState.classList.add('flex');
+                
+                // Ensure default tab
+                switchTab('bibtex');
+
+                statTotal.innerText = result.totalCitations;
+                statKept.innerText = result.keptCitations;
+                statMerged.innerText = result.mergedCitations;
+                statRemoved.innerText = result.totalCitations - result.keptCitations - result.mergedCitations;
+
+                // Handle missing tags
+                if (result.missingTags.size > 0) {
+                    missingTagsList.innerHTML = '';
+                    result.missingTags.forEach(tag => {
+                        const li = document.createElement('li');
+                        li.innerText = tag;
+                        missingTagsList.appendChild(li);
+                    });
+                    missingTagsAlert.classList.remove('hidden');
+                } else {
+                    missingTagsAlert.classList.add('hidden');
+                }
+                
+                // Buttons visibility
+                downloadDeletedBtn.classList.toggle('hidden', !(options.deleted && deletedBibContent.trim().length > 0));
+                downloadTexBtn.classList.toggle('hidden', !((options.keys || result.mergedCitations > 0) && updatedTexFilesData.length > 0));
+
+                // Colorize Output
+                outputArea.innerHTML = colorizeBibtex(cleanBibContent);
+
+                // Render Charts
+                renderCharts(result.stats, result.keptCitations);
+
+            } catch (error) {
+                console.error(error);
+                alert("An error occurred while processing the files. Check console for details.");
+            } finally {
+                cleanBtn.disabled = false;
+                cleanBtn.innerHTML = originalBtnHTML;
+            }
+        });
+
+        // Downloads and Copy 
+        copyBtn.addEventListener('click', () => {
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = cleanBibContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+            
+            const origHTML = copyBtn.innerHTML;
+            copyBtn.innerHTML = `<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+            setTimeout(() => { copyBtn.innerHTML = origHTML; }, 2000);
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            triggerDownload(cleanBibContent, 'new.bib');
+        });
+        
+        downloadDeletedBtn.addEventListener('click', () => {
+            triggerDownload(deletedBibContent, 'deleted.bib');
+        });
+        
+        downloadTexBtn.addEventListener('click', async () => {
+            if (updatedTexFilesData.length === 0) return;
+            const zip = new JSZip();
+            updatedTexFilesData.forEach(f => {
+                zip.file(f.name, f.content);
+            });
+            const content = await zip.generateAsync({type: "blob"});
+            const url = URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'updated_tex_files.zip';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // Chart Downloads
+        function downloadChart(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const destCanvas = document.createElement('canvas');
+            destCanvas.width = canvas.width;
+            destCanvas.height = canvas.height;
+            const destCtx = destCanvas.getContext('2d');
+            
+            // Draw a white background so PNG isn't transparent
+            destCtx.fillStyle = '#ffffff';
+            destCtx.fillRect(0, 0, destCanvas.width, destCanvas.height);
+            destCtx.drawImage(canvas, 0, 0);
+
+            const url = destCanvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+        }
+
+        document.getElementById('dl-type-chart').addEventListener('click', () => downloadChart('typeChart', 'bib-types-distribution.png'));
+        document.getElementById('dl-year-chart').addEventListener('click', () => downloadChart('yearChart', 'bib-years-distribution.png'));
+        document.getElementById('dl-author-chart').addEventListener('click', () => downloadChart('authorChart', 'bib-authors-distribution.png'));
+        document.getElementById('dl-venue-chart').addEventListener('click', () => downloadChart('venueChart', 'bib-venues-distribution.png'));
+
+        // --- Core Logic Functions ---
+
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.onerror = e => reject(e);
+                reader.readAsText(file);
+            });
+        }
+        
+        function triggerDownload(content, filename) {
+            if (!content) return;
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function extractTagsFromTex(texContentsArray) {
+            const tags = new Set();
+            const regex = /\\(?:[a-zA-Z]*cite[a-zA-Z]*|footcite|autocite|nocite)\s*(?:\[[^\]]*\]\s*)*\{([^}]+)\}/g;
+
+            texContentsArray.forEach(tex => {
+                const noCommentsTex = tex.replace(/(^|[^\\])%.*$/gm, '$1');
+                let match;
+                while ((match = regex.exec(noCommentsTex)) !== null) {
+                    const innerContent = match[1];
+                    const parts = innerContent.split(',');
+                    parts.forEach(p => {
+                        const cleanTag = p.trim();
+                        if (cleanTag) tags.add(cleanTag);
+                    });
+                }
+            });
+            return tags;
+        }
+
+        async function processBibtexAsync(text, usedTags, options) {
+            let totalCitations = 0;
+            let keptCitations = 0;
+            let mergedCitations = 0;
+            let cleanText = "";
+            let deletedText = "";
+            let missingTags = new Set(usedTags);
+            
+            let keyMapping = {}; 
+            let generatedKeyCounts = {};
+            
+            // Expanded stats tracking
+            let stats = { types: {}, years: {}, authors: {}, venues: {}, doiCount: 0 };
+            
+            // For duplicate tracking
+            let acceptedEntries = []; // Elements like { key, finalKey, doi, normTitle, year }
+
+            let i = 0;
+            while (i < text.length) {
+                let nextAt = text.indexOf('@', i);
+                if (nextAt === -1) {
+                    cleanText += text.slice(i); 
+                    break;
+                }
+
+                const preText = text.slice(i, nextAt);
+                cleanText += preText;
+                
+                let braceOpen = text.indexOf('{', nextAt);
+                if (braceOpen === -1) {
+                    cleanText += text.slice(nextAt);
+                    break;
+                }
+
+                let typeStr = text.slice(nextAt + 1, braceOpen).trim().toLowerCase();
+                
+                if (['string', 'preamble', 'comment'].includes(typeStr)) {
+                    const { endIdx } = extractBalanced(text, braceOpen);
+                    cleanText += text.slice(nextAt, endIdx + 1) + "\n";
+                    i = endIdx + 1;
+                    continue;
+                }
+
+                let firstComma = text.indexOf(',', braceOpen);
+                if (firstComma === -1) {
+                    const { endIdx } = extractBalanced(text, braceOpen);
+                    cleanText += text.slice(nextAt, endIdx + 1) + "\n";
+                    i = endIdx + 1;
+                    continue;
+                }
+
+                const key = text.slice(braceOpen + 1, firstComma).trim();
+                const { endIdx } = extractBalanced(text, braceOpen);
+                let rawEntry = text.slice(nextAt, endIdx + 1);
+                
+                totalCitations++;
+                
+                if (usedTags.has(key)) {
+                    
+                    // --- 1. Identify Fields for Deduplication ---
+                    let doiMatch = rawEntry.match(/doi\s*=\s*(?:\{([^}]+)\}|"([^"]+)"|([^\s,{}]+))/i);
+                    let parsedDoi = doiMatch ? (doiMatch[1] || doiMatch[2] || doiMatch[3]).replace(/https?:\/\/doi\.org\//, '').toLowerCase().trim() : null;
+
+                    let titleMatch = rawEntry.match(/title\s*=\s*(?:\{([^}]+)\}|"([^"]+)")/i);
+                    let parsedTitle = titleMatch ? (titleMatch[1] || titleMatch[2]) : "";
+                    let normTitle = parsedTitle.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+                    let yearMatch = rawEntry.match(/year\s*=\s*(?:\{(\d{4})\}|"(\d{4})"|(\d{4}))/i);
+                    let parsedYear = yearMatch ? (yearMatch[1] || yearMatch[2] || yearMatch[3]) : "";
+
+                    // --- 2. Check for Duplicates ---
+                    let isDuplicate = false;
+                    let duplicateOf = null;
+
+                    if (options.dedupe) {
+                        for (let ext of acceptedEntries) {
+                            if (parsedDoi && ext.doi && parsedDoi === ext.doi) {
+                                isDuplicate = true; duplicateOf = ext; break;
+                            }
+                            if (normTitle && ext.normTitle && normTitle === ext.normTitle && parsedYear === ext.year && parsedYear !== "") {
+                                isDuplicate = true; duplicateOf = ext; break;
+                            }
+                        }
+                    }
+
+                    if (isDuplicate) {
+                        mergedCitations++;
+                        // Map the duplicate key to the final processed key of the entry we decided to keep
+                        keyMapping[key] = duplicateOf.finalKey; 
+                        
+                        if (options.deleted) {
+                            deletedText += `% Merged duplicate of: ${duplicateOf.finalKey}\n` + rawEntry + "\n\n";
+                        }
+                        
+                        i = endIdx + 1;
+                        continue; // Skip adding to output
+                    }
+
+                    // --- 3. Process Valid Entry ---
+                    keptCitations++;
+                    missingTags.delete(key);
+                    let finalEntry = rawEntry;
+
+                    if (options.doi) {
+                        if (parsedDoi) {
+                            document.getElementById('btn-text').innerText = `Fetching DOI (${keptCitations})...`;
+                            const crossrefData = await fetchCrossrefBibtex(parsedDoi);
+                            if (crossrefData) {
+                                finalEntry = ensureKeyIntegrity(crossrefData, key);
+                                // re-extract typeStr in case crossref updated it
+                                let newTypeMatch = finalEntry.match(/^@([a-zA-Z]+)\s*\{/);
+                                if(newTypeMatch) typeStr = newTypeMatch[1].toLowerCase();
+                            }
+                        }
+                    }
+                    
+                    let finalKey = key;
+                    if (options.keys) {
+                        finalKey = generateStandardKey(finalEntry, generatedKeyCounts);
+                        if (finalKey && finalKey !== key) {
+                            keyMapping[key] = finalKey;
+                            finalEntry = finalEntry.replace(new RegExp(`^(@[a-zA-Z]+\\s*\\{\\s*)[^,]+(\\s*,)`), `$1${finalKey}$2`);
+                        }
+                    } else {
+                        // Crucial: we still need to record the mapping target correctly if duplicate checking maps to this
+                        finalKey = key; 
+                    }
+
+                    // Store identifying characteristics for future duplicate checks
+                    acceptedEntries.push({
+                        key: key,
+                        finalKey: finalKey,
+                        doi: parsedDoi,
+                        normTitle: normTitle,
+                        year: parsedYear
+                    });
+
+                    if (options.format) {
+                        finalEntry = formatBibtexIndentation(finalEntry);
+                    }
+                    
+                    // --- 4. Analytics Gathering ---
+                    stats.types[typeStr] = (stats.types[typeStr] || 0) + 1;
+                    stats.years[parsedYear || "Unknown"] = (stats.years[parsedYear || "Unknown"] || 0) + 1;
+                    
+                    if (parsedDoi) stats.doiCount++;
+
+                    // Author Gathering
+                    let authorMatch = finalEntry.match(/author\s*=\s*(?:\{([^}]+)\}|"([^"]+)")/i);
+                    if (authorMatch) {
+                        let authStr = authorMatch[1] || authorMatch[2];
+                        let authArray = authStr.split(/\s+and\s+/i);
+                        authArray.forEach(a => {
+                            let clean = a.replace(/[{}]/g, '').trim();
+                            if(clean) {
+                                // Prefer "Lastname, Firstname", if not grab last word
+                                if(clean.includes(',')) clean = clean.split(',')[0].trim();
+                                else clean = clean.split(' ').pop().trim();
+                                
+                                if(clean) stats.authors[clean] = (stats.authors[clean] || 0) + 1;
+                            }
+                        });
+                    }
+
+                    // Venue Gathering
+                    let venueMatch = finalEntry.match(/(?:journal|journaltitle|booktitle)\s*=\s*(?:\{([^}]+)\}|"([^"]+)")/i);
+                    let venueStr = venueMatch ? (venueMatch[1] || venueMatch[2]) : null;
+                    if (venueStr) {
+                        venueStr = venueStr.replace(/[{}]/g, '').trim();
+                        // Truncate overly long venue names for neat charting
+                        if(venueStr.length > 40) venueStr = venueStr.substring(0, 37) + '...';
+                        stats.venues[venueStr] = (stats.venues[venueStr] || 0) + 1;
+                    }
+
+                    cleanText += finalEntry + "\n\n";
+
+                } else {
+                    if (options.deleted) {
+                        deletedText += rawEntry + "\n\n";
+                    }
+                }
+
+                i = endIdx + 1;
+            }
+
+            return { cleanText, deletedText, totalCitations, keptCitations, mergedCitations, missingTags, keyMapping, stats };
+        }
+
+        // --- Chart Rendering ---
+        function renderCharts(stats, totalKept) {
+            if (typeChartInstance) typeChartInstance.destroy();
+            if (yearChartInstance) yearChartInstance.destroy();
+            if (authorChartInstance) authorChartInstance.destroy();
+            if (venueChartInstance) venueChartInstance.destroy();
+
+            // Populate Meta Stats (Oldest, Newest, DOI %)
+            const yearsNum = Object.keys(stats.years).filter(y => y !== "Unknown" && y !== "").map(Number);
+            if (yearsNum.length > 0) {
+                statOldest.innerText = Math.min(...yearsNum);
+                statNewest.innerText = Math.max(...yearsNum);
+            } else {
+                statOldest.innerText = "N/A";
+                statNewest.innerText = "N/A";
+            }
+
+            const doiPerc = totalKept > 0 ? Math.round((stats.doiCount / totalKept) * 100) : 0;
+            statDoi.innerText = `${doiPerc}%`;
+
+            // Chart Configuration
+            const colors = ['#6366f1', '#10b981', '#f43f5e', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#3b82f6', '#14b8a6', '#f97316'];
+
+            // 1. Entry Types Chart (Doughnut)
+            const typeLabels = Object.keys(stats.types);
+            const typeData = Object.values(stats.types);
+            const ctxType = document.getElementById('typeChart').getContext('2d');
+            
+            typeChartInstance = new Chart(ctxType, {
+                type: 'doughnut',
+                data: {
+                    labels: typeLabels.map(l => `@${l}`),
+                    datasets: [{
+                        data: typeData,
+                        backgroundColor: colors.slice(0, typeLabels.length),
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { family: 'Inter' } } } }
+                }
+            });
+
+            // 2. Publication Years Chart (Bar)
+            const yearLabels = Object.keys(stats.years).sort((a,b) => {
+                if (a === "Unknown") return 1;
+                if (b === "Unknown") return -1;
+                return parseInt(a) - parseInt(b);
+            });
+            const yearData = yearLabels.map(y => stats.years[y]);
+            const ctxYear = document.getElementById('yearChart').getContext('2d');
+            
+            yearChartInstance = new Chart(ctxYear, {
+                type: 'bar',
+                data: {
+                    labels: yearLabels,
+                    datasets: [{
+                        label: 'Publications',
+                        data: yearData,
+                        backgroundColor: '#6366f1',
+                        borderRadius: 4,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, font: { family: 'Inter' } }, grid: { color: '#f1f5f9' } },
+                        x: { ticks: { font: { family: 'Inter' } }, grid: { display: false } }
+                    }
+                }
+            });
+
+            // 3. Top Authors Chart (Horizontal Bar)
+            const topAuthors = Object.entries(stats.authors).sort((a,b) => b[1] - a[1]).slice(0, 10);
+            const authorLabels = topAuthors.map(a => a[0]);
+            const authorData = topAuthors.map(a => a[1]);
+            const ctxAuthor = document.getElementById('authorChart').getContext('2d');
+
+            authorChartInstance = new Chart(ctxAuthor, {
+                type: 'bar',
+                data: {
+                    labels: authorLabels,
+                    datasets: [{
+                        label: 'Citations',
+                        data: authorData,
+                        backgroundColor: '#10b981',
+                        borderRadius: 4,
+                        barPercentage: 0.7
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, font: { family: 'Inter' } }, grid: { color: '#f1f5f9' } },
+                        y: { ticks: { font: { family: 'Inter' } }, grid: { display: false } }
+                    }
+                }
+            });
+
+            // 4. Top Venues Chart (Bar)
+            const topVenues = Object.entries(stats.venues).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            const venueLabels = topVenues.map(v => v[0]);
+            const venueData = topVenues.map(v => v[1]);
+            const ctxVenue = document.getElementById('venueChart').getContext('2d');
+
+            venueChartInstance = new Chart(ctxVenue, {
+                type: 'bar',
+                data: {
+                    labels: venueLabels,
+                    datasets: [{
+                        label: 'Publications',
+                        data: venueData,
+                        backgroundColor: colors, // Distinct colors
+                        borderRadius: 4,
+                        barPercentage: 0.5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: function(context) {
+                                    // Make tooltip title wrap for long venue names
+                                    return context[0].label.match(/.{1,50}(\s|$)/g) || [];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1, precision: 0, font: { family: 'Inter' } }, grid: { color: '#f1f5f9' } },
+                        x: { 
+                            ticks: { 
+                                font: { family: 'Inter' },
+                                // Truncate x-axis labels if too long
+                                callback: function(value, index) {
+                                    let label = this.getLabelForValue(value);
+                                    return label.length > 15 ? label.substr(0, 15) + '...' : label;
+                                }
+                            }, 
+                            grid: { display: false } 
+                        }
+                    }
+                }
+            });
+        }
+
+        // Helper: Fetches clean BibTeX directly from Crossref's content negotiation API
+        async function fetchCrossrefBibtex(doi) {
+            try {
+                const res = await fetch(`https://api.crossref.org/works/${encodeURIComponent(doi)}/transform/application/x-bibtex?mailto=bibcleaner@example.com`, {
+                    headers: { 'Accept': 'application/x-bibtex' }
+                });
+                if (res.ok) {
+                    return await res.text();
+                }
+            } catch (e) {
+                console.warn('Failed to fetch Crossref for DOI:', doi);
+            }
+            return null;
+        }
+
+        // Helper: Ensures fetched crossref bibtex keeps the designated key
+        function ensureKeyIntegrity(newBibtex, targetKey) {
+            return newBibtex.replace(/^(@[a-zA-Z]+\s*\{\s*)[^,]+(\s*,)/, `$1${targetKey}$2`).trim();
+        }
+
+        // Helper: Generates an AuthorYearTitle citekey
+        function generateStandardKey(entryStr, keyCounts) {
+            let authorMatch = entryStr.match(/author\s*=\s*(?:\{([^}]+)\}|"([^"]+)")/i);
+            let yearMatch = entryStr.match(/year\s*=\s*(?:\{(\d{4})\}|"(\d{4})"|(\d{4}))/i);
+            let titleMatch = entryStr.match(/title\s*=\s*(?:\{([^}]+)\}|"([^"]+)")/i);
+            
+            if (!authorMatch && !titleMatch) return null; 
+            
+            let authorStr = (authorMatch ? (authorMatch[1] || authorMatch[2]) : "Unknown").split(/\s+and\s+/i)[0];
+            let lastName = authorStr.includes(',') ? authorStr.split(',')[0] : authorStr.split(' ').pop();
+            lastName = lastName.replace(/[^a-zA-Z]/g, '');
+            lastName = lastName.charAt(0).toUpperCase() + lastName.slice(1).toLowerCase();
+            
+            let yearStr = yearMatch ? (yearMatch[1] || yearMatch[2] || yearMatch[3]) : "";
+            
+            let titleStr = titleMatch ? (titleMatch[1] || titleMatch[2]) : "Title";
+            let words = titleStr.replace(/[^a-zA-Z\s]/g, '').split(/\s+/);
+            const stopWords = ['a', 'an', 'the', 'on', 'in', 'of', 'and', 'to', 'for', 'with', 'by', 'as', 'at'];
+            let sigWord = words.find(w => w.length > 2 && !stopWords.includes(w.toLowerCase())) || words[0] || "Title";
+            sigWord = sigWord.charAt(0).toUpperCase() + sigWord.slice(1).toLowerCase();
+            
+            let baseKey = `${lastName}${yearStr}${sigWord}`;
+            if (!baseKey) return null;
+
+            if (!keyCounts[baseKey]) keyCounts[baseKey] = 0;
+            let finalKey = baseKey;
+            if (keyCounts[baseKey] > 0) {
+                finalKey += String.fromCharCode(96 + keyCounts[baseKey]);
+            }
+            keyCounts[baseKey]++;
+            
+            return finalKey;
+        }
+
+        // Helper: Smart Formatter ensuring nice 2-space indentation
+        function formatBibtexIndentation(entryStr) {
+            const firstBrace = entryStr.indexOf('{');
+            const lastBrace = entryStr.lastIndexOf('}');
+            if (firstBrace === -1 || lastBrace === -1) return entryStr;
+
+            const header = entryStr.slice(0, firstBrace + 1);
+            const body = entryStr.slice(firstBrace + 1, lastBrace);
+            
+            let fields = [];
+            let current = "";
+            let depth = 0;
+            let inQuotes = false;
+            
+            for (let i = 0; i < body.length; i++) {
+                const char = body[i];
+                if (char === '{') depth++;
+                else if (char === '}') depth--;
+                else if (char === '"' && body[i-1] !== '\\') inQuotes = !inQuotes;
+                
+                if (char === ',' && depth === 0 && !inQuotes) {
+                    fields.push(current.trim());
+                    current = "";
+                } else {
+                    current += char;
+                }
+            }
+            if (current.trim()) fields.push(current.trim());
+            
+            // Re-build fields
+            let formattedBody = fields.filter(f => f.length > 0).map(f => {
+                let tidyField = f.replace(/^([a-zA-Z0-9_\-]+)\s*=\s*/, '$1 = ');
+                return '  ' + tidyField;
+            }).join(',\n');
+            
+            return header + '\n' + formattedBody + '\n}';
+        }
+
+        // Helper: Extracts balanced braces
+        function extractBalanced(text, startIdx) {
+            let depth = 0;
+            for (let i = startIdx; i < text.length; i++) {
+                if (text[i] === '{') depth++;
+                if (text[i] === '}') {
+                    depth--;
+                    if (depth === 0) {
+                        return { endIdx: i };
+                    }
+                }
+            }
+            return { endIdx: text.length - 1 };
+        }
+
+        // Helper: Custom BibTeX Syntax Highlighter
+        function colorizeBibtex(text) {
+            if (!text || text.trim() === '') return '<span class="text-slate-500">% No citations matched.</span>';
+            
+            // Escape HTML first
+            let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            // Comments
+            html = html.replace(/(%.*)$/gm, '<span class="text-slate-500 italic">$1</span>');
+            
+            // @type and {citekey,
+            html = html.replace(/^(@[a-zA-Z_]+)(\s*\{)(\s*)([^,\}]+)([,}])/gm, 
+                '<span class="text-pink-400 font-bold">$1</span>$2$3<span class="text-indigo-300 font-bold">$4</span>$5');
+            
+            // Field names
+            html = html.replace(/^(\s*)([a-zA-Z0-9_\-]+)(\s*=)/gm, 
+                '$1<span class="text-emerald-400">$2</span>$3');
+                
+            // Numbers (values)
+            html = html.replace(/(= \s*\{?)(\d+)(\}?\s*[,}])/gm, 
+                '$1<span class="text-amber-300">$2</span>$3');
+
+            return html;
+        }
+
+    </script>
+</body>
+</html>

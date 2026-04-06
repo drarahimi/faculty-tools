@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaTeX Project Flattener & Optimizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        .drag-active {
+            border-color: #3b82f6 !important;
+            background-color: #eff6ff !important;
+        }
+        /* Custom scrollbar for console */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col items-center py-12 px-4">
+
+    <div class="max-w-3xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+        
+        <!-- Header -->
+        <div class="bg-blue-600 p-6 text-white text-center">
+            <h1 class="text-3xl font-bold flex items-center justify-center gap-2 mb-2">
+                <i class="ph ph-file-zip text-4xl"></i>
+                LaTeX Project Flattener
+            </h1>
+            <p class="text-blue-100 text-sm">Upload a zipped LaTeX project. We'll inline inputs, flatten directory structures, and remove unused files entirely in your browser.</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="p-8">
+            
+            <!-- Drag & Drop Zone -->
+            <div id="dropzone" class="border-4 border-dashed border-gray-300 rounded-xl p-10 text-center cursor-pointer transition-colors duration-200 hover:border-blue-400 hover:bg-blue-50 relative">
+                <input type="file" id="fileInput" accept=".zip" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                <i class="ph ph-upload-simple text-5xl text-gray-400 mb-4 inline-block"></i>
+                <h3 class="text-xl font-semibold text-gray-700 mb-1">Click or Drag & Drop</h3>
+                <p class="text-gray-500">Upload your LaTeX .zip file here</p>
+            </div>
+
+            <!-- Console / Logs -->
+            <div class="mt-8">
+                <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2 flex justify-between items-center">
+                    Processing Log
+                    <span id="stats" class="text-xs text-blue-600 font-medium hidden">Saved Space: <span id="savedSpace">0%</span></span>
+                </h4>
+                <div id="console" class="bg-gray-900 text-gray-300 font-mono text-sm p-4 rounded-xl h-64 overflow-y-auto shadow-inner leading-relaxed">
+                    <div class="text-gray-500 italic">Waiting for a file...</div>
+                </div>
+            </div>
+
+            <!-- Download Section -->
+            <div id="downloadContainer" class="mt-8 text-center hidden transition-all duration-300 transform scale-95 opacity-0">
+                <a id="downloadBtn" href="#" class="inline-flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-bold text-lg shadow-lg hover:shadow-xl transition-all">
+                    <i class="ph ph-download-simple text-2xl"></i>
+                    Download Flattened Project
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const consoleEl = document.getElementById('console');
+        const downloadContainer = document.getElementById('downloadContainer');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const statsEl = document.getElementById('stats');
+        const savedSpaceEl = document.getElementById('savedSpace');
+
+        // UI Event Listeners
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('drag-active');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('drag-active');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('drag-active');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // Logger Helper
+        function clearLog() {
+            consoleEl.innerHTML = '';
+        }
+
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            let color = 'text-gray-300';
+            let icon = '<span class="text-blue-400 mr-2">›</span>';
+            
+            if (type === 'success') {
+                color = 'text-green-400';
+                icon = '<span class="text-green-500 mr-2">✓</span>';
+            } else if (type === 'warning') {
+                color = 'text-yellow-400';
+                icon = '<span class="text-yellow-500 mr-2">⚠</span>';
+            } else if (type === 'error') {
+                color = 'text-red-400 font-bold';
+                icon = '<span class="text-red-500 mr-2">✗</span>';
+            }
+
+            div.className = `mb-1 ${color} flex items-start`;
+            div.innerHTML = `${icon}<span class="flex-1 break-all">${message}</span>`;
+            consoleEl.appendChild(div);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        // Path Utils
+        function normalizePath(path) {
+            const parts = path.split('/');
+            const result = [];
+            for (let part of parts) {
+                if (part === '' || part === '.') continue;
+                if (part === '..') result.pop();
+                else result.push(part);
+            }
+            return result.join('/');
+        }
+
+        async function resolvePath(zip, baseDir, mainBaseDir, reqPath, extensions) {
+            reqPath = reqPath.replace(/^\/+/, ''); // remove leading slashes
+            const dirsToTry = [baseDir];
+            if (baseDir !== mainBaseDir) dirsToTry.push(mainBaseDir);
+            dirsToTry.push(''); // fallback to root
+
+            for (let dir of dirsToTry) {
+                for (let ext of extensions) {
+                    let fullPath = normalizePath(dir + reqPath + ext);
+                    if (zip.file(fullPath)) return fullPath;
+                }
+            }
+            return null;
+        }
+
+        function getUniqueAsset(fullPath, usedAssetsMap) {
+            if (usedAssetsMap.has(fullPath)) return usedAssetsMap.get(fullPath);
+
+            let baseName = fullPath.split('/').pop();
+            let uniqueName = baseName;
+            let counter = 1;
+            let existingNames = new Set(usedAssetsMap.values());
+
+            while (existingNames.has(uniqueName)) {
+                let parts = baseName.split('.');
+                let ext = parts.length > 1 ? '.' + parts.pop() : '';
+                let name = parts.join('.');
+                uniqueName = `${name}_${counter}${ext}`;
+                counter++;
+            }
+
+            usedAssetsMap.set(fullPath, uniqueName);
+            return uniqueName;
+        }
+
+        // Core processing function
+        async function processTex(zip, filePath, mainBaseDir, usedAssets, visited, isSubfile = false) {
+            visited.add(filePath);
+            let content = await zip.file(filePath).async("string");
+            
+            // If it's a subfile, extract only the body to avoid nested preambles
+            if (isSubfile) {
+                const bodyMatch = content.match(/\\begin\{document\}([\s\S]*?)\\end\{document\}/);
+                if (bodyMatch) {
+                    content = bodyMatch[1];
+                }
+            }
+
+            let baseDir = filePath.substring(0, filePath.lastIndexOf('/') + 1);
+
+            // Comprehensive Regex with named capture groups. 
+            // Note: Comment regex captures the whole line from % onwards.
+            const rxCombined = /(?<comment>(?<!\\)%.*)|\\(?<cmdInp>input|include|subfile)\s*\{(?<pathInp>[^}]+)\}|\\includegraphics\s*(?<optGrp>\[[^\]]*\])?\s*\{(?<pathGrp>[^}]+)\}|\\(?<cmdBib>bibliography|addbibresource)\s*\{(?<pathBib>[^}]+)\}|\\usepackage\s*(?<optPkg>\[[^\]]*\])?\s*\{(?<pathPkg>[^}]+)\}|\\documentclass\s*(?<optCls>\[[^\]]*\])?\s*\{(?<pathCls>[^}]+)\}|\\bibliographystyle\s*\{(?<pathBst>[^}]+)\}/g;
+
+            let matches = [...content.matchAll(rxCombined)];
+            let result = "";
+            let lastIndex = 0;
+
+            for (let match of matches) {
+                result += content.substring(lastIndex, match.index);
+                lastIndex = match.index + match[0].length;
+
+                // 1. Comments
+                if (match.groups.comment !== undefined) {
+                    result += match[0]; // keep comment untouched
+                    continue;
+                }
+
+                // 2. Input/Include/Subfile
+                if (match.groups.cmdInp) {
+                    let resolved = await resolvePath(zip, baseDir, mainBaseDir, match.groups.pathInp, ['.tex', '']);
+                    if (resolved) {
+                        if (visited.has(resolved)) {
+                            log(`Warning: Circular dependency avoided for ${match.groups.pathInp}`, 'warning');
+                            result += `% circular dependency avoided: ${match.groups.pathInp}`;
+                        } else {
+                            log(`Inlining ${resolved}...`, 'info');
+                            let inlineContent = await processTex(zip, resolved, mainBaseDir, usedAssets, visited, match.groups.cmdInp === 'subfile');
+                            let prefix = match.groups.cmdInp === 'include' ? '\\clearpage\n' : '';
+                            result += `${prefix}% --- begin ${match.groups.pathInp} ---\n${inlineContent}\n% --- end ${match.groups.pathInp} ---`;
+                        }
+                    } else {
+                        log(`Warning: Could not resolve input ${match.groups.pathInp}`, 'warning');
+                        result += match[0];
+                    }
+                }
+                // 3. Includes Graphics
+                else if (match.groups.pathGrp) {
+                    let resolved = await resolvePath(zip, baseDir, mainBaseDir, match.groups.pathGrp, ['.pdf', '.png', '.jpg', '.jpeg', '.eps', '.tikz', '']);
+                    if (resolved) {
+                        let newName = getUniqueAsset(resolved, usedAssets);
+                        result += `\\includegraphics${match.groups.optGrp || ''}{${newName}}`;
+                        log(`Kept asset: ${resolved} → ${newName}`, 'success');
+                    } else {
+                        log(`Warning: Could not resolve graphic ${match.groups.pathGrp}`, 'warning');
+                        result += match[0];
+                    }
+                }
+                // 4. Bibliography
+                else if (match.groups.pathBib) {
+                    let bibs = match.groups.pathBib.split(',').map(s => s.trim());
+                    let newBibs = [];
+                    for (let bib of bibs) {
+                        let resolved = await resolvePath(zip, baseDir, mainBaseDir, bib, ['.bib', '']);
+                        if (resolved) {
+                            let newName = getUniqueAsset(resolved, usedAssets);
+                            newBibs.push(newName.replace(/\.bib$/, ''));
+                            log(`Kept bibliography: ${resolved}`, 'success');
+                        } else {
+                            newBibs.push(bib); // keep original if external
+                        }
+                    }
+                    result += `\\${match.groups.cmdBib}{${newBibs.join(',')}}`;
+                }
+                // 5. Packages (.sty files)
+                else if (match.groups.pathPkg) {
+                    let pkgs = match.groups.pathPkg.split(',').map(s => s.trim());
+                    let newCmds = [];
+                    for (let pkg of pkgs) {
+                        let resolved = await resolvePath(zip, baseDir, mainBaseDir, pkg, ['.sty']);
+                        if (resolved) {
+                            let newName = getUniqueAsset(resolved, usedAssets);
+                            newCmds.push(`\\usepackage${match.groups.optPkg || ''}{${newName.replace(/\.sty$/, '')}}`);
+                            log(`Kept local package: ${resolved}`, 'success');
+                        } else {
+                            newCmds.push(`\\usepackage${match.groups.optPkg || ''}{${pkg}}`);
+                        }
+                    }
+                    result += newCmds.join('\n');
+                }
+                // 6. Document Class (.cls files)
+                else if (match.groups.pathCls) {
+                    let resolved = await resolvePath(zip, baseDir, mainBaseDir, match.groups.pathCls, ['.cls']);
+                    if (resolved) {
+                        let newName = getUniqueAsset(resolved, usedAssets);
+                        result += `\\documentclass${match.groups.optCls || ''}{${newName.replace(/\.cls$/, '')}}`;
+                        log(`Kept local class: ${resolved}`, 'success');
+                    } else {
+                        result += match[0];
+                    }
+                }
+                // 7. Bibliography Style (.bst files)
+                else if (match.groups.pathBst) {
+                    let resolved = await resolvePath(zip, baseDir, mainBaseDir, match.groups.pathBst, ['.bst']);
+                    if (resolved) {
+                        let newName = getUniqueAsset(resolved, usedAssets);
+                        result += `\\bibliographystyle{${newName.replace(/\.bst$/, '')}}`;
+                        log(`Kept local BST: ${resolved}`, 'success');
+                    } else {
+                        result += match[0];
+                    }
+                }
+            }
+            
+            result += content.substring(lastIndex);
+            return result;
+        }
+
+        // Main Handler
+        async function handleFile(file) {
+            clearLog();
+            downloadContainer.classList.add('hidden');
+            downloadContainer.classList.remove('scale-100', 'opacity-100');
+            statsEl.classList.add('hidden');
+
+            const originalSize = file.size;
+
+            try {
+                log(`Loading ${file.name} (${(originalSize / 1024).toFixed(1)} KB)...`, 'info');
+                const zip = await JSZip.loadAsync(file);
+                const allFiles = Object.keys(zip.files).filter(f => !zip.files[f].dir);
+
+                // Find main.tex
+                let mainTexPath = null;
+                let texFiles = allFiles.filter(f => f.endsWith('.tex'));
+                
+                log(`Scanning ${texFiles.length} TeX files to find root document...`);
+                for (let f of texFiles) {
+                    let content = await zip.file(f).async("string");
+                    if (content.includes('\\documentclass')) {
+                        if (!mainTexPath) mainTexPath = f;
+                        else if (f.toLowerCase().includes('main') || f.toLowerCase().includes('paper')) {
+                            mainTexPath = f; 
+                        }
+                    }
+                }
+
+                if (!mainTexPath) {
+                    throw new Error("Could not find a .tex file containing \\documentclass.");
+                }
+
+                log(`Root document identified: ${mainTexPath}`, 'success');
+                const mainBaseDir = mainTexPath.substring(0, mainTexPath.lastIndexOf('/') + 1);
+
+                const usedAssets = new Map();
+                const visited = new Set();
+
+                log('Tracing dependencies and flattening structure...', 'info');
+                const flattenedTex = await processTex(zip, mainTexPath, mainBaseDir, usedAssets, visited);
+
+                log('Generating optimized ZIP archive...', 'info');
+                const newZip = new JSZip();
+                
+                // Add the flattened single TeX file
+                newZip.file("main.tex", flattenedTex);
+
+                // Copy over all resolved and renamed assets
+                for (let [originalPath, newName] of usedAssets) {
+                    let blob = await zip.file(originalPath).async("blob");
+                    newZip.file(newName, blob);
+                }
+
+                const newBlob = await newZip.generateAsync({type:"blob"});
+                const newSize = newBlob.size;
+                
+                // Calculate reduction
+                let diffStr = "";
+                if (newSize < originalSize) {
+                    const reduction = (((originalSize - newSize) / originalSize) * 100).toFixed(1);
+                    diffStr = `Reduced by ${reduction}%!`;
+                    savedSpaceEl.innerText = diffStr;
+                    statsEl.classList.remove('hidden');
+                }
+
+                log(`Optimization complete! New file size: ${(newSize / 1024).toFixed(1)} KB`, 'success');
+
+                const url = URL.createObjectURL(newBlob);
+                downloadBtn.href = url;
+                downloadBtn.download = `flat_${file.name}`;
+                
+                // Show UI
+                downloadContainer.classList.remove('hidden');
+                setTimeout(() => {
+                    downloadContainer.classList.add('scale-100', 'opacity-100');
+                }, 50);
+
+            } catch (err) {
+                log(`Error: ${err.message}`, 'error');
+                console.error(err);
+            }
+        }
+    </script>
+</body>
+</html>
