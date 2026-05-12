@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bobblehead State Space Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Nunito', sans-serif;
+            background-color: #f0fdf4;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+        .ui-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 16px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            width: 90%;
+            max-width: 700px;
+            backdrop-filter: blur(10px);
+            border: 2px solid #e2e8f0;
+        }
+        h1, h2, h3 { font-family: 'Fredoka One', cursive; color: #334155; }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        input[type=range] {
+            flex-grow: 1;
+            accent-color: #3b82f6;
+        }
+        .btn-poke {
+            transition: all 0.2s;
+            font-family: 'Fredoka One', cursive;
+            letter-spacing: 1px;
+        }
+        .btn-poke:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+        .btn-poke:active {
+            transform: translateY(1px);
+        }
+        .concept-badge {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: #e2e8f0;
+            color: #475569;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <div class="ui-panel">
+        <div class="text-center mb-2">
+            <h1 class="text-xl text-slate-800">The Bobblehead Dog</h1>
+            <p class="text-slate-500 text-xs">Learn State Space! Pokes = Excitation, Dances = Eigenvectors, Sleepiness = Eigenvalues</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Pokes (Excitation) -->
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <h3 class="text-base font-bold mb-2 flex items-center text-slate-700">
+                    1. The Pokes <span class="concept-badge">Excitation</span>
+                </h3>
+                <div class="flex flex-col gap-2">
+                    <button id="btnNose" class="btn-poke bg-blue-500 text-white py-2 px-3 rounded-xl hover:bg-blue-600 flex justify-between items-center text-sm">
+                        <span>👉 Poke Nose</span>
+                        <span class="text-xs bg-blue-700 bg-opacity-30 px-2 py-1 rounded">Pure "Yes"</span>
+                    </button>
+                    <button id="btnEar" class="btn-poke bg-emerald-500 text-white py-2 px-3 rounded-xl hover:bg-emerald-600 flex justify-between items-center text-sm">
+                        <span>👉 Flick Ear</span>
+                        <span class="text-xs bg-emerald-700 bg-opacity-30 px-2 py-1 rounded">Pure "No"</span>
+                    </button>
+                    <button id="btnCheek" class="btn-poke bg-purple-500 text-white py-2 px-3 rounded-xl hover:bg-purple-600 flex justify-between items-center text-sm">
+                        <span>👉 Poke Cheek</span>
+                        <span class="text-xs bg-purple-700 bg-opacity-30 px-2 py-1 rounded">Mixed!</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sleepiness (Eigenvalues) -->
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <h3 class="text-base font-bold mb-2 flex items-center text-slate-700">
+                    2. The Sleepiness <span class="concept-badge">Eigenvalues</span>
+                </h3>
+                
+                <div class="mb-2">
+                    <label class="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                        <span>"Yes" Sleepiness</span>
+                        <span id="valPitch" class="text-blue-600">Normal</span>
+                    </label>
+                    <div class="slider-container mb-0">
+                        <span class="text-lg">☕</span>
+                        <input type="range" id="sliderPitch" min="0.2" max="6.0" step="0.1" value="2.0">
+                        <span class="text-lg">😴</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                        <span>"No" Sleepiness</span>
+                        <span id="valYaw" class="text-emerald-600">Normal</span>
+                    </label>
+                    <div class="slider-container mb-0">
+                        <span class="text-lg">☕</span>
+                        <input type="range" id="sliderYaw" min="0.2" max="6.0" step="0.1" value="1.0">
+                        <span class="text-lg">😴</span>
+                    </div>
+                </div>
+                
+                <div class="mt-2 text-[10px] text-slate-500 italic text-center leading-tight">
+                    High sleepiness = stable negative eigenvalue. Low sleepiness = eigenvalue closer to zero.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            // --- THREE.JS SETUP ---
+            const container = document.getElementById('canvas-container');
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color('#f0fdf4');
+            
+            // Camera
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+            // Moved camera slightly lower and aimed it towards the base to shift the dog UP on the screen
+            camera.position.set(0, 4, 13);
+            camera.lookAt(0, 0.5, 0);
+
+            // Renderer
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 10, 5);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+
+            // --- BUILD THE BOBBLEHEAD ---
+            // Materials
+            const matBrown = new THREE.MeshLambertMaterial({ color: '#8B4513' });
+            const matLightBrown = new THREE.MeshLambertMaterial({ color: '#D2B48C' });
+            const matDarkBrown = new THREE.MeshLambertMaterial({ color: '#3E1F00' });
+            const matBlack = new THREE.MeshLambertMaterial({ color: '#000000' });
+            const matBase = new THREE.MeshLambertMaterial({ color: '#3b82f6' });
+            const matSpring = new THREE.MeshLambertMaterial({ color: '#94a3b8' });
+
+            // 1. Base
+            const baseGeo = new THREE.CylinderGeometry(2, 2.5, 0.5, 32);
+            const base = new THREE.Mesh(baseGeo, matBase);
+            base.position.y = 0.25;
+            base.castShadow = true;
+            base.receiveShadow = true;
+            scene.add(base);
+
+            // 2. Spring (Neck)
+            const springGeo = new THREE.CylinderGeometry(0.2, 0.2, 2, 16);
+            const spring = new THREE.Mesh(springGeo, matSpring);
+            spring.position.y = 1.5;
+            spring.castShadow = true;
+            scene.add(spring);
+
+            // 3. Head Pivot Group (This is what rotates)
+            const headPivot = new THREE.Group();
+            headPivot.position.y = 2.5; // Top of the spring
+            scene.add(headPivot);
+
+            // 4. Constructing the Dog Head inside the Pivot
+            const headGroup = new THREE.Group();
+            headGroup.position.y = 1.0; // Offset up so it pivots near the chin
+
+            // Main Head Box
+            const headGeo = new THREE.BoxGeometry(2.2, 2, 2.2);
+            const head = new THREE.Mesh(headGeo, matBrown);
+            head.castShadow = true;
+            headGroup.add(head);
+
+            // Snout
+            const snoutGeo = new THREE.BoxGeometry(1.2, 1, 1);
+            const snout = new THREE.Mesh(snoutGeo, matLightBrown);
+            snout.position.set(0, -0.3, 1.3);
+            snout.castShadow = true;
+            headGroup.add(snout);
+
+            // Nose
+            const noseGeo = new THREE.SphereGeometry(0.25, 16, 16);
+            const nose = new THREE.Mesh(noseGeo, matBlack);
+            nose.position.set(0, 0.2, 0.5);
+            snout.add(nose);
+
+            // Eyes
+            const eyeGeo = new THREE.SphereGeometry(0.15, 16, 16);
+            const eyeL = new THREE.Mesh(eyeGeo, matBlack);
+            eyeL.position.set(-0.5, 0.3, 1.1);
+            headGroup.add(eyeL);
+            
+            const eyeR = new THREE.Mesh(eyeGeo, matBlack);
+            eyeR.position.set(0.5, 0.3, 1.1);
+            headGroup.add(eyeR);
+
+            // Ears (Floppy)
+            const earGeo = new THREE.BoxGeometry(0.4, 1.5, 1);
+            const earL = new THREE.Mesh(earGeo, matDarkBrown);
+            earL.position.set(-1.2, 0.2, 0);
+            // Angle ears slightly
+            earL.rotation.z = 0.2;
+            headGroup.add(earL);
+
+            const earR = new THREE.Mesh(earGeo, matDarkBrown);
+            earR.position.set(1.2, 0.2, 0);
+            earR.rotation.z = -0.2;
+            headGroup.add(earR);
+
+            // Add assembled head to the pivot
+            headPivot.add(headGroup);
+
+            // --- PHYSICS ENGINE (State Space System) ---
+            // Mode 1: Pitch (Nodding Yes) -> X axis rotation
+            // Mode 2: Yaw (Shaking No) -> Y axis rotation
+            
+            let state = {
+                pitch: 0,       // theta X
+                pitchVel: 0,    // omega X
+                yaw: 0,         // theta Y
+                yawVel: 0       // omega Y
+            };
+
+            const physics = {
+                stiffness: 40,  // Spring constant 'k' (determines frequency)
+                pitchDamping: 2.0, // Initial "Sleepiness" for Yes
+                yawDamping: 1.0,   // Initial "Sleepiness" for No
+                dt: 0.016       // approx 60fps
+            };
+
+            // --- INTERACTION LOGIC ---
+
+            // Excitation (Pokes)
+            document.getElementById('btnNose').addEventListener('click', () => {
+                // Pure Pitch (Mode 1 Eigenvector)
+                state.pitchVel += 8; 
+            });
+
+            document.getElementById('btnEar').addEventListener('click', () => {
+                // Pure Yaw (Mode 2 Eigenvector)
+                state.yawVel += 8; 
+            });
+
+            document.getElementById('btnCheek').addEventListener('click', () => {
+                // Mixed Excitation (Combination of Modes)
+                state.pitchVel += 6;
+                state.yawVel -= 6; 
+            });
+
+            // Eigenvalues (Sleepiness/Damping)
+            const sliderPitch = document.getElementById('sliderPitch');
+            const valPitch = document.getElementById('valPitch');
+            sliderPitch.addEventListener('input', (e) => {
+                physics.pitchDamping = parseFloat(e.target.value);
+                updateLabels();
+            });
+
+            const sliderYaw = document.getElementById('sliderYaw');
+            const valYaw = document.getElementById('valYaw');
+            sliderYaw.addEventListener('input', (e) => {
+                physics.yawDamping = parseFloat(e.target.value);
+                updateLabels();
+            });
+
+            function updateLabels() {
+                const getLabel = (val) => {
+                    if(val < 1.0) return "Very Awake (Lots of Wobble)";
+                    if(val < 3.0) return "Normal";
+                    if(val < 5.0) return "Sleepy (Stops Fast)";
+                    return "Exhausted (Stops instantly)";
+                };
+                valPitch.innerText = getLabel(physics.pitchDamping);
+                valYaw.innerText = getLabel(physics.yawDamping);
+            }
+            updateLabels();
+
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            // Mouse interaction (camera angle)
+            let isDragging = false;
+            let previousMousePosition = { x: 0, y: 0 };
+            
+            renderer.domElement.addEventListener('mousedown', () => isDragging = true);
+            renderer.domElement.addEventListener('mouseup', () => isDragging = false);
+            renderer.domElement.addEventListener('mousemove', (e) => {
+                if(isDragging) {
+                    const deltaX = e.offsetX - previousMousePosition.x;
+                    headPivot.parent.rotation.y += deltaX * 0.01; // rotate entire scene slightly
+                }
+                previousMousePosition = { x: e.offsetX, y: e.offsetY };
+            });
+
+            // --- ANIMATION LOOP ---
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // 1. Calculate Acceleration (a = -k*x - c*v)
+                const pitchAccel = (-physics.stiffness * state.pitch) - (physics.pitchDamping * state.pitchVel);
+                const yawAccel = (-physics.stiffness * state.yaw) - (physics.yawDamping * state.yawVel);
+
+                // 2. Integrate Velocity (v = v + a*dt)
+                state.pitchVel += pitchAccel * physics.dt;
+                state.yawVel += yawAccel * physics.dt;
+
+                // 3. Integrate Position (x = x + v*dt)
+                state.pitch += state.pitchVel * physics.dt;
+                state.yaw += state.yawVel * physics.dt;
+
+                // 4. Apply to 3D Model
+                headPivot.rotation.x = state.pitch;
+                headPivot.rotation.y = state.yaw;
+
+                // Add slight visual spring bending effect based on pitch/yaw
+                spring.rotation.x = state.pitch * 0.2;
+                spring.rotation.z = state.yaw * 0.2;
+
+                renderer.render(scene, camera);
+            }
+
+            // Start the loop!
+            animate();
+        };
+    </script>
+</body>
+</html>
