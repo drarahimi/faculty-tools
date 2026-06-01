@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compile Conference Proceedings</title>
+  
+  <!-- Tailwind CSS for styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'ct-darkblue': '#0f172a',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 p-4 md:p-8 text-slate-900 font-sans min-h-screen">
+
+  <div id="proceedings-compiler-page" class="space-y-8 max-w-7xl mx-auto">
+    <section class="rounded-2xl bg-white px-8 py-10 text-center shadow-sm border border-slate-200">
+      <div class="mx-auto max-w-4xl">
+        <p class="text-sm font-semibold uppercase tracking-[0.25em] text-blue-600">Proceedings Utility</p>
+        <h2 class="mt-3 text-4xl font-bold leading-tight text-ct-darkblue md:text-5xl">Compile Conference Proceedings</h2>
+        <p class="mt-4 max-w-3xl text-base leading-7 text-gray-700 md:mx-auto md:text-lg">
+          Upload or drag in accepted-paper PDFs to generate one proceedings file with a conference cover page,
+          a contents list built from the filenames, and optional password protection on export.
+        </p>
+      </div>
+    </section>
+
+    <section class="grid gap-6 lg:grid-cols-[1.35fr_0.95fr]">
+      <div class="space-y-6">
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 class="text-2xl font-bold text-ct-darkblue">Paper Uploads</h3>
+              <p class="mt-2 text-sm leading-6 text-gray-600">
+                Drop multiple PDF files here or browse from your device. The list below controls the proceedings order.
+              </p>
+            </div>
+            <button id="proceedings-browse-btn" type="button" class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-blue-700">
+              Select PDFs
+            </button>
+          </div>
+
+          <input id="proceedings-file-input" type="file" class="hidden" accept="application/pdf,.pdf" multiple>
+
+          <div id="proceedings-dropzone" class="proceedings-dropzone mt-6 rounded-[1.75rem] border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-12 text-center transition-colors hover:border-blue-400 hover:bg-blue-50/50 cursor-pointer">
+            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
+              <i class="fa-solid fa-file-arrow-up text-2xl" aria-hidden="true"></i>
+            </div>
+            <p class="mt-4 text-lg font-semibold text-slate-800">Drop PDF files here</p>
+            <p class="mt-2 text-sm text-gray-500">Multiple files supported. Non-PDF files are ignored.</p>
+          </div>
+        </div>
+
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 class="text-2xl font-bold text-ct-darkblue">Proceedings Order</h3>
+              <p class="mt-2 text-sm text-gray-600">Move papers up or down before generating the compiled PDF.</p>
+            </div>
+            <div id="proceedings-summary" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">
+              0 files queued
+            </div>
+          </div>
+
+          <div id="proceedings-empty-state" class="mt-6 rounded-2xl border border-dashed border-slate-300 px-6 py-10 text-center text-gray-500 bg-slate-50">
+            No PDFs added yet.
+          </div>
+
+          <ul id="proceedings-file-list" class="mt-6 space-y-4"></ul>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 class="text-2xl font-bold text-ct-darkblue">Cover & Export Settings</h3>
+          <div class="mt-6 space-y-5">
+            <label class="block">
+              <span class="mb-2 block text-sm font-semibold text-slate-700">Proceedings Title</span>
+              <input id="proceedings-title" type="text" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+            </label>
+
+            <label class="block">
+              <span class="mb-2 block text-sm font-semibold text-slate-700">Cover Subtitle</span>
+              <input id="proceedings-subtitle" type="text" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+            </label>
+
+            <label class="block">
+              <span class="mb-2 block text-sm font-semibold text-slate-700">Output Filename</span>
+              <input id="proceedings-output-name" type="text" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="icphm-proceedings.pdf">
+            </label>
+
+            <label class="block">
+              <span class="mb-2 block text-sm font-semibold text-slate-700">Optional PDF Password</span>
+              <input id="proceedings-password" type="password" class="w-full rounded-2xl border border-slate-300 px-4 py-3 text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="Leave blank for no password">
+              <span class="mt-2 block text-xs leading-5 text-gray-500">If provided, the exported PDF will require this password to open.</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 class="text-2xl font-bold text-ct-darkblue">Generate</h3>
+          <p class="mt-3 text-sm leading-6 text-gray-600">
+            The compilation runs locally in your browser. Uploaded PDFs are flattened into the generated proceedings file for broad browser compatibility.
+          </p>
+
+          <button id="proceedings-generate-btn" type="button" class="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-6 py-4 text-base font-semibold text-white shadow-sm transition-colors duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500">
+            Generate Proceedings PDF
+          </button>
+
+          <div class="mt-5 overflow-hidden rounded-full bg-slate-200">
+            <div id="proceedings-progress-bar" class="h-3 w-0 rounded-full bg-blue-600 transition-all duration-300"></div>
+          </div>
+          <p id="proceedings-progress-text" class="mt-3 text-sm text-gray-600 font-medium">Waiting for files.</p>
+
+          <div id="proceedings-status" class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 transition-colors">
+            Add papers to begin.
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const ProceedingsCompilerPage = (() => {
+      const state = {
+        files: [],
+        nextId: 1,
+        dependenciesPromise: null,
+        conference: null,
+        isGenerating: false,
+      };
+
+      const pdfJsUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      const pdfJsWorkerUrl = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const jsPdfUrl = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      const tocEntriesPerPage = 24;
+      const pageMargin = 40;
+      let elements = null;
+
+      function loadScript(url) {
+        return new Promise((resolve, reject) => {
+          const existing = document.querySelector(`script[src="${url}"]`);
+          if (existing) {
+            if (existing.dataset.loaded === 'true') {
+              resolve();
+              return;
+            }
+            existing.addEventListener('load', () => resolve(), { once: true });
+            existing.addEventListener('error', () => reject(new Error('Failed to load ' + url)), { once: true });
+            return;
+          }
+
+          const script = document.createElement('script');
+          script.src = url;
+          script.async = true;
+          script.onload = () => {
+            script.dataset.loaded = 'true';
+            resolve();
+          };
+          script.onerror = () => reject(new Error('Failed to load ' + url));
+          document.head.appendChild(script);
+        });
+      }
+
+      async function ensureDependencies() {
+        if (!state.dependenciesPromise) {
+          state.dependenciesPromise = (async () => {
+            await loadScript(pdfJsUrl);
+            await loadScript(jsPdfUrl);
+
+            if (!window.pdfjsLib) throw new Error('pdf.js failed to load.');
+            if (!window.jspdf || !window.jspdf.jsPDF) throw new Error('jsPDF failed to load.');
+
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = pdfJsWorkerUrl;
+
+            return {
+              pdfjsLib: window.pdfjsLib,
+              jsPDF: window.jspdf.jsPDF,
+            };
+          })();
+        }
+        return state.dependenciesPromise;
+      }
+
+      function slugify(value) {
+        return value
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .replace(/-{2,}/g, '-');
+      }
+
+      function escapeHtml(value) {
+        return value
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      function getDisplayName(fileName) {
+        return fileName
+          .replace(/\.pdf$/i, '')
+          .replace(/[_-]+/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+
+      function humanFileSize(size) {
+        if (!Number.isFinite(size) || size <= 0) return '0 KB';
+        const units = ['B', 'KB', 'MB', 'GB'];
+        let value = size;
+        let index = 0;
+        while (value >= 1024 && index < units.length - 1) {
+          value /= 1024;
+          index += 1;
+        }
+        const precision = value >= 10 || index === 0 ? 0 : 1;
+        return `${value.toFixed(precision)} ${units[index]}`;
+      }
+
+      function setStatus(message, tone = 'info') {
+        if (!elements) return;
+        elements.status.textContent = message;
+        elements.status.dataset.tone = tone;
+        elements.status.classList.remove(
+          'border-slate-200', 'bg-slate-50', 'text-slate-700',
+          'border-red-200', 'bg-red-50', 'text-red-700',
+          'border-emerald-200', 'bg-emerald-50', 'text-emerald-700'
+        );
+
+        if (tone === 'error') {
+          elements.status.classList.add('border-red-200', 'bg-red-50', 'text-red-700');
+        } else if (tone === 'success') {
+          elements.status.classList.add('border-emerald-200', 'bg-emerald-50', 'text-emerald-700');
+        } else {
+          elements.status.classList.add('border-slate-200', 'bg-slate-50', 'text-slate-700');
+        }
+      }
+
+      function updateProgress(current, total, message) {
+        const safeTotal = total > 0 ? total : 1;
+        const percent = Math.max(0, Math.min(100, Math.round((current / safeTotal) * 100)));
+        elements.progressBar.style.width = `${percent}%`;
+        elements.progressText.textContent = message || `${percent}% complete`;
+      }
+
+      async function readPdfMetadata(item) {
+        const { pdfjsLib } = await ensureDependencies();
+        const bytes = await item.file.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({ data: bytes });
+
+        try {
+          const pdf = await loadingTask.promise;
+          item.pageCount = pdf.numPages;
+          item.error = null;
+          if (typeof pdf.destroy === 'function') {
+            pdf.destroy();
+          }
+        } catch (error) {
+          console.error("PDF Read Error:", error);
+          item.pageCount = null;
+          // ENHANCEMENT: Expose the raw error message to help identify password/encryption issues
+          item.error = error.message || 'Could not read this PDF. It may be encrypted or corrupted.';
+        }
+      }
+
+      async function addFiles(fileList) {
+        const candidates = Array.from(fileList || []);
+        if (!candidates.length) return;
+
+        const added = [];
+        candidates.forEach((file) => {
+          const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+          if (!isPdf) return;
+
+          const exists = state.files.some((item) => (
+            item.file.name === file.name &&
+            item.file.size === file.size &&
+            item.file.lastModified === file.lastModified
+          ));
+          if (exists) return;
+
+          const item = {
+            id: state.nextId++,
+            file,
+            title: getDisplayName(file.name),
+            pageCount: null,
+            error: null,
+          };
+          state.files.push(item);
+          added.push(item);
+        });
+
+        renderFileList();
+
+        if (!added.length) {
+          setStatus('No new PDF files were added.', 'info');
+          return;
+        }
+
+        setStatus(`Reading ${added.length} PDF ${added.length === 1 ? 'file' : 'files'}...`, 'info');
+        updateProgress(0, added.length, 'Inspecting uploaded PDFs...');
+
+        for (let index = 0; index < added.length; index += 1) {
+          await readPdfMetadata(added[index]);
+          updateProgress(index + 1, added.length, `Read ${index + 1} of ${added.length} uploaded PDFs.`);
+          renderFileList();
+        }
+
+        updateProgress(0, 1, 'Ready to generate proceedings.');
+        setStatus(`Added ${added.length} PDF ${added.length === 1 ? 'file' : 'files'}.`, 'success');
+      }
+
+      function moveFile(id, direction) {
+        const index = state.files.findIndex((item) => item.id === id);
+        if (index < 0) return;
+
+        const nextIndex = index + direction;
+        if (nextIndex < 0 || nextIndex >= state.files.length) return;
+
+        const [item] = state.files.splice(index, 1);
+        state.files.splice(nextIndex, 0, item);
+        renderFileList();
+      }
+
+      function removeFile(id) {
+        state.files = state.files.filter((item) => item.id !== id);
+        renderFileList();
+        if (!state.files.length) {
+          updateProgress(0, 1, 'Waiting for files.');
+          setStatus('Add papers to begin.', 'info');
+        }
+      }
+
+      function renderFileList() {
+        const count = state.files.length;
+        elements.summary.textContent = `${count} file${count === 1 ? '' : 's'} queued`;
+        elements.emptyState.classList.toggle('hidden', count > 0);
+        elements.fileList.innerHTML = '';
+
+        state.files.forEach((item, index) => {
+          const li = document.createElement('li');
+          li.className = 'proceedings-file-row flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm md:flex-row md:items-center md:justify-between';
+
+          // Show specific error messages if the PDF failed to parse
+          const pageMeta = item.error
+            ? `<div class="rounded-lg bg-red-50 border border-red-200 px-3 py-2 max-w-xs"><span class="text-xs font-semibold text-red-700 break-words">Error: ${escapeHtml(item.error)}</span><p class="text-[10px] text-red-600 mt-1">Try opening it in Chrome and "Printing to PDF" to fix it.</p></div>`
+            : (item.pageCount
+              ? `<span class="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">${item.pageCount} page${item.pageCount === 1 ? '' : 's'}</span>`
+              : '<span class="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Reading...</span>');
+
+          li.innerHTML = `
+            <div class="min-w-0 flex-1">
+              <div class="flex items-start gap-4">
+                <div class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-800 text-sm font-bold text-white shadow">${index + 1}</div>
+                <div class="min-w-0">
+                  <p class="truncate text-base font-semibold text-slate-900">${escapeHtml(item.title)}</p>
+                  <p class="mt-1 text-sm text-slate-500">${escapeHtml(item.file.name)} &bull; ${humanFileSize(item.file.size)}</p>
+                </div>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 md:justify-end">
+              ${pageMeta}
+              <div class="flex gap-1 ml-2">
+                <button type="button" class="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:hover:bg-transparent transition-colors" data-action="move-up" data-id="${item.id}" ${index === 0 ? 'disabled' : ''} title="Move Up"><i class="fa-solid fa-arrow-up text-xs"></i></button>
+                <button type="button" class="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:hover:bg-transparent transition-colors" data-action="move-down" data-id="${item.id}" ${index === count - 1 ? 'disabled' : ''} title="Move Down"><i class="fa-solid fa-arrow-down text-xs"></i></button>
+                <button type="button" class="flex h-9 w-9 items-center justify-center rounded-full border border-red-200 text-red-600 hover:bg-red-50 transition-colors ml-2" data-action="remove" data-id="${item.id}" title="Remove"><i class="fa-solid fa-trash-can text-xs"></i></button>
+              </div>
+            </div>
+          `;
+
+          elements.fileList.appendChild(li);
+        });
+      }
+
+      function buildDefaultTitle(conference) {
+        if (!conference) return 'Proceedings of the Conference';
+        return `Proceedings of the ${conference.year} ${conference.title}`;
+      }
+
+      function buildDefaultSubtitle(conference) {
+        if (!conference) return 'Accepted Papers Compilation';
+        let subtitle = conference.location || 'Accepted Papers Compilation';
+        return subtitle;
+      }
+
+      function buildDefaultOutputName(conference) {
+        if (!conference) return 'conference-proceedings.pdf';
+        return `${slugify(conference.acronym || 'conference')}-${conference.year}-proceedings.pdf`;
+      }
+
+      function buildContents(entries) {
+        return Array.from({ length: Math.max(1, Math.ceil(entries.length / tocEntriesPerPage)) }, (_, pageIndex) => {
+          const start = pageIndex * tocEntriesPerPage;
+          return entries.slice(start, start + tocEntriesPerPage);
+        });
+      }
+
+      function addFooter(doc, pageNumber) {
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(107, 114, 128);
+        doc.text(String(pageNumber), pageWidth / 2, pageHeight - 18, { align: 'center' });
+      }
+
+      function getTextBlockHeight(lineCount, fontSize, lineHeightMultiplier = 1.2) {
+        return lineCount * fontSize * lineHeightMultiplier;
+      }
+
+      function addCoverPage(doc, title, subtitle) {
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const titleMaxWidth = pageWidth - 120;
+        const subtitleMaxWidth = pageWidth - 140;
+        let titleFontSize = 24;
+        let subtitleFontSize = 14;
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(titleFontSize);
+        let titleLines = doc.splitTextToSize(title, titleMaxWidth);
+        while (titleLines.length > 6 && titleFontSize > 16) {
+          titleFontSize -= 2;
+          doc.setFontSize(titleFontSize);
+          titleLines = doc.splitTextToSize(title, titleMaxWidth);
+        }
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(subtitleFontSize);
+        let subtitleLines = doc.splitTextToSize(subtitle, subtitleMaxWidth);
+        while (subtitleLines.length > 4 && subtitleFontSize > 11) {
+          subtitleFontSize -= 1;
+          doc.setFontSize(subtitleFontSize);
+          subtitleLines = doc.splitTextToSize(subtitle, subtitleMaxWidth);
+        }
+
+        const titleHeight = getTextBlockHeight(titleLines.length, titleFontSize, 1.25);
+        const subtitleHeight = getTextBlockHeight(subtitleLines.length, subtitleFontSize, 1.3);
+        const gap = 28;
+        const blockHeight = titleHeight + gap + subtitleHeight;
+        const blockTop = Math.max(110, (pageHeight - blockHeight) / 2);
+        const titleY = blockTop + titleFontSize;
+        const subtitleY = blockTop + titleHeight + gap + subtitleFontSize;
+
+        doc.setFillColor(255, 255, 255);
+        doc.rect(0, 0, pageWidth, pageHeight, 'F');
+        doc.setDrawColor(17, 17, 17);
+        doc.setLineWidth(1.5);
+        doc.rect(40, 40, pageWidth - 80, pageHeight - 80, 'S');
+        doc.setLineWidth(0.75);
+        doc.line(72, pageHeight - 136, pageWidth - 72, pageHeight - 136);
+
+        doc.setTextColor(17, 17, 17);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(titleFontSize);
+        doc.text(titleLines, pageWidth / 2, titleY, {
+          align: 'center',
+          lineHeightFactor: 1.25,
+        });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(subtitleFontSize);
+        doc.setTextColor(80, 80, 80);
+        doc.text(subtitleLines, pageWidth / 2, subtitleY, {
+          align: 'center',
+          lineHeightFactor: 1.3,
+        });
+
+        doc.setFontSize(12);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Accepted Papers', pageWidth / 2, pageHeight - 100, { align: 'center' });
+      }
+
+      function addContentsPages(doc, contentsPages) {
+        contentsPages.forEach((entries, index) => {
+          doc.addPage('a4', 'portrait');
+          const pageWidth = doc.internal.pageSize.getWidth();
+          doc.setFillColor(255, 255, 255);
+          doc.rect(0, 0, pageWidth, doc.internal.pageSize.getHeight(), 'F');
+          doc.setTextColor(17, 17, 17);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(24);
+          doc.text(index === 0 ? 'Contents' : `Contents (${index + 1})`, pageMargin, 60);
+          doc.setDrawColor(17, 17, 17);
+          doc.setLineWidth(0.8);
+          doc.line(pageMargin, 72, pageWidth - pageMargin, 72);
+
+          let y = 96;
+          entries.forEach((entry) => {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(12);
+            doc.setTextColor(17, 17, 17);
+            const titleWidth = pageWidth - (pageMargin * 2) - 70;
+            const wrapped = doc.splitTextToSize(entry.title, titleWidth);
+            const linesHeight = getTextBlockHeight(wrapped.length, 12, 1.15);
+            const blockHeight = Math.max(22, linesHeight + 8);
+            const pageNumberText = String(entry.startPage);
+            const pageNumberWidth = doc.getTextWidth(pageNumberText);
+            const linkHeight = blockHeight;
+
+            doc.text(wrapped, pageMargin, y);
+            doc.text(pageNumberText, pageWidth - pageMargin, y, { align: 'right' });
+
+            const dotStartX = pageMargin + Math.min(titleWidth + 8, doc.getTextWidth(wrapped[0] || '') + 12);
+            const dotEndX = pageWidth - pageMargin - pageNumberWidth - 10;
+            if (dotEndX > dotStartX) {
+              doc.setDrawColor(120, 120, 120);
+              doc.setLineDashPattern([1, 3], 0);
+              doc.line(dotStartX, y - 4, dotEndX, y - 4);
+              doc.setLineDashPattern([], 0);
+            }
+
+            doc.link(pageMargin - 2, y - 12, pageWidth - (pageMargin * 2) + 4, linkHeight, {
+              pageNumber: entry.startPage,
+            });
+
+            y += blockHeight;
+          });
+
+          addFooter(doc, index + 2);
+        });
+      }
+
+      function buildOutputDocument(password, jsPDF) {
+        const options = {
+          orientation: 'portrait',
+          unit: 'pt',
+          format: 'a4',
+          compress: true,
+        };
+
+        if (password) {
+          options.encryption = {
+            userPassword: password,
+            ownerPassword: password,
+            userPermissions: ['print'],
+          };
+        }
+
+        return new jsPDF(options);
+      }
+
+      async function appendUploadedPdfPages(doc, entry, startOffset, totalPages) {
+        const { pdfjsLib } = await ensureDependencies();
+        const bytes = await entry.file.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({ data: bytes });
+        const sourcePdf = await loadingTask.promise;
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d', { willReadFrequently: false });
+        let completed = 0;
+
+        try {
+          for (let pageNumber = 1; pageNumber <= sourcePdf.numPages; pageNumber += 1) {
+            const page = await sourcePdf.getPage(pageNumber);
+            const baseViewport = page.getViewport({ scale: 1 });
+            const renderScale = Math.max(1.2, Math.min(2, 1500 / Math.max(baseViewport.width, baseViewport.height)));
+            const viewport = page.getViewport({ scale: renderScale });
+
+            canvas.width = Math.ceil(viewport.width);
+            canvas.height = Math.ceil(viewport.height);
+            context.fillStyle = '#ffffff';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            await page.render({ canvasContext: context, viewport }).promise;
+
+            const orientation = viewport.width > viewport.height ? 'landscape' : 'portrait';
+            doc.addPage('a4', orientation);
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const usableWidth = pageWidth - (pageMargin * 2);
+            const usableHeight = pageHeight - (pageMargin * 2);
+            const fittedScale = Math.min(usableWidth / viewport.width, usableHeight / viewport.height);
+            const renderWidth = viewport.width * fittedScale;
+            const renderHeight = viewport.height * fittedScale;
+            const x = (pageWidth - renderWidth) / 2;
+            const y = (pageHeight - renderHeight) / 2;
+            doc.addImage(canvas, 'JPEG', x, y, renderWidth, renderHeight, undefined, 'FAST');
+
+            const compiledPageNumber = startOffset + completed + 1;
+            addFooter(doc, compiledPageNumber);
+            completed += 1;
+            updateProgress(startOffset + completed, totalPages, `Compiling "${entry.title}" (${pageNumber}/${sourcePdf.numPages})...`);
+          }
+        } finally {
+          canvas.width = 1;
+          canvas.height = 1;
+          if (typeof sourcePdf.destroy === 'function') {
+            sourcePdf.destroy();
+          }
+        }
+      }
+
+      async function generateProceedings() {
+        if (state.isGenerating) return;
+
+        if (!state.files.length) {
+          setStatus('Add at least one PDF before generating the proceedings.', 'error');
+          return;
+        }
+
+        const brokenEntry = state.files.find((item) => item.error || !item.pageCount);
+        if (brokenEntry) {
+          setStatus(`Resolve the PDF issue for "${brokenEntry.file.name}" before generating.`, 'error');
+          return;
+        }
+
+        state.isGenerating = true;
+        elements.generateBtn.disabled = true;
+
+        try {
+          const { jsPDF } = await ensureDependencies();
+          const password = elements.password.value.trim();
+          const title = elements.title.value.trim() || buildDefaultTitle(state.conference);
+          const subtitle = elements.subtitle.value.trim() || buildDefaultSubtitle(state.conference);
+          const outputName = (elements.outputName.value.trim() || buildDefaultOutputName(state.conference)).replace(/\.pdf$/i, '') + '.pdf';
+
+          const tocPageCount = Math.max(1, Math.ceil(state.files.length / tocEntriesPerPage));
+          let nextStartPage = tocPageCount + 2;
+          const entries = state.files.map((item) => {
+            const mapped = {
+              title: item.title,
+              file: item.file,
+              pageCount: item.pageCount,
+              startPage: nextStartPage,
+            };
+            nextStartPage += item.pageCount;
+            return mapped;
+          });
+          const contentsPages = buildContents(entries);
+          const totalCompiledPages = entries.reduce((sum, entry) => sum + entry.pageCount, 0);
+
+          updateProgress(0, totalCompiledPages || 1, 'Building cover and contents pages...');
+          setStatus('Generating proceedings PDF...', 'info');
+
+          let doc;
+          try {
+            doc = buildOutputDocument(password, jsPDF);
+          } catch (error) {
+            throw new Error(password ? 'Unable to enable password protection with the current browser PDF library.' : error.message);
+          }
+
+          addCoverPage(doc, title, subtitle);
+          addContentsPages(doc, contentsPages);
+
+          let compiledPagesSoFar = 0;
+          for (const entry of entries) {
+            await appendUploadedPdfPages(doc, entry, compiledPagesSoFar + tocPageCount + 1, totalCompiledPages + tocPageCount + 1);
+            compiledPagesSoFar += entry.pageCount;
+          }
+
+          updateProgress(totalCompiledPages + tocPageCount + 1, totalCompiledPages + tocPageCount + 1, 'Exporting proceedings PDF...');
+          doc.save(outputName);
+          setStatus(password ? 'Proceedings PDF generated with password protection.' : 'Proceedings PDF generated successfully.', 'success');
+          updateProgress(1, 1, 'Proceedings PDF ready.');
+        } catch (error) {
+          console.error(error);
+          setStatus(error.message || 'Unable to generate the proceedings PDF.', 'error');
+          updateProgress(0, 1, 'Generation failed.');
+        } finally {
+          state.isGenerating = false;
+          elements.generateBtn.disabled = false;
+        }
+      }
+
+      function bindEvents() {
+        elements.browseBtn.addEventListener('click', () => {
+          elements.fileInput.click();
+        });
+
+        elements.fileInput.addEventListener('change', async (event) => {
+          await addFiles(event.target.files);
+          elements.fileInput.value = '';
+        });
+
+        elements.dropzone.addEventListener('click', () => {
+            elements.fileInput.click();
+        });
+
+        ['dragenter', 'dragover'].forEach((eventName) => {
+          elements.dropzone.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            elements.dropzone.classList.add('border-blue-500', 'bg-blue-50');
+          });
+        });
+
+        ['dragleave', 'drop'].forEach((eventName) => {
+          elements.dropzone.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            elements.dropzone.classList.remove('border-blue-500', 'bg-blue-50');
+          });
+        });
+
+        elements.dropzone.addEventListener('drop', async (event) => {
+          await addFiles(event.dataTransfer.files);
+        });
+
+        elements.fileList.addEventListener('click', (event) => {
+          const button = event.target.closest('button[data-action]');
+          if (!button) return;
+
+          const id = Number(button.dataset.id);
+          if (button.dataset.action === 'move-up') {
+            moveFile(id, -1);
+          } else if (button.dataset.action === 'move-down') {
+            moveFile(id, 1);
+          } else if (button.dataset.action === 'remove') {
+            removeFile(id);
+          }
+        });
+
+        elements.generateBtn.addEventListener('click', () => {
+          generateProceedings();
+        });
+      }
+
+      async function init() {
+        elements = {
+          browseBtn: document.getElementById('proceedings-browse-btn'),
+          fileInput: document.getElementById('proceedings-file-input'),
+          dropzone: document.getElementById('proceedings-dropzone'),
+          fileList: document.getElementById('proceedings-file-list'),
+          emptyState: document.getElementById('proceedings-empty-state'),
+          summary: document.getElementById('proceedings-summary'),
+          title: document.getElementById('proceedings-title'),
+          subtitle: document.getElementById('proceedings-subtitle'),
+          outputName: document.getElementById('proceedings-output-name'),
+          password: document.getElementById('proceedings-password'),
+          generateBtn: document.getElementById('proceedings-generate-btn'),
+          progressBar: document.getElementById('proceedings-progress-bar'),
+          progressText: document.getElementById('proceedings-progress-text'),
+          status: document.getElementById('proceedings-status'),
+        };
+
+        // Mocked Conference Data (since fetch(getdataurl()) won't work in a standalone file)
+        state.conference = {
+            year: new Date().getFullYear(),
+            title: "Demo Conference",
+            acronym: "DEMO"
+        };
+
+        elements.title.value = buildDefaultTitle(state.conference);
+        elements.subtitle.value = buildDefaultSubtitle(state.conference);
+        elements.outputName.value = buildDefaultOutputName(state.conference);
+        renderFileList();
+        bindEvents();
+        updateProgress(0, 1, 'Waiting for files.');
+        setStatus('Add papers to begin.', 'info');
+
+        ensureDependencies().catch((error) => {
+          console.error(error);
+          setStatus('Could not load browser PDF libraries. Check your network connection and reload the page.', 'error');
+        });
+      }
+
+      return { init };
+    })();
+
+    // Initialize application when DOM is ready
+    document.addEventListener("DOMContentLoaded", () => {
+      ProceedingsCompilerPage.init();
+    });
+  </script>
+</body>
+</html>
