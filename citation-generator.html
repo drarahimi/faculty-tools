@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citation Generator - Faculty Tools</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for textareas and pre */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f8fafc; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans antialiased flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm backdrop-blur-md bg-white/90">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-brand-50 text-brand-600 p-2 rounded-lg">
+                    <i data-lucide="quote" class="h-5 w-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-gray-900 leading-tight">Citation & DOI Generator</h1>
+                    <p class="text-xs text-gray-500">Resolve DOIs or search titles to format BibTeX, APA, MLA, IEEE, and Chicago</p>
+                </div>
+            </div>
+            <div>
+                <a href="index.html" class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-brand-600 transition-colors bg-gray-100 hover:bg-brand-50 px-3 py-1.5 rounded-lg border border-gray-200">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+        
+        <!-- Search Card -->
+        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+            <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Lookup DOI or Search Papers</h2>
+            <form id="searchForm" class="flex flex-col sm:flex-row gap-3">
+                <div class="relative flex-grow group">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <i data-lucide="search" class="h-5 w-5 text-gray-400 group-focus-within:text-brand-600 transition-colors"></i>
+                    </div>
+                    <input type="text" id="searchInput"
+                        class="block w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-sm transition-all text-sm"
+                        placeholder="Enter DOI (e.g. 10.1145/3313831.3376590) or Paper Title / Keywords...">
+                </div>
+                <button type="submit"
+                    class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-medium rounded-xl text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 shadow-md hover:shadow-lg transition-all duration-150 gap-2 shrink-0">
+                    <i data-lucide="refresh-cw" class="w-4 h-4 animate-spin hidden" id="spinner"></i>
+                    <span id="btnText">Generate</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Loader -->
+        <div id="loader" class="hidden flex flex-col items-center justify-center py-12">
+            <div class="p-3 bg-brand-50 text-brand-600 rounded-full animate-spin">
+                <i data-lucide="loader-2" class="w-8 h-8"></i>
+            </div>
+            <p class="mt-3 text-sm text-gray-500 font-medium">Fetching details from Crossref...</p>
+        </div>
+
+        <!-- Error Panel -->
+        <div id="errorPanel" class="hidden bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-start gap-3">
+            <i data-lucide="alert-circle" class="w-5 h-5 text-red-500 shrink-0 mt-0.5"></i>
+            <div>
+                <h4 class="font-bold text-sm">Failed to retrieve metadata</h4>
+                <p class="text-xs text-red-600 mt-1" id="errorMessage">Please verify the DOI or search keywords and try again.</p>
+            </div>
+        </div>
+
+        <!-- Search Results Panel -->
+        <div id="searchResultsPanel" class="hidden bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Search Results</span>
+                <span class="text-xs text-gray-500 font-medium" id="resultsCount">0 items found</span>
+            </div>
+            <div class="divide-y divide-gray-100 max-h-[400px] overflow-y-auto custom-scrollbar" id="resultsList">
+                <!-- Javascript will inject search items here -->
+            </div>
+        </div>
+
+        <!-- Results / Output Dashboard -->
+        <div id="dashboard" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left Side: Paper Details Card -->
+            <div class="lg:col-span-1 flex flex-col gap-5">
+                <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col h-full">
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Paper Metadata</span>
+                    
+                    <div class="flex-grow">
+                        <span id="detailType" class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-brand-50 text-brand-700 uppercase tracking-wider mb-2">JOURNAL ARTICLE</span>
+                        <h3 id="detailTitle" class="text-lg font-bold text-gray-900 leading-snug mb-3">Attention Is All You Need</h3>
+                        
+                        <div class="space-y-3.5 text-xs text-gray-600">
+                            <div>
+                                <span class="block text-gray-400 font-medium mb-0.5">Authors</span>
+                                <span id="detailAuthors" class="font-medium text-gray-800">Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit</span>
+                            </div>
+                            <div>
+                                <span class="block text-gray-400 font-medium mb-0.5">Journal / Container</span>
+                                <span id="detailJournal" class="font-medium text-gray-800 italic">Advances in Neural Information Processing Systems</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <span class="block text-gray-400 font-medium mb-0.5">Vol / Issue</span>
+                                    <span id="detailVolIssue" class="font-medium text-gray-800">30 (1)</span>
+                                </div>
+                                <div>
+                                    <span class="block text-gray-400 font-medium mb-0.5">Pages</span>
+                                    <span id="detailPages" class="font-medium text-gray-800">5998–6008</span>
+                                </div>
+                                <div>
+                                    <span class="block text-gray-400 font-medium mb-0.5">Year</span>
+                                    <span id="detailYear" class="font-medium text-gray-800">2017</span>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="block text-gray-400 font-medium mb-0.5">DOI</span>
+                                <span id="detailDOI" class="font-mono text-gray-800 break-all">10.5555/3295222.3295349</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-gray-100 flex flex-col gap-2">
+                        <button onclick="copyDOI()" class="inline-flex items-center justify-center w-full px-4 py-2 border border-gray-200 text-xs font-semibold rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors gap-2">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            Copy DOI
+                        </button>
+                        <a id="detailLink" href="#" target="_blank" class="inline-flex items-center justify-center w-full px-4 py-2 border border-transparent text-xs font-semibold rounded-lg text-white bg-brand-600 hover:bg-brand-700 transition-colors gap-2 shadow-sm">
+                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                            Open Article URL
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Citations Formats -->
+            <div class="lg:col-span-2 flex flex-col gap-5">
+                
+                <!-- BibTeX Container -->
+                <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm relative">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">BibTeX Format (LaTeX)</span>
+                        <div class="flex items-center gap-2">
+                            <button onclick="downloadBib()" class="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 px-2 py-1 rounded bg-brand-50 hover:bg-brand-100/80 transition-colors border border-brand-100">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                Download .bib
+                            </button>
+                            <button onclick="copyCitation('bibtex', this)" class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 hover:text-gray-900 px-2.5 py-1 rounded bg-gray-100 hover:bg-gray-200 transition-colors border border-gray-200">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                    <pre class="bg-slate-900 text-slate-100 rounded-xl p-4 text-xs font-mono overflow-x-auto custom-scrollbar max-h-56 leading-relaxed" id="cite-bibtex">@article{vaswani2017attention, ...}</pre>
+                </div>
+
+                <!-- Styled Formatted Citations -->
+                <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col gap-4">
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Common Citation Styles</span>
+                    
+                    <div class="space-y-4">
+                        <!-- APA -->
+                        <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
+                            <div class="flex justify-between items-start mb-1.5">
+                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">APA Style</span>
+                                <button onclick="copyCitation('apa', this)" class="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                                    <i data-lucide="copy" class="w-3 h-3"></i> Copy
+                                </button>
+                            </div>
+                            <div class="text-xs text-gray-800 leading-relaxed font-medium" id="cite-apa">APA Citation text</div>
+                        </div>
+
+                        <!-- MLA -->
+                        <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
+                            <div class="flex justify-between items-start mb-1.5">
+                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">MLA Style</span>
+                                <button onclick="copyCitation('mla', this)" class="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                                    <i data-lucide="copy" class="w-3 h-3"></i> Copy
+                                </button>
+                            </div>
+                            <div class="text-xs text-gray-800 leading-relaxed font-medium" id="cite-mla">MLA Citation text</div>
+                        </div>
+
+                        <!-- IEEE -->
+                        <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
+                            <div class="flex justify-between items-start mb-1.5">
+                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">IEEE Style</span>
+                                <button onclick="copyCitation('ieee', this)" class="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                                    <i data-lucide="copy" class="w-3 h-3"></i> Copy
+                                </button>
+                            </div>
+                            <div class="text-xs text-gray-800 leading-relaxed font-medium" id="cite-ieee">IEEE Citation text</div>
+                        </div>
+
+                        <!-- Chicago -->
+                        <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
+                            <div class="flex justify-between items-start mb-1.5">
+                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Chicago Style</span>
+                                <button onclick="copyCitation('chicago', this)" class="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                                    <i data-lucide="copy" class="w-3 h-3"></i> Copy
+                                </button>
+                            </div>
+                            <div class="text-xs text-gray-800 leading-relaxed font-medium" id="cite-chicago">Chicago Citation text</div>
+                        </div>
+
+                        <!-- Harvard -->
+                        <div class="p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors">
+                            <div class="flex justify-between items-start mb-1.5">
+                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Harvard Style</span>
+                                <button onclick="copyCitation('harvard', this)" class="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+                                    <i data-lucide="copy" class="w-3 h-3"></i> Copy
+                                </button>
+                            </div>
+                            <div class="text-xs text-gray-800 leading-relaxed font-medium" id="cite-harvard">Harvard Citation text</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-3 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
+                <div class="flex items-center gap-1.5 font-medium text-gray-700">
+                    <i data-lucide="sigma" class="w-4 h-4 text-brand-600"></i>
+                    <span>Faculty Tools by A. Rahimi</span>
+                </div>
+                <div>
+                    &copy; 2026 Faculty Tools. All rights reserved.
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i data-lucide="github" class="h-4 w-4"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i data-lucide="twitter" class="h-4 w-4"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-gray-900 text-white px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 text-xs transition-opacity duration-300 opacity-0 pointer-events-none z-50">
+        <i data-lucide="check-circle" class="w-4 h-4 text-brand-500"></i>
+        <span id="toastMsg">Copied to clipboard!</span>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        let currentMetadata = null;
+
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('searchInput').value.trim();
+            if (!input) return;
+
+            hideAllPanels();
+            showLoader(true);
+
+            // Detect if input is a DOI
+            const isDOI = isDOIPattern(input);
+
+            try {
+                if (isDOI) {
+                    const cleanDOI = extractDOI(input);
+                    const metadata = await fetchMetadataByDOI(cleanDOI);
+                    currentMetadata = metadata;
+                    renderCitationDashboard(metadata);
+                } else {
+                    const results = await fetchSearchWorks(input);
+                    if (results.length === 0) {
+                        showError("No publications found for the given keywords.");
+                    } else {
+                        renderSearchResults(results);
+                    }
+                }
+            } catch (err) {
+                showError(err.message || "An unexpected error occurred while fetching details.");
+            } finally {
+                showLoader(false);
+            }
+        });
+
+        // Helpers
+        function isDOIPattern(str) {
+            // matches standard doi starting with 10. or absolute doi url
+            const doiRegex = /\b10\.\d{4,9}\/[-._;()/:A-Z0-9]+\b/i;
+            const doiUrlRegex = /doi\.org\/\b10\.\d{4,9}\/[-._;()/:A-Z0-9]+\b/i;
+            return doiRegex.test(str) || doiUrlRegex.test(str);
+        }
+
+        function extractDOI(str) {
+            const doiRegex = /(10\.\d{4,9}\/[-._;()/:A-Z0-9]+)/i;
+            const match = str.match(doiRegex);
+            return match ? match[1] : str;
+        }
+
+        function showLoader(show) {
+            const loader = document.getElementById('loader');
+            const spinner = document.getElementById('spinner');
+            const btnText = document.getElementById('btnText');
+            if (show) {
+                loader.classList.remove('hidden');
+                spinner.classList.remove('hidden');
+                btnText.textContent = "Loading...";
+            } else {
+                loader.classList.add('hidden');
+                spinner.classList.add('hidden');
+                btnText.textContent = "Generate";
+            }
+        }
+
+        function hideAllPanels() {
+            document.getElementById('errorPanel').classList.add('hidden');
+            document.getElementById('searchResultsPanel').classList.add('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+        }
+
+        function showError(msg) {
+            document.getElementById('errorPanel').classList.remove('hidden');
+            document.getElementById('errorMessage').textContent = msg;
+        }
+
+        // Fetch API
+        async function fetchMetadataByDOI(doi) {
+            const response = await fetch(`https://api.crossref.org/works/${encodeURIComponent(doi)}`, {
+                headers: { 'User-Agent': 'mailto:afshin.rahimi@example.com' } // Polite request
+            });
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error("DOI not found in the Crossref database.");
+                }
+                throw new Error("Crossref API query failed.");
+            }
+            const data = await response.json();
+            return data.message;
+        }
+
+        async function fetchSearchWorks(query) {
+            const response = await fetch(`https://api.crossref.org/works?query=${encodeURIComponent(query)}&rows=10`, {
+                headers: { 'User-Agent': 'mailto:afshin.rahimi@example.com' }
+            });
+            if (!response.ok) {
+                throw new Error("Crossref search query failed.");
+            }
+            const data = await response.json();
+            return data.message.items || [];
+        }
+
+        // Render Search Results
+        function renderSearchResults(items) {
+            const panel = document.getElementById('searchResultsPanel');
+            const count = document.getElementById('resultsCount');
+            const list = document.getElementById('resultsList');
+            
+            list.innerHTML = '';
+            count.textContent = `${items.length} publications found`;
+
+            items.forEach((item, index) => {
+                const title = cleanText(item.title) || "Untitled Publication";
+                const authors = getFormattedAuthorsShort(item.author);
+                const source = cleanText(item['container-title']) || cleanText(item['publisher']) || "Unknown Venue";
+                const year = getYear(item);
+                const doi = item.DOI;
+
+                const resultDiv = document.createElement('div');
+                resultDiv.className = "p-4 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer";
+                resultDiv.onclick = () => {
+                    currentMetadata = item;
+                    hideAllPanels();
+                    renderCitationDashboard(item);
+                };
+
+                resultDiv.innerHTML = `
+                    <div class="flex-grow">
+                        <h4 class="text-sm font-bold text-gray-900 group-hover:text-brand-600">${title}</h4>
+                        <p class="text-xs text-gray-500 mt-1">${authors} &middot; <span class="italic">${source}</span> (${year})</p>
+                        <p class="text-[10px] text-gray-400 font-mono mt-0.5">${doi}</p>
+                    </div>
+                    <button class="inline-flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-3 py-1.5 rounded-lg border border-brand-100 transition-colors shrink-0">
+                        <i data-lucide="quote" class="w-3.5 h-3.5"></i>
+                        Cite
+                    </button>
+                `;
+                list.appendChild(resultDiv);
+            });
+
+            panel.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        // Render Citation Dashboard
+        function renderCitationDashboard(item) {
+            const db = document.getElementById('dashboard');
+
+            // Metadata card
+            document.getElementById('detailType').textContent = (item.type || 'publication').replace('-', ' ');
+            document.getElementById('detailTitle').textContent = cleanText(item.title) || "Untitled";
+            document.getElementById('detailAuthors').textContent = getFormattedAuthorsLong(item.author);
+            document.getElementById('detailJournal').textContent = cleanText(item['container-title']) || cleanText(item['publisher']) || 'N/A';
+            
+            const volume = item.volume || 'N/A';
+            const issue = item.issue ? `(${item.issue})` : '';
+            document.getElementById('detailVolIssue').textContent = `${volume} ${issue}`;
+            document.getElementById('detailPages').textContent = item.page || 'N/A';
+            document.getElementById('detailYear').textContent = getYear(item);
+            document.getElementById('detailDOI').textContent = item.DOI || 'N/A';
+            
+            const link = document.getElementById('detailLink');
+            if (item.resource && item.resource.primary && item.resource.primary.URL) {
+                link.href = item.resource.primary.URL;
+                link.classList.remove('pointer-events-none', 'opacity-50');
+            } else if (item.DOI) {
+                link.href = `https://doi.org/${item.DOI}`;
+                link.classList.remove('pointer-events-none', 'opacity-50');
+            } else {
+                link.href = '#';
+                link.classList.add('pointer-events-none', 'opacity-50');
+            }
+
+            // Generate citation formats
+            const bibtex = formatBibTeX(item);
+            const apa = formatAPA(item);
+            const mla = formatMLA(item);
+            const ieee = formatIEEE(item);
+            const chicago = formatChicago(item);
+            const harvard = formatHarvard(item);
+
+            // Populate dashboard
+            document.getElementById('cite-bibtex').textContent = bibtex;
+            document.getElementById('cite-apa').innerHTML = apa;
+            document.getElementById('cite-mla').innerHTML = mla;
+            document.getElementById('cite-ieee').innerHTML = ieee;
+            document.getElementById('cite-chicago').innerHTML = chicago;
+            document.getElementById('cite-harvard').innerHTML = harvard;
+
+            db.classList.remove('hidden');
+        }
+
+        // Text Cleaners
+        function cleanText(str) {
+            if (!str) return '';
+            if (Array.isArray(str)) str = str[0] || '';
+            return str.replace(/<\/?[^>]+(>|$)/g, ""); // strip simple HTML
+        }
+
+        function getYear(item) {
+            const dateSources = [item['published-print'], item['published-online'], item['issued'], item['created']];
+            for (let source of dateSources) {
+                if (source && source['date-parts'] && source['date-parts'][0] && source['date-parts'][0][0]) {
+                    return source['date-parts'][0][0];
+                }
+            }
+            return new Date().getFullYear();
+        }
+
+        // formatting helpers
+        function getFormattedAuthorsShort(authors) {
+            if (!authors || authors.length === 0) return 'Unknown Author';
+            if (authors.length === 1) return authors[0].family || authors[0].name || 'Unknown';
+            if (authors.length === 2) return `${authors[0].family || ''} & ${authors[1].family || ''}`;
+            return `${authors[0].family || ''} et al.`;
+        }
+
+        function getFormattedAuthorsLong(authors) {
+            if (!authors || authors.length === 0) return 'Unknown Author';
+            return authors.map(a => {
+                if (a.name) return a.name;
+                return `${a.given || ''} ${a.family || ''}`.trim();
+            }).join(', ');
+        }
+
+        // CITATION FORMATTING ENGINES
+        function generateBibKey(authors, title, year) {
+            let authorPart = 'unknown';
+            if (authors && authors[0] && authors[0].family) {
+                authorPart = authors[0].family.toLowerCase().replace(/[^a-z0-9]/g, '');
+            }
+            let titleWord = 'ref';
+            if (title) {
+                const cleanTitle = cleanText(title).toLowerCase();
+                const words = cleanTitle.split(/\s+/).filter(w => w.length > 3);
+                if (words.length > 0) {
+                    titleWord = words[0].replace(/[^a-z0-9]/g, '');
+                }
+            }
+            return `${authorPart}${year}${titleWord}`;
+        }
+
+        function escapeBibTeX(str) {
+            if (!str) return '';
+            return str.replace(/&/g, '\\&')
+                      .replace(/_/g, '\\_')
+                      .replace(/%/g, '\\%');
+        }
+
+        function getBibTeXAuthors(authors) {
+            if (!authors || authors.length === 0) return 'Unknown';
+            return authors.map(a => `${a.family || ''}, ${a.given || ''}`).join(' and ');
+        }
+
+        function getAPAAuthors(authors) {
+            if (!authors || authors.length === 0) return 'Unknown';
+            const formatted = authors.map(a => {
+                const family = a.family || '';
+                const given = a.given || '';
+                const initials = given.split(/[\s-]+/).map(n => n ? n[0] + '.' : '').join(' ');
+                return `${family}, ${initials}`.trim();
+            });
+            if (formatted.length === 1) return formatted[0];
+            if (formatted.length === 2) return `${formatted[0]} & ${formatted[1]}`;
+            if (formatted.length <= 7) {
+                return formatted.slice(0, -1).join(', ') + `, & ${formatted[formatted.length - 1]}`;
+            } else {
+                return formatted.slice(0, 6).join(', ') + ', ... ' + formatted[formatted.length - 1];
+            }
+        }
+
+        function getMLAAuthors(authors) {
+            if (!authors || authors.length === 0) return 'Unknown';
+            if (authors.length === 1) {
+                return `${authors[0].family || ''}, ${authors[0].given || ''}`;
+            }
+            if (authors.length === 2) {
+                return `${authors[0].family || ''}, ${authors[0].given || ''}, and ${authors[1].given || ''} ${authors[1].family || ''}`;
+            }
+            return `${authors[0].family || ''}, ${authors[0].given || ''}, et al.`;
+        }
+
+        function getIEEEAuthors(authors) {
+            if (!authors || authors.length === 0) return 'Unknown';
+            const formatSingle = (a) => {
+                const family = a.family || '';
+                const given = a.given || '';
+                const initials = given.split(/[\s-]+/).map(n => n ? n[0] + '.' : '').join(' ');
+                return `${initials} ${family}`.trim();
+            };
+            if (authors.length === 1) return formatSingle(authors[0]);
+            if (authors.length === 2) return `${formatSingle(authors[0])} and ${formatSingle(authors[1])}`;
+            return `${formatSingle(authors[0])} et al.`;
+        }
+
+        function getHarvardAuthors(authors) {
+            if (!authors || authors.length === 0) return 'Unknown';
+            const formatSingle = (a) => {
+                const family = a.family || '';
+                const given = a.given || '';
+                const initials = given.split(/[\s-]+/).map(n => n ? n[0] : '').join('');
+                return `${family}, ${initials}`;
+            };
+            if (authors.length === 1) return formatSingle(authors[0]);
+            if (authors.length === 2) return `${formatSingle(authors[0])} & ${formatSingle(authors[1])}`;
+            return `${authors[0].family || ''} et al.`;
+        }
+
+        function formatBibTeX(item) {
+            const type = item.type === 'journal-article' ? 'article' : (item.type === 'proceedings-article' ? 'inproceedings' : 'misc');
+            const key = generateBibKey(item.author, item.title, getYear(item));
+            const author = escapeBibTeX(getBibTeXAuthors(item.author));
+            const title = escapeBibTeX(cleanText(item.title));
+            const container = escapeBibTeX(cleanText(item['container-title']));
+            const year = getYear(item);
+            const volume = item.volume || '';
+            const issue = item.issue || '';
+            const page = item.page || '';
+            const doi = item.DOI || '';
+            const publisher = escapeBibTeX(item.publisher || '');
+
+            let bib = `@${type}{${key},\n`;
+            bib += `  author    = {${author}},\n`;
+            bib += `  title     = {${title}},\n`;
+            if (type === 'article') {
+                if (container) bib += `  journal   = {${container}},\n`;
+            } else if (type === 'inproceedings') {
+                if (container) bib += `  booktitle = {${container}},\n`;
+            } else {
+                if (container) bib += `  publisher = {${container}},\n`;
+            }
+            if (volume) bib += `  volume    = {${volume}},\n`;
+            if (issue) bib += `  number    = {${issue}},\n`;
+            if (page) bib += `  pages     = {${page}},\n`;
+            bib += `  year      = {${year}},\n`;
+            if (publisher && type !== 'article') bib += `  publisher = {${publisher}},\n`;
+            if (doi) bib += `  doi       = {${doi}},\n`;
+            bib = bib.trim().replace(/,$/, '') + '\n}';
+            return bib;
+        }
+
+        function formatAPA(item) {
+            const author = getAPAAuthors(item.author);
+            const year = getYear(item);
+            const title = cleanText(item.title);
+            const journal = cleanText(item['container-title']);
+            const volume = item.volume || '';
+            const issue = item.issue ? `(${item.issue})` : '';
+            const page = item.page || '';
+            const doi = item.DOI ? `https://doi.org/${item.DOI}` : '';
+
+            let res = `${author} (${year}). ${title}. `;
+            if (journal) {
+                res += `<i>${journal}</i>`;
+                if (volume || page) {
+                    res += `, `;
+                    if (volume) res += `<i>${volume}</i>${issue}`;
+                    if (page) res += `, ${page}`;
+                }
+                res += `.`;
+            }
+            if (doi) res += ` <a href="${doi}" target="_blank" class="text-brand-600 hover:underline">${doi}</a>`;
+            return res;
+        }
+
+        function formatMLA(item) {
+            const author = getMLAAuthors(item.author);
+            const title = cleanText(item.title);
+            const journal = cleanText(item['container-title']);
+            const volume = item.volume ? `vol. ${item.volume}` : '';
+            const issue = item.issue ? `no. ${item.issue}` : '';
+            const year = getYear(item);
+            const page = item.page ? `pp. ${item.page}` : '';
+            const doi = item.DOI ? `https://doi.org/${item.DOI}` : '';
+
+            let res = `${author}. "${title}." `;
+            if (journal) {
+                res += `<i>${journal}</i>`;
+                const parts = [];
+                if (volume) parts.push(volume);
+                if (issue) parts.push(issue);
+                if (year) parts.push(year);
+                if (page) parts.push(page);
+                if (parts.length > 0) {
+                    res += `, ${parts.join(', ')}`;
+                }
+                res += `.`;
+            } else if (year) {
+                res += `, ${year}.`;
+            }
+            if (doi) res += ` <a href="${doi}" target="_blank" class="text-brand-600 hover:underline">${doi}</a>`;
+            return res;
+        }
+
+        function formatIEEE(item) {
+            const author = getIEEEAuthors(item.author);
+            const title = cleanText(item.title);
+            const journal = cleanText(item['container-title']);
+            const volume = item.volume ? `vol. ${item.volume}` : '';
+            const issue = item.issue ? `no. ${item.issue}` : '';
+            const page = item.page ? `pp. ${item.page}` : '';
+            const year = getYear(item);
+            const doi = item.DOI ? `doi: ${item.DOI}.` : '';
+
+            let res = `${author}, "${title}," `;
+            if (journal) {
+                res += `<i>${journal}</i>`;
+                const parts = [];
+                if (volume) parts.push(volume);
+                if (issue) parts.push(issue);
+                if (page) parts.push(page);
+                if (year) parts.push(year);
+                if (parts.length > 0) {
+                    res += `, ${parts.join(', ')}`;
+                }
+                res += `.`;
+            } else if (year) {
+                res += `, ${year}.`;
+            }
+            if (doi) res += ` ${doi}`;
+            return res;
+        }
+
+        function formatChicago(item) {
+            const author = getMLAAuthors(item.author); // similar rules
+            const title = cleanText(item.title);
+            const journal = cleanText(item['container-title']);
+            const volume = item.volume || '';
+            const issue = item.issue ? `no. ${item.issue}` : '';
+            const page = item.page || '';
+            const year = getYear(item);
+            const doi = item.DOI ? `https://doi.org/${item.DOI}` : '';
+
+            let res = `${author}. "${title}." `;
+            if (journal) {
+                res += `<i>${journal}</i>`;
+                if (volume) {
+                    res += ` ${volume}`;
+                    if (issue) res += `, ${issue}`;
+                }
+                if (year) res += ` (${year})`;
+                if (page) res += `: ${page}`;
+                res += `.`;
+            } else if (year) {
+                res += ` (${year}).`;
+            }
+            if (doi) res += ` <a href="${doi}" target="_blank" class="text-brand-600 hover:underline">${doi}</a>`;
+            return res;
+        }
+
+        function formatHarvard(item) {
+            const author = getHarvardAuthors(item.author);
+            const year = getYear(item);
+            const title = cleanText(item.title);
+            const journal = cleanText(item['container-title']);
+            const volume = item.volume || '';
+            const issue = item.issue ? `no. ${item.issue}` : '';
+            const page = item.page || '';
+            const doi = item.DOI ? `https://doi.org/${item.DOI}` : '';
+
+            let res = `${author}, ${year}. ${title}. `;
+            if (journal) {
+                res += `<i>${journal}</i>`;
+                if (volume || issue || page) {
+                    res += `, `;
+                    if (volume) res += `${volume}`;
+                    if (issue) res += `(${issue})`;
+                    if (page) res += `, pp. ${page}`;
+                }
+                res += `.`;
+            }
+            if (doi) res += ` Available at: <a href="${doi}" target="_blank" class="text-brand-600 hover:underline">${doi}</a>`;
+            return res;
+        }
+
+        // Interactive Copy Utilities
+        function copyDOI() {
+            if (!currentMetadata || !currentMetadata.DOI) return;
+            navigator.clipboard.writeText(currentMetadata.DOI);
+            showToast("DOI copied to clipboard!");
+        }
+
+        function copyCitation(formatId, btnElement) {
+            const citeElement = document.getElementById(`cite-${formatId}`);
+            let text = citeElement.innerText || citeElement.textContent;
+            
+            navigator.clipboard.writeText(text.trim());
+            showToast(`${formatId.toUpperCase()} citation copied!`);
+
+            // Quick button feedback
+            const originalHTML = btnElement.innerHTML;
+            btnElement.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i> Copied!`;
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                btnElement.innerHTML = originalHTML;
+                lucide.createIcons();
+            }, 1500);
+        }
+
+        function downloadBib() {
+            if (!currentMetadata) return;
+            const bibText = formatBibTeX(currentMetadata);
+            const key = generateBibKey(currentMetadata.author, currentMetadata.title, getYear(currentMetadata));
+            
+            const blob = new Blob([bibText], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${key}.bib`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            showToast("BibTeX downloaded!");
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+
+        // Initialize icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
