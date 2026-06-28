@@ -1,0 +1,2050 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure PDF Redactor - Faculty Tools</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Compromise.js (NLP library for local PII extraction) -->
+    <script src="https://unpkg.com/compromise"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for a polished look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s, visibility 0.3s;
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+        
+        /* Hide default number inputs spinners */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans antialiased flex flex-col min-h-screen">
+
+    <!-- Header / Navigation Bar -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/90">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="p-2 text-gray-500 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="Back to Tools">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </a>
+                <div class="p-2 bg-brand-50 text-brand-600 rounded-lg">
+                    <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-base sm:text-lg font-bold text-gray-900 leading-tight flex items-center gap-2">
+                        Secure PDF Redactor
+                        <span class="px-2 py-0.5 text-[10px] font-semibold tracking-wider text-green-700 bg-green-100 rounded-full uppercase">Local Only</span>
+                    </h1>
+                    <p class="text-xs text-gray-500 hidden sm:block">Sanitize financial statements securely by burning out sensitive info before submission</p>
+                </div>
+            </div>
+
+            <!-- Export Button (hidden initially) -->
+            <div id="headerActions" class="hidden">
+                <button onclick="exportRedactedPdf()" class="flex items-center gap-2 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 font-semibold shadow-sm transition-all text-sm">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    Export Secure PDF
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Area -->
+    <main class="flex-grow flex flex-col w-full min-h-[calc(100vh-65px)]">
+        
+        <!-- File Drop / Select Area (shown when no PDF is loaded) -->
+        <div id="dropzoneContainer" class="flex-grow flex items-center justify-center p-6 max-w-4xl mx-auto w-full">
+            <div id="dropzone" class="w-full bg-white border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center shadow-sm hover:border-brand-500 hover:shadow-md transition-all flex flex-col items-center justify-center cursor-pointer group">
+                <div class="w-16 h-16 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <i data-lucide="file-key-2" class="w-8 h-8"></i>
+                </div>
+                
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Upload your PDF Bank Statement</h3>
+                <p class="text-sm text-gray-500 mb-6 max-w-md">Drag & drop your PDF file here, or click to browse. Handles password-protected statements locally.</p>
+                
+                <input type="file" id="pdfFileInput" accept="application/pdf" class="hidden" />
+                <button onclick="document.getElementById('pdfFileInput').click()" class="px-5 py-2.5 bg-brand-600 text-white rounded-lg hover:bg-brand-700 font-semibold shadow transition-all text-sm mb-8">
+                    Browse Files
+                </button>
+
+                <!-- Security Badges -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full pt-6 border-t border-gray-100 max-w-xl">
+                    <div class="flex items-center gap-2 justify-center text-xs text-gray-600">
+                        <i data-lucide="lock" class="w-4 h-4 text-emerald-600"></i>
+                        <span>100% In-Browser (Private)</span>
+                    </div>
+                    <div class="flex items-center gap-2 justify-center text-xs text-gray-600">
+                        <i data-lucide="key" class="w-4 h-4 text-emerald-600"></i>
+                        <span>Unlocks Protected PDFs</span>
+                    </div>
+                    <div class="flex items-center gap-2 justify-center text-xs text-gray-600">
+                        <i data-lucide="file-check-2" class="w-4 h-4 text-emerald-600"></i>
+                        <span>Flat Secure Raster Export</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Layout (hidden initially) -->
+        <div id="editorLayout" class="hidden flex-grow flex flex-col lg:flex-row h-[calc(100vh-65px)] overflow-hidden">
+            
+            <!-- Sidebar: Navigation & Pages (Left) -->
+            <aside class="w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-gray-200 bg-white flex flex-col h-1/4 lg:h-full shrink-0">
+                <div class="p-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+                    <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Document Pages</span>
+                    <span id="pageCountLabel" class="text-xs text-gray-500 font-medium">0 Pages</span>
+                </div>
+                <!-- Page List -->
+                <div id="sidebarList" class="flex-grow overflow-y-auto p-3 space-y-1.5 flex flex-row lg:flex-col gap-2 lg:gap-0 select-none">
+                    <!-- Loaded pages listed here -->
+                </div>
+            </aside>
+
+            <!-- Main Work Area (Center) -->
+            <div class="flex-grow flex flex-col bg-gray-100 overflow-hidden">
+                <!-- Document Editor Viewport -->
+                <div id="workspace" class="flex-grow overflow-y-auto p-6 flex flex-col items-center">
+                    <!-- Canvas items will be populated here -->
+                </div>
+            </div>
+
+            <!-- Options Sidebar (Right) -->
+            <aside class="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-gray-200 bg-white flex flex-col h-2/5 lg:h-full shrink-0 overflow-y-auto">
+                <div class="p-4 border-b border-gray-150 flex items-center gap-2 shrink-0 bg-gray-50/50">
+                    <i data-lucide="sliders-horizontal" class="w-4 h-4 text-brand-600"></i>
+                    <span class="text-xs font-bold text-gray-700 uppercase tracking-wider">Redaction Options</span>
+                </div>
+                
+                <div class="p-4 space-y-6 flex-grow overflow-y-auto">
+                    <!-- Custom Text Search Redact -->
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Manual Text Redact</label>
+                        <div class="flex gap-2">
+                            <div class="relative flex-grow">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i data-lucide="search" class="w-3.5 h-3.5 text-gray-400"></i>
+                                </div>
+                                <input type="text" id="searchRedactInput" class="block w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-sm" placeholder="Search text to redact...">
+                            </div>
+                            <button onclick="triggerAutoRedact()" class="px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all shrink-0">
+                                Redact
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Power Scanners -->
+                    <div class="space-y-2.5">
+                        <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Automatic Power Scanners</label>
+                        <button onclick="autoRedactAllSensitive()" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm" title="Scan and redact account details, limits, and all financial totals">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i>
+                            Redact All Sensitive Info
+                        </button>
+                        <button onclick="autoRedactBalancesAndLimits()" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm" title="Redact Account Balance, Points Balance, Last Balance, Payments & Limits, and Credit Limit">
+                            <i data-lucide="wallet" class="w-4 h-4"></i>
+                            Redact Balances & Limits
+                        </button>
+                        <button onclick="openTxSelector()" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm" title="Scan all transaction line items and select which ones to keep visible">
+                            <i data-lucide="receipt" class="w-4 h-4"></i>
+                            Redact Personal Expenses
+                        </button>
+                    </div>
+
+                    <!-- Local AI NLP Scanners -->
+                    <div class="space-y-2">
+                        <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                            <i data-lucide="brain" class="w-3.5 h-3.5 text-indigo-500"></i> Local AI (NLP) Scanners
+                        </label>
+                        <p class="text-[10px] text-gray-400 mb-2 leading-relaxed">Runs offline natural language models in-browser.</p>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="autoRedactNLP('people')" class="flex items-center justify-center gap-1.5 px-2 py-2 bg-gray-50 border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50/20 rounded-lg text-gray-750 font-semibold text-xs transition-all text-center">
+                                <i data-lucide="user" class="w-3.5 h-3.5 text-indigo-500"></i> Names
+                            </button>
+                            <button onclick="autoRedactNLP('organizations')" class="flex items-center justify-center gap-1.5 px-2 py-2 bg-gray-50 border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50/20 rounded-lg text-gray-750 font-semibold text-xs transition-all text-center">
+                                <i data-lucide="building" class="w-3.5 h-3.5 text-indigo-500"></i> Businesses
+                            </button>
+                            <button onclick="autoRedactNLP('places')" class="flex items-center justify-center gap-1.5 px-2 py-2 bg-gray-50 border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50/20 rounded-lg text-gray-750 font-semibold text-xs transition-all text-center">
+                                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-indigo-500"></i> Locations
+                            </button>
+                            <button onclick="autoRedactNLP('dates')" class="flex items-center justify-center gap-1.5 px-2 py-2 bg-gray-50 border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50/20 rounded-lg text-gray-755 font-semibold text-xs transition-all text-center">
+                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-500"></i> Dates
+                            </button>
+                            <button onclick="autoRedactNLP('contact')" class="flex items-center justify-center gap-1.5 px-2 py-2 bg-gray-50 border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50/20 rounded-lg text-gray-750 font-semibold text-xs transition-all text-center col-span-2">
+                                <i data-lucide="phone" class="w-3.5 h-3.5 text-indigo-500"></i> Contact (Emails/Phones)
+                            </button>
+                            <button onclick="autoRedactNLP('values')" class="flex items-center justify-center gap-1.5 px-2 py-2 bg-gray-50 border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50/20 rounded-lg text-gray-750 font-semibold text-xs transition-all text-center col-span-2">
+                                <i data-lucide="hash" class="w-3.5 h-3.5 text-indigo-500"></i> Numbers & Amounts
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Smart Presets -->
+                    <div class="space-y-3">
+                        <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-brand-600"></i> Smart Presets
+                        </label>
+                        
+                        <!-- Identity -->
+                        <div class="space-y-1.5">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">Identity</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button onclick="applySearchPreset('Account No')" class="px-2 py-1 bg-gray-50 border border-gray-200 hover:border-brand-500 hover:bg-brand-50 rounded-lg text-gray-650 font-medium text-[11px] shadow-sm transition-all">Account No</button>
+                                <button onclick="applySearchPreset('Card Number')" class="px-2 py-1 bg-gray-50 border border-gray-200 hover:border-brand-500 hover:bg-brand-50 rounded-lg text-gray-655 font-medium text-[11px] shadow-sm transition-all">Card Number</button>
+                                <button onclick="applySearchPreset('SSN')" class="px-2 py-1 bg-gray-50 border border-gray-200 hover:border-brand-500 hover:bg-brand-50 rounded-lg text-gray-650 font-medium text-[11px] shadow-sm transition-all">SSN</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Balances -->
+                        <div class="space-y-1.5">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">Balances</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button onclick="applySearchPreset('Balance')" class="px-2 py-1 bg-gray-50 border border-gray-200 hover:border-brand-500 hover:bg-brand-50 rounded-lg text-gray-650 font-medium text-[11px] shadow-sm transition-all">Account Balance</button>
+                                <button onclick="applySearchPreset('Points Balance')" class="px-2 py-1 bg-gray-50 border border-gray-200 hover:border-brand-500 hover:bg-brand-50 rounded-lg text-gray-655 font-medium text-[11px] shadow-sm transition-all">Points Balance</button>
+                                <button onclick="applySearchPreset('Previous Balance')" class="px-2 py-1 bg-gray-50 border border-gray-200 hover:border-brand-500 hover:bg-brand-50 rounded-lg text-gray-650 font-medium text-[11px] shadow-sm transition-all">Last Balance</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Payments -->
+                        <div class="space-y-1.5">
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-wider block">Payments & Limits</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                <button onclick="applySearchPreset('Credit Limit')" class="px-2 py-1 bg-gray-50 border border-gray-200 hover:border-brand-500 hover:bg-brand-50 rounded-lg text-gray-650 font-medium text-[11px] shadow-sm transition-all">Credit Limit</button>
+                                <button onclick="applySearchPreset('Last Payment')" class="px-2 py-1 bg-gray-50 border border-gray-200 hover:border-brand-500 hover:bg-brand-50 rounded-lg text-gray-655 font-medium text-[11px] shadow-sm transition-all">Last Payment</button>
+                                <button onclick="applySearchPreset('Payment Due')" class="px-2 py-1 bg-gray-50 border border-gray-200 hover:border-brand-500 hover:bg-brand-50 rounded-lg text-gray-650 font-medium text-[11px] shadow-sm transition-all">Payment Due</button>
+                                <button onclick="applySearchPreset('Minimum Payment')" class="px-2 py-1 bg-gray-50 border border-gray-200 hover:border-brand-500 hover:bg-brand-50 rounded-lg text-gray-650 font-medium text-[11px] shadow-sm transition-all">Min Payment</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Sidebar Controls (Clear All & Zoom) -->
+                <div class="p-4 border-t border-gray-200 bg-gray-50 flex flex-col gap-3 shrink-0">
+                    <div class="flex items-center justify-between gap-2 select-none">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Workspace Zoom</span>
+                        <!-- Zoom percentage indicator -->
+                        <span id="zoomPercent" class="text-xs font-bold text-gray-700">100%</span>
+                    </div>
+                    <div class="flex items-center border border-gray-200 rounded-lg bg-white overflow-hidden shadow-sm justify-between select-none">
+                        <button onclick="changeZoom(-0.25)" class="flex-grow py-2 hover:bg-gray-50 text-gray-500 transition-colors flex justify-center border-r border-gray-150">
+                            <i data-lucide="minus" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="fitToWidth()" class="flex-grow py-2 hover:bg-gray-50 text-gray-500 transition-colors text-xs font-semibold flex justify-center border-r border-gray-150">
+                            Fit Width
+                        </button>
+                        <button onclick="changeZoom(0.25)" class="flex-grow py-2 hover:bg-gray-50 text-gray-500 transition-colors flex justify-center">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <button onclick="clearAllRedactions()" class="w-full flex items-center justify-center gap-1.5 py-2 border border-red-200 hover:bg-red-50 text-red-600 rounded-lg text-xs font-bold transition-all shadow-sm">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        Clear All Redactions
+                    </button>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- Password Modal -->
+    <div id="passwordModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 transform scale-100 transition-transform flex flex-col items-center">
+            <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mb-4">
+                <i data-lucide="key-round" class="w-6 h-6"></i>
+            </div>
+            
+            <h3 class="text-base font-bold text-gray-900 mb-1.5">Password Protected PDF</h3>
+            <p class="text-xs text-gray-500 text-center mb-4">This bank statement is encrypted. Enter the password below to decrypt and unlock it securely in-browser.</p>
+            
+            <form onsubmit="event.preventDefault(); submitPassword();" class="w-full">
+                <input type="password" id="passwordInput" class="w-full px-3.5 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 mb-1" placeholder="Enter password..." required />
+                <p id="passwordError" class="text-[11px] text-red-500 mb-4 hidden"></p>
+                
+                <div class="flex gap-3 mt-4">
+                    <button type="button" onclick="cancelPassword()" class="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold transition-colors">
+                        Unlock Document
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Exporting Progress Modal -->
+    <div id="exportModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 flex flex-col items-center">
+            <div class="w-12 h-12 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center mb-4 animate-pulse">
+                <i data-lucide="shield-check" class="w-6 h-6 animate-bounce"></i>
+            </div>
+            
+            <h3 class="text-base font-bold text-gray-900 mb-1.5">Generating Secure Flat PDF</h3>
+            <p class="text-xs text-gray-500 text-center mb-4">Rasterizing pages & sealing redactions. This prevents text recovery or metadata extraction.</p>
+            
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-100 rounded-full h-2 mb-2 overflow-hidden border border-gray-200">
+                <div id="exportProgress" class="bg-brand-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <span id="exportProgressText" class="text-[11px] font-medium text-gray-500">Preparing...</span>
+        </div>
+    </div>
+
+    <!-- Transaction Selector Modal -->
+    <div id="txSelectorModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] p-6 shadow-2xl border border-gray-100 flex flex-col">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4 shrink-0">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="receipt" class="w-5 h-5 text-brand-600"></i>
+                    <h3 class="text-base font-bold text-gray-900">Exclude Personal Transactions</h3>
+                </div>
+                <button onclick="closeTxSelector()" class="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600 transition-colors">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            
+            <p class="text-xs text-gray-500 mb-4 shrink-0">
+                The scanner has identified the following transactions. 
+                <strong>Check</strong> the business expenses you want to <strong>KEEP visible</strong>. 
+                Any <strong>UNCHECKED</strong> personal transactions will be automatically redacted (blacked out).
+            </p>
+            
+            <!-- Table Wrapper -->
+            <div class="flex-grow overflow-y-auto border border-gray-200 rounded-lg mb-4">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-wider sticky top-0 z-10 select-none">
+                            <th class="p-3 w-16 text-center">Keep</th>
+                            <th class="p-3 w-16">Page</th>
+                            <th class="p-3 w-24">Date</th>
+                            <th class="p-3">Merchant / Description</th>
+                            <th class="p-3 w-28 text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="txTableBody" class="text-xs text-gray-700 divide-y divide-gray-100">
+                        <!-- Populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="flex flex-wrap items-center justify-between gap-3 shrink-0 pt-2 border-t border-gray-100">
+                <div class="flex gap-2">
+                    <button onclick="toggleAllTxs(true)" class="px-2.5 py-1.5 border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-lg text-xs font-semibold transition-all">
+                        Keep All
+                    </button>
+                    <button onclick="toggleAllTxs(false)" class="px-2.5 py-1.5 border border-gray-200 hover:bg-gray-50 text-gray-600 rounded-lg text-xs font-semibold transition-all">
+                        Redact All
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="closeTxSelector()" class="px-4 py-2 border border-gray-200 rounded-lg text-xs font-semibold text-gray-500 hover:bg-gray-50 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="btnApplyTxRedactions" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                        Apply Redactions
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast flex items-center gap-2.5 shadow-xl text-sm border border-gray-700">
+        <i data-lucide="info" class="h-4.5 w-4.5 text-brand-400 shrink-0"></i>
+        <span id="toastMessage" class="font-medium text-xs">Processing...</span>
+    </div>
+
+    <script>
+        // Set worker source for PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // Extend compromise.js lexicon for better financial entity recognition
+        if (window.nlp) {
+            nlp.extend((Doc, world) => {
+                world.addWords({
+                    'td canada trust': 'Organization',
+                    'easyweb': 'Organization',
+                    'visa': 'Organization',
+                    'mastercard': 'Organization',
+                    'amex': 'Organization',
+                    'cardholder': 'Noun',
+                    'statement': 'Noun',
+                    'interac': 'Organization'
+                });
+            });
+        }
+
+        // Application State
+        const state = {
+            pdfFile: null,
+            pdfDoc: null,
+            zoomScale: 1.25,
+            passwordResolve: null,
+            // Array of arrays: redactions[pageIndex] = [{ id, x, y, w, h }] (coordinates in PDF space points)
+            redactions: [],
+            deletedPages: new Set(),
+            isDirty: false
+        };
+
+        // Initialize elements
+        const dropzone = document.getElementById('dropzone');
+        const pdfFileInput = document.getElementById('pdfFileInput');
+        const dropzoneContainer = document.getElementById('dropzoneContainer');
+        const editorLayout = document.getElementById('editorLayout');
+        const headerActions = document.getElementById('headerActions');
+        const searchRedactInput = document.getElementById('searchRedactInput');
+
+        // File upload event listeners
+        dropzone.addEventListener('click', () => pdfFileInput.click());
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('border-brand-500', 'bg-brand-50/50');
+        });
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('border-brand-500', 'bg-brand-50/50');
+        });
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-brand-500', 'bg-brand-50/50');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleUploadedFile(files[0]);
+            }
+        });
+        pdfFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleUploadedFile(e.target.files[0]);
+            }
+        });
+
+        // Trigger Toast notifications
+        let toastTimeout = null;
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            
+            toast.classList.add('show');
+            
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
+
+        // File reader and PDF initiator
+        function handleUploadedFile(file) {
+            if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                showToast('Only PDF files are supported.');
+                return;
+            }
+            
+            state.pdfFile = file;
+            const reader = new FileReader();
+            
+            showToast('Loading document...');
+            reader.onload = async function() {
+                const arrayBuffer = this.result;
+                try {
+                    // Try to load document, unlocking if protected
+                    const pdfDoc = await loadPdfDoc(arrayBuffer);
+                    state.pdfDoc = pdfDoc;
+                    
+                    // Show editor, hide upload
+                    dropzoneContainer.classList.add('hidden');
+                    editorLayout.classList.remove('hidden');
+                    headerActions.classList.remove('hidden');
+                    
+                    // Setup UI elements
+                    document.getElementById('pageCountLabel').textContent = `${pdfDoc.numPages} Page${pdfDoc.numPages > 1 ? 's' : ''}`;
+                    
+                    // Render page list & viewports
+                    await renderAllPages(pdfDoc);
+                    scrollToPage(1);
+                    showToast('Document loaded successfully.');
+                } catch (err) {
+                    console.error(err);
+                    if (err.message !== 'Cancelled') {
+                        showToast(`Failed to parse PDF: ${err.message}`, 4000);
+                    }
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Handles PDF loading & recursive decryption prompt if locked
+        async function loadPdfDoc(pdfData, pw = '', isRetry = false) {
+            try {
+                const loadingTask = pdfjsLib.getDocument({
+                    data: pdfData,
+                    password: pw
+                });
+                return await loadingTask.promise;
+            } catch (error) {
+                if (error.name === 'PasswordException') {
+                    const userPassword = await promptPasswordModal(isRetry);
+                    if (userPassword === null) {
+                        throw new Error('Cancelled');
+                    }
+                    return loadPdfDoc(pdfData, userPassword, true);
+                } else {
+                    throw error;
+                }
+            }
+        }
+
+        // Password Prompt Promises
+        function promptPasswordModal(isRetry = false) {
+            return new Promise((resolve) => {
+                state.passwordResolve = resolve;
+                const modal = document.getElementById('passwordModal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                
+                const errorEl = document.getElementById('passwordError');
+                if (isRetry) {
+                    errorEl.textContent = 'Incorrect password. Please try again.';
+                    errorEl.classList.remove('hidden');
+                } else {
+                    errorEl.textContent = '';
+                    errorEl.classList.add('hidden');
+                }
+                
+                const input = document.getElementById('passwordInput');
+                input.value = '';
+                input.focus();
+            });
+        }
+
+        // Submit decrypt password
+        function submitPassword() {
+            const input = document.getElementById('passwordInput');
+            const modal = document.getElementById('passwordModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            if (state.passwordResolve) {
+                state.passwordResolve(input.value);
+                state.passwordResolve = null;
+            }
+        }
+
+        // Cancel decrypt password
+        function cancelPassword() {
+            const modal = document.getElementById('passwordModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            if (state.passwordResolve) {
+                state.passwordResolve(null);
+                state.passwordResolve = null;
+            }
+        }
+
+        // Workspace setup & layout mapping
+        async function renderAllPages(pdfDoc) {
+            const numPages = pdfDoc.numPages;
+            state.redactions = Array.from({ length: numPages }, () => []);
+            state.deletedPages.clear();
+            
+            const workspace = document.getElementById('workspace');
+            workspace.innerHTML = '';
+            
+            const sidebarList = document.getElementById('sidebarList');
+            sidebarList.innerHTML = '';
+            
+            for (let i = 1; i <= numPages; i++) {
+                // Sidebar item
+                const sidebarItem = document.createElement('div');
+                sidebarItem.id = `sidebar-page-${i}`;
+                sidebarItem.className = 'w-full px-3 py-2 rounded-lg text-sm transition-all hover:bg-gray-100 flex items-center justify-between group/sidebar shrink-0 lg:shrink select-none';
+                
+                sidebarItem.innerHTML = `
+                    <button onclick="scrollToPage(${i})" class="flex-grow text-left font-medium text-gray-700 flex justify-between items-center mr-2">
+                        <span>Page ${i}</span>
+                        <span id="badge-page-${i}" class="hidden px-2 py-0.5 rounded-full text-[10px] font-semibold bg-brand-100 text-brand-600">0</span>
+                    </button>
+                    <button onclick="toggleSidebarPageDelete(${i})" class="delete-sidebar-btn p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors opacity-0 group-hover/sidebar:opacity-100" title="Delete Page">
+                        <i data-lucide="file-minus" class="w-3.5 h-3.5"></i>
+                    </button>
+                `;
+                sidebarList.appendChild(sidebarItem);
+                
+                // Workspace page card
+                const pageContainer = document.createElement('div');
+                pageContainer.id = `page-container-${i}`;
+                pageContainer.className = 'bg-white rounded-xl shadow-md border border-gray-200 p-4 mb-6 flex flex-col items-center w-fit';
+                
+                pageContainer.innerHTML = `
+                    <div class="w-full flex justify-between items-center mb-3 pb-2 border-b border-gray-100 select-none">
+                        <span class="text-xs font-semibold text-gray-500" id="page-label-${i}">Page ${i} of ${numPages}</span>
+                        <div class="flex items-center gap-3">
+                            <button onclick="clearPageRedactions(${i})" class="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 transition-colors">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear Page
+                            </button>
+                            <span class="text-gray-300">|</span>
+                            <button onclick="deletePage(${i})" class="text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1 transition-colors" id="btn-delete-page-${i}">
+                                <i data-lucide="file-minus" class="w-3.5 h-3.5"></i> Delete Page
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Page Deleted Placeholder -->
+                    <div id="deleted-placeholder-${i}" class="hidden w-full py-8 px-12 bg-red-50/50 border border-red-200 rounded-xl text-center flex flex-col items-center justify-center">
+                        <i data-lucide="file-x-2" class="w-8 h-8 text-red-500 mb-2 animate-bounce"></i>
+                        <p class="text-sm font-bold text-gray-900">Page ${i} has been deleted</p>
+                        <p class="text-xs text-gray-500 mb-3">This page will be excluded from the exported PDF.</p>
+                        <button onclick="restorePage(${i})" class="px-3 py-1.5 bg-white border border-gray-200 hover:border-brand-500 hover:bg-brand-50 rounded text-brand-600 transition-all font-semibold text-xs shadow-sm">
+                            Undo Delete
+                        </button>
+                    </div>
+
+                    <div id="page-content-${i}" class="flex flex-col items-center">
+                        <div id="wrapper-page-${i}" class="relative select-none border border-gray-200 shadow-sm" style="display: inline-block;">
+                            <canvas id="canvas-page-${i}"></canvas>
+                            <div id="overlay-page-${i}" class="absolute top-0 left-0 w-full h-full pointer-events-auto" style="cursor: crosshair;"></div>
+                        </div>
+                    </div>
+                `;
+                workspace.appendChild(pageContainer);
+                
+                await renderPage(pdfDoc, i);
+            }
+            
+            lucide.createIcons();
+        }
+
+        // Renders single PDF page
+        async function renderPage(pdfDoc, pageNum) {
+            const page = await pdfDoc.getPage(pageNum);
+            const viewport = page.getViewport({ scale: state.zoomScale });
+            
+            const canvas = document.getElementById(`canvas-page-${pageNum}`);
+            const ctx = canvas.getContext('2d');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            
+            await page.render({
+                canvasContext: ctx,
+                viewport: viewport
+            }).promise;
+            
+            // Retrieve and store page text items for hover highlighting
+            try {
+                const textContent = await page.getTextContent();
+                if (!state.pageTextItems) {
+                    state.pageTextItems = [];
+                }
+                state.pageTextItems[pageNum - 1] = textContent.items.map(item => {
+                    const fontHeight = Math.abs(item.transform[3]) || item.height || 10;
+                    const tx = item.transform[4];
+                    const ty = item.transform[5];
+                    
+                    const pdfRect = [tx, ty, tx + (item.width || item.str.length * fontHeight * 0.5), ty + fontHeight];
+                    const viewRect = viewport.convertToViewportRectangle(pdfRect);
+                    
+                    const rx = Math.min(viewRect[0], viewRect[2]);
+                    const ry = Math.min(viewRect[1], viewRect[3]);
+                    const rw = Math.abs(viewRect[2] - viewRect[0]);
+                    const rh = Math.abs(viewRect[3] - viewRect[1]);
+                    
+                    return {
+                        item: item,
+                        x: rx,
+                        y: ry,
+                        w: rw,
+                        h: rh,
+                        pdfX: tx,
+                        pdfY: ty,
+                        pdfW: item.width || (item.str.length * fontHeight * 0.5),
+                        pdfH: fontHeight
+                    };
+                }).filter(r => r.w > 0 && r.h > 0 && r.x >= -2 && r.y >= -2 && r.x <= viewport.width + 2 && r.y <= viewport.height + 2);
+            } catch (err) {
+                console.error("Error retrieving text items for page " + pageNum, err);
+            }
+            
+            const overlay = document.getElementById(`overlay-page-${pageNum}`);
+            overlay.style.width = `${viewport.width}px`;
+            overlay.style.height = `${viewport.height}px`;
+            
+            const wrapper = document.getElementById(`wrapper-page-${pageNum}`);
+            wrapper.style.width = `${viewport.width}px`;
+            wrapper.style.height = `${viewport.height}px`;
+            
+            setupDrawing(overlay, pageNum);
+            drawRedactionOverlays(pageNum);
+        }
+
+        // Navigation controls
+        function scrollToPage(pageNum) {
+            const element = document.getElementById(`page-container-${pageNum}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                // Sidebar active mapping
+                for (let i = 1; i <= state.pdfDoc.numPages; i++) {
+                    const el = document.getElementById(`sidebar-page-${i}`);
+                    if (el) {
+                        if (i === pageNum) {
+                            el.classList.add('bg-brand-50', 'text-brand-600', 'border-l-2', 'border-brand-500');
+                            el.classList.remove('text-gray-700');
+                        } else {
+                            el.classList.remove('bg-brand-50', 'text-brand-600', 'border-l-2', 'border-brand-500');
+                            el.classList.add('text-gray-700');
+                        }
+                    }
+                }
+            }
+        }
+
+        // Page Deletion Management
+        function deletePage(pageNum) {
+            state.deletedPages.add(pageNum);
+            state.isDirty = true;
+            
+            // Hide content wrapper, show deleted placeholder banner
+            document.getElementById(`page-content-${pageNum}`).classList.add('hidden');
+            const placeholder = document.getElementById(`deleted-placeholder-${pageNum}`);
+            placeholder.classList.remove('hidden');
+            placeholder.classList.add('flex');
+            
+            // Modify workspace page delete button state
+            const deleteBtn = document.getElementById(`btn-delete-page-${pageNum}`);
+            if (deleteBtn) {
+                deleteBtn.disabled = true;
+                deleteBtn.classList.add('opacity-30', 'cursor-not-allowed');
+            }
+            
+            // Modify sidebar entry styling and swap button to restore
+            const sidebarItem = document.getElementById(`sidebar-page-${pageNum}`);
+            if (sidebarItem) {
+                sidebarItem.classList.add('opacity-40');
+                const label = sidebarItem.querySelector('span');
+                if (label) label.classList.add('line-through');
+                
+                const sidebarBtn = sidebarItem.querySelector('.delete-sidebar-btn');
+                if (sidebarBtn) {
+                    sidebarBtn.innerHTML = '<i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>';
+                    sidebarBtn.title = "Restore Page";
+                    sidebarBtn.classList.remove('hover:text-red-500', 'hover:bg-red-50');
+                    sidebarBtn.classList.add('text-brand-500', 'hover:text-brand-600', 'hover:bg-brand-50');
+                }
+            }
+            
+            lucide.createIcons();
+            showToast(`Page ${pageNum} excluded from export.`);
+        }
+
+        function restorePage(pageNum) {
+            state.deletedPages.delete(pageNum);
+            
+            // Show content wrapper, hide deleted placeholder banner
+            document.getElementById(`page-content-${pageNum}`).classList.remove('hidden');
+            const placeholder = document.getElementById(`deleted-placeholder-${pageNum}`);
+            placeholder.classList.add('hidden');
+            placeholder.classList.remove('flex');
+            
+            // Re-enable workspace page delete button
+            const deleteBtn = document.getElementById(`btn-delete-page-${pageNum}`);
+            if (deleteBtn) {
+                deleteBtn.disabled = false;
+                deleteBtn.classList.remove('opacity-30', 'cursor-not-allowed');
+            }
+            
+            // Restore sidebar styling and swap button back to delete
+            const sidebarItem = document.getElementById(`sidebar-page-${pageNum}`);
+            if (sidebarItem) {
+                sidebarItem.classList.remove('opacity-40');
+                const label = sidebarItem.querySelector('span');
+                if (label) label.classList.remove('line-through');
+                
+                const sidebarBtn = sidebarItem.querySelector('.delete-sidebar-btn');
+                if (sidebarBtn) {
+                    sidebarBtn.innerHTML = '<i data-lucide="file-minus" class="w-3.5 h-3.5"></i>';
+                    sidebarBtn.title = "Delete Page";
+                    sidebarBtn.classList.add('hover:text-red-500', 'hover:bg-red-50');
+                    sidebarBtn.classList.remove('text-brand-500', 'hover:text-brand-600', 'hover:bg-brand-50');
+                }
+            }
+            
+            lucide.createIcons();
+            showToast(`Page ${pageNum} restored.`);
+        }
+
+        function toggleSidebarPageDelete(pageNum) {
+            if (state.deletedPages.has(pageNum)) {
+                restorePage(pageNum);
+            } else {
+                deletePage(pageNum);
+            }
+        }
+
+        // Interactive Redactor Canvas Setup
+        function setupDrawing(overlay, pageNum) {
+            let isDrawing = false;
+            let startX = 0;
+            let startY = 0;
+            let tempBox = null;
+
+            // Hover highlight element management
+            let highlight = overlay.querySelector('.hover-highlight');
+            if (!highlight) {
+                highlight = document.createElement('div');
+                highlight.className = 'hover-highlight absolute pointer-events-none border border-brand-500 bg-brand-500/10 rounded-sm transition-all duration-75 hidden z-10';
+                overlay.appendChild(highlight);
+            }
+            
+            let hoveredItem = null;
+            
+            overlay.onmousemove = handleHoverMove;
+            overlay.onmouseleave = handleHoverLeave;
+            
+            function handleHoverMove(e) {
+                if (isDrawing) {
+                    highlight.style.display = 'none';
+                    return;
+                }
+                
+                const rect = overlay.getBoundingClientRect();
+                const mx = e.clientX - rect.left;
+                const my = e.clientY - rect.top;
+                
+                const items = (state.pageTextItems && state.pageTextItems[pageNum - 1]) || [];
+                hoveredItem = items.find(t => 
+                    mx >= t.x && mx <= t.x + t.w && my >= t.y && my <= t.y + t.h
+                );
+                
+                if (hoveredItem) {
+                    highlight.style.left = `${hoveredItem.x}px`;
+                    highlight.style.top = `${hoveredItem.y}px`;
+                    highlight.style.width = `${hoveredItem.w}px`;
+                    highlight.style.height = `${hoveredItem.h}px`;
+                    highlight.style.display = 'block';
+                } else {
+                    highlight.style.display = 'none';
+                }
+            }
+            
+            function handleHoverLeave() {
+                highlight.style.display = 'none';
+                hoveredItem = null;
+            }
+
+            function getPos(e) {
+                const rect = overlay.getBoundingClientRect();
+                if (e.touches && e.touches[0]) {
+                    return {
+                        x: e.touches[0].clientX - rect.left,
+                        y: e.touches[0].clientY - rect.top
+                    };
+                }
+                return {
+                    x: e.offsetX,
+                    y: e.offsetY
+                };
+            }
+
+            overlay.onmousedown = startDraw;
+            overlay.ontouchstart = startDraw;
+
+            function startDraw(e) {
+                if (e.target.closest('.delete-box-btn')) {
+                    return;
+                }
+                
+                if (e.type === 'touchstart') {
+                    // Prevent scrolling/pinch on viewport while redacting
+                    e.preventDefault();
+                }
+
+                isDrawing = true;
+                const pos = getPos(e);
+                startX = pos.x;
+                startY = pos.y;
+
+                tempBox = document.createElement('div');
+                tempBox.className = 'absolute bg-black bg-opacity-75 border border-dashed border-brand-500 pointer-events-none z-20';
+                tempBox.style.left = `${startX}px`;
+                tempBox.style.top = `${startY}px`;
+                overlay.appendChild(tempBox);
+
+                window.addEventListener('mousemove', moveDraw);
+                window.addEventListener('mouseup', endDraw);
+                window.addEventListener('touchmove', moveDraw, { passive: false });
+                window.addEventListener('touchend', endDraw);
+            }
+
+            function moveDraw(e) {
+                if (!isDrawing) return;
+                if (e.cancelable) e.preventDefault();
+
+                const pos = getPos(e);
+                const curX = Math.max(0, Math.min(pos.x, overlay.clientWidth));
+                const curY = Math.max(0, Math.min(pos.y, overlay.clientHeight));
+
+                const x = Math.min(startX, curX);
+                const y = Math.min(startY, curY);
+                const w = Math.abs(startX - curX);
+                const h = Math.abs(startY - curY);
+
+                tempBox.style.left = `${x}px`;
+                tempBox.style.top = `${y}px`;
+                tempBox.style.width = `${w}px`;
+                tempBox.style.height = `${h}px`;
+                
+                // Hide hover highlight while drawing a custom box
+                highlight.style.display = 'none';
+            }
+
+            function endDraw(e) {
+                if (!isDrawing) return;
+                isDrawing = false;
+
+                window.removeEventListener('mousemove', moveDraw);
+                window.removeEventListener('mouseup', endDraw);
+                window.removeEventListener('touchmove', moveDraw);
+                window.removeEventListener('touchend', endDraw);
+
+                if (tempBox) {
+                    const rect = tempBox.getBoundingClientRect();
+                    const overlayRect = overlay.getBoundingClientRect();
+
+                    const left = rect.left - overlayRect.left;
+                    const top = rect.top - overlayRect.top;
+                    const width = rect.width;
+                    const height = rect.height;
+
+                    overlay.removeChild(tempBox);
+                    tempBox = null;
+
+                    // Convert dimensions to PDF scale 1.0 points
+                    const S = state.zoomScale;
+                    const pdfX = left / S;
+                    const pdfY = top / S;
+                    const pdfW = width / S;
+                    const pdfH = height / S;
+
+                    // Draw if box represents a meaningful size (dragged)
+                    if (pdfW > 3 && pdfH > 3) {
+                        state.redactions[pageNum - 1].push({
+                            id: Date.now() + Math.random().toString(36).substr(2, 9),
+                            x: pdfX,
+                            y: pdfY,
+                            w: pdfW,
+                            h: pdfH
+                        });
+                        
+                        state.isDirty = true;
+                        drawRedactionOverlays(pageNum);
+                        updateSidebarBadge(pageNum);
+                    } else {
+                        // Single click (tap) - check if we are hovering a text item!
+                        if (hoveredItem) {
+                            state.redactions[pageNum - 1].push({
+                                id: Date.now() + Math.random().toString(36).substr(2, 9),
+                                x: hoveredItem.x / S,
+                                y: hoveredItem.y / S,
+                                w: hoveredItem.w / S,
+                                h: hoveredItem.h / S
+                            });
+                            
+                            state.isDirty = true;
+                            drawRedactionOverlays(pageNum);
+                            updateSidebarBadge(pageNum);
+                            
+                            // Hide highlight after clicking to redact
+                            highlight.style.display = 'none';
+                            hoveredItem = null;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Paints redactions as visual interactive divs
+        function drawRedactionOverlays(pageNum) {
+            const overlay = document.getElementById(`overlay-page-${pageNum}`);
+            if (!overlay) return;
+            
+            // Remove existing overlay boxes
+            const boxes = overlay.querySelectorAll('.redaction-box');
+            boxes.forEach(box => overlay.removeChild(box));
+            
+            const pageRedactions = state.redactions[pageNum - 1];
+            const S = state.zoomScale;
+            
+            pageRedactions.forEach(box => {
+                const boxDiv = document.createElement('div');
+                boxDiv.className = 'redaction-box absolute bg-black border border-gray-700/50 flex items-center justify-center group pointer-events-auto hover:bg-black/90 transition-all shadow-sm z-10';
+                boxDiv.style.left = `${box.x * S}px`;
+                boxDiv.style.top = `${box.y * S}px`;
+                boxDiv.style.width = `${box.w * S}px`;
+                boxDiv.style.height = `${box.h * S}px`;
+                
+                // Delete button inside redaction box
+                boxDiv.innerHTML = `
+                    <button class="delete-box-btn absolute bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100 pointer-events-auto shadow-md"
+                            style="width: 18px; height: 18px; font-size: 10px; line-height: 1;"
+                            onclick="deleteRedaction(${pageNum}, '${box.id}')">
+                        <i data-lucide="x" class="w-2.5 h-2.5"></i>
+                    </button>
+                `;
+                overlay.appendChild(boxDiv);
+            });
+            
+            lucide.createIcons();
+        }
+
+        // Redaction list managers
+        function deleteRedaction(pageNum, boxId) {
+            state.redactions[pageNum - 1] = state.redactions[pageNum - 1].filter(box => box.id !== boxId);
+            drawRedactionOverlays(pageNum);
+            updateSidebarBadge(pageNum);
+        }
+
+        function clearPageRedactions(pageNum) {
+            state.redactions[pageNum - 1] = [];
+            drawRedactionOverlays(pageNum);
+            updateSidebarBadge(pageNum);
+            showToast(`Cleared redactions for page ${pageNum}.`);
+        }
+
+        function clearAllRedactions() {
+            if (confirm("Are you sure you want to clear all redactions in this document?")) {
+                for (let i = 1; i <= state.pdfDoc.numPages; i++) {
+                    state.redactions[i - 1] = [];
+                    drawRedactionOverlays(i);
+                    updateSidebarBadge(i);
+                }
+                showToast("Cleared all redactions.");
+            }
+        }
+
+        function updateSidebarBadge(pageNum) {
+            const badge = document.getElementById(`badge-page-${pageNum}`);
+            if (!badge) return;
+            const count = state.redactions[pageNum - 1].length;
+            if (count > 0) {
+                badge.textContent = count;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // Zoom Management Controls
+        function changeZoom(delta) {
+            const newZoom = state.zoomScale + delta;
+            if (newZoom >= 0.5 && newZoom <= 3.0) {
+                state.zoomScale = newZoom;
+                document.getElementById('zoomPercent').textContent = `${Math.round(state.zoomScale * 100)}%`;
+                refreshViewports();
+            }
+        }
+
+        function fitToWidth() {
+            if (!state.pdfDoc) return;
+            
+            // Calculate scale based on container width
+            const workspaceWidth = document.getElementById('workspace').clientWidth - 48; // padding factor
+            
+            // Get original width of Page 1 as baseline
+            state.pdfDoc.getPage(1).then(page => {
+                const viewport = page.getViewport({ scale: 1.0 });
+                const calculatedScale = workspaceWidth / viewport.width;
+                
+                // Restrict zoom limits
+                state.zoomScale = Math.max(0.5, Math.min(calculatedScale, 2.0));
+                document.getElementById('zoomPercent').textContent = `${Math.round(state.zoomScale * 100)}%`;
+                refreshViewports();
+            });
+        }
+
+        async function refreshViewports() {
+            if (!state.pdfDoc) return;
+            showToast("Updating zoom level...");
+            for (let i = 1; i <= state.pdfDoc.numPages; i++) {
+                await renderPage(state.pdfDoc, i);
+            }
+        }
+
+        // Text Search automatic redactor logic
+        async function triggerAutoRedact() {
+            const query = searchRedactInput.value.trim();
+            if (!query) {
+                showToast("Please enter a search query.");
+                return;
+            }
+            await autoRedactText(query);
+        }
+
+        function reconstructLines(items) {
+            if (!items || items.length === 0) return [];
+            
+            const linesMap = new Map();
+            
+            for (const item of items) {
+                if (!item.str || !item.str.trim()) continue;
+                
+                const y = item.transform[5];
+                
+                // Find line with similar y-coordinate (tolerance of 5 points)
+                let foundKey = null;
+                for (const key of linesMap.keys()) {
+                    if (Math.abs(key - y) < 5) {
+                        foundKey = key;
+                        break;
+                    }
+                }
+                
+                if (foundKey === null) {
+                    foundKey = y;
+                    linesMap.set(foundKey, []);
+                }
+                
+                linesMap.get(foundKey).push(item);
+            }
+            
+            // Sort vertical coordinates from top to bottom (descending y-coordinate)
+            const sortedY = Array.from(linesMap.keys()).sort((a, b) => b - a);
+            
+            return sortedY.map(y => {
+                const lineItems = linesMap.get(y);
+                // Sort line items from left to right (ascending x-coordinate)
+                lineItems.sort((a, b) => a.transform[4] - b.transform[4]);
+                
+                let text = '';
+                const mappings = [];
+                
+                for (const item of lineItems) {
+                    const start = text.length;
+                    text += item.str + ' ';
+                    const end = text.length;
+                    
+                    mappings.push({
+                        start: start,
+                        end: end,
+                        item: item
+                    });
+                }
+                
+                return {
+                    y: y,
+                    text: text,
+                    items: lineItems,
+                    mappings: mappings
+                };
+            });
+        }
+
+        function applySearchPreset(text) {
+            searchRedactInput.value = text;
+            
+            // Map the preset text to specific keyword arrays for smart redaction
+            let keywords = [text];
+            let redactRight = true;
+            
+            if (text === 'Account No') {
+                keywords = ['account no', 'account number', 'account #', 'acct no', 'acct number', 'acct #', 'account:', 'account value'];
+            } else if (text === 'Card Number') {
+                keywords = ['card number', 'card no', 'card #', 'credit card', 'primary cardholder', 'cardholder'];
+            } else if (text === 'SSN') {
+                keywords = ['ssn', 'social security', 'tax id'];
+            } else if (text === 'Balance') {
+                keywords = ['ending balance', 'new balance', 'current balance', 'closing balance', 'previous balance', 'account balance', 'statement balance'];
+            } else if (text === 'Points Balance') {
+                keywords = ['points balance', 'reward points', 'available points', 'td rewards', 'td points', 'new points balance', 'previous points'];
+            } else if (text === 'Previous Balance') {
+                keywords = ['previous balance', 'prev balance', 'last balance', 'prior balance'];
+            } else if (text === 'Credit Limit') {
+                keywords = ['credit limit', 'credit line', 'limit:', 'available credit'];
+            } else if (text === 'Last Payment') {
+                keywords = ['last payment', 'payment received', 'recent payment'];
+            } else if (text === 'Payment Due') {
+                keywords = ['payment due', 'amount due', 'due date'];
+            } else if (text === 'Minimum Payment') {
+                keywords = ['minimum payment', 'min payment', 'min. payment'];
+            } else if (text === 'Statement Period') {
+                keywords = ['statement period', 'statement date', 'billing cycle', 'period:', 'billing period'];
+            } else if (text === 'Deposit') {
+                keywords = ['deposit', 'total deposits', 'deposits:'];
+            }
+            
+            autoRedactKeywords(keywords, redactRight);
+        }
+
+        async function autoRedactKeywords(keywords, redactRightValue = false) {
+            if (!state.pdfDoc || !keywords || keywords.length === 0) return;
+            
+            let totalMatches = 0;
+            showToast("Scanning and redacting sensitive sections...");
+            
+            for (let i = 1; i <= state.pdfDoc.numPages; i++) {
+                const page = await state.pdfDoc.getPage(i);
+                const textContent = await page.getTextContent();
+                const viewport = page.getViewport({ scale: 1.0 });
+                
+                // Reconstruct lines on this page
+                const lines = reconstructLines(textContent.items);
+                
+                // Keep track of which items we decided to redact on this page
+                const itemsToRedact = new Set();
+                
+                // Iterate through reconstructed lines to search for keywords
+                for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+                    const line = lines[lineIndex];
+                    
+                    for (const keyword of keywords) {
+                        const lowerText = line.text.toLowerCase();
+                        const lowerKw = keyword.toLowerCase();
+                        let idx = 0;
+                        
+                        while ((idx = lowerText.indexOf(lowerKw, idx)) !== -1) {
+                            const matchStart = idx;
+                            const matchEnd = matchStart + lowerKw.length;
+                            
+                            // Find matching items for the keyword label itself
+                            const matchingItems = [];
+                            let minX = Infinity;
+                            let maxX = -Infinity;
+                            
+                            for (const map of line.mappings) {
+                                if (Math.max(map.start, matchStart) < Math.min(map.end, matchEnd)) {
+                                    matchingItems.push(map.item);
+                                    minX = Math.min(minX, map.item.transform[4]);
+                                    const itemW = map.item.width || (map.item.str.length * (Math.abs(map.item.transform[3]) || 10) * 0.5);
+                                    maxX = Math.max(maxX, map.item.transform[4] + itemW);
+                                }
+                            }
+                            
+                            // Redact the keyword label items
+                            matchingItems.forEach(item => itemsToRedact.add(item));
+                            
+                            if (redactRightValue && minX !== Infinity) {
+                                // 1. Redact same-line right values (increased check range to 500 to catch far-right elements)
+                                for (const map of line.mappings) {
+                                    const item = map.item;
+                                    const itemX = item.transform[4];
+                                    if (itemX > maxX && itemX - maxX < 500) {
+                                        itemsToRedact.add(item);
+                                    }
+                                }
+                                
+                                // 2. Redact vertically stacked values (below the label)
+                                for (let j = lineIndex + 1; j < lines.length; j++) {
+                                    const lowerLine = lines[j];
+                                    const diffY = line.y - lowerLine.y;
+                                    
+                                    // Stacked values are typically 8 to 50 points below the label
+                                    if (diffY >= 8 && diffY <= 50) {
+                                        for (const item of lowerLine.items) {
+                                            const itemX = item.transform[4];
+                                            const itemW = item.width || (item.str.length * (Math.abs(item.transform[3]) || 10) * 0.5);
+                                            
+                                            // Check horizontal overlap / column alignment (with 45pt padding)
+                                            const isAligned = (itemX < maxX + 45 && itemX + itemW > minX - 45);
+                                                              
+                                            if (isAligned) {
+                                                itemsToRedact.add(item);
+                                            }
+                                        }
+                                    } else if (diffY > 50) {
+                                        // Stop looking further down (correctly aligned with 50pt threshold)
+                                        break;
+                                    }
+                                }
+                            }
+                            
+                            idx += lowerKw.length;
+                        }
+                    }
+                }
+                
+                // Apply redactions to this page
+                for (const item of itemsToRedact) {
+                    const fontHeight = Math.abs(item.transform[3]) || item.height || 10;
+                    const tx = item.transform[4];
+                    const ty = item.transform[5];
+                    
+                    const pdfRect = [tx, ty, tx + (item.width || item.str.length * fontHeight * 0.5), ty + fontHeight];
+                    const viewRect = viewport.convertToViewportRectangle(pdfRect);
+                    
+                    const x = Math.min(viewRect[0], viewRect[2]);
+                    const y = Math.min(viewRect[1], viewRect[3]);
+                    const w = Math.abs(viewRect[2] - viewRect[0]);
+                    const h = Math.abs(viewRect[3] - viewRect[1]);
+                    
+                    // Boundary check to prevent off-page or invisible metadata redactions
+                    if (x < -2 || y < -2 || x > viewport.width + 2 || y > viewport.height + 2 || w <= 0 || h <= 0) {
+                        continue;
+                    }
+
+                    // Avoid overlapping duplicate redactions
+                    const padding = 1.5;
+                    const boxX = Math.max(0, x - padding);
+                    const boxY = Math.max(0, y - padding);
+                    const boxW = w + (padding * 2);
+                    const boxH = h + (padding * 2);
+                    
+                    const alreadyExists = state.redactions[i - 1].some(r => 
+                        Math.abs(r.x - boxX) < 3 && Math.abs(r.y - boxY) < 3 && Math.abs(r.w - boxW) < 5
+                    );
+                    
+                    if (!alreadyExists) {
+                        state.redactions[i - 1].push({
+                            id: Date.now() + Math.random().toString(36).substr(2, 9),
+                            x: boxX,
+                            y: boxY,
+                            w: boxW,
+                            h: boxH
+                        });
+                        totalMatches++;
+                    }
+                }
+                
+                drawRedactionOverlays(i);
+                updateSidebarBadge(i);
+            }
+            
+            if (totalMatches > 0) {
+                showToast(`Auto-redacted ${totalMatches} elements.`);
+                state.isDirty = true;
+            } else {
+                showToast("No matching sensitive elements found.");
+            }
+        }
+
+        async function autoRedactRegexPatterns() {
+            if (!state.pdfDoc) return;
+            
+            let totalMatches = 0;
+            showToast("Scanning for card numbers, postal codes, and contact info...");
+            
+            const patterns = [
+                // Credit cards (Visa, Mastercard, Amex, masked or plain)
+                { name: 'Card Number', regex: /\b(?:\d|X|x){4}[ -]+(?:\d|X|x){4}[ -]+(?:\d|X|x){4}[ -]+(?:\d|X|x){4}\b/gi },
+                { name: 'Card Number', regex: /\b(?:\d|X|x){4}[ -]+(?:\d|X|x){6}[ -]+(?:\d|X|x){5}\b/gi },
+                { name: 'Card Number', regex: /\b(?:\d|X|x){13,16}\b/gi },
+                // Emails
+                { name: 'Email', regex: /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/gi },
+                // Phone numbers
+                { name: 'Phone', regex: /\b(?:\+?1[-. ]?)?\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})\b/gi },
+                // Canadian Postal Codes (e.g. M5V 2T6, K1P5J2)
+                { name: 'Postal Code', regex: /\b[A-Z]\d[A-Z][ -]?\d[A-Z]\d\b/gi }
+            ];
+            
+            for (let i = 1; i <= state.pdfDoc.numPages; i++) {
+                const page = await state.pdfDoc.getPage(i);
+                const textContent = await page.getTextContent();
+                const viewport = page.getViewport({ scale: 1.0 });
+                
+                const lines = reconstructLines(textContent.items);
+                const itemsToRedact = new Set();
+                
+                for (const line of lines) {
+                    for (const pattern of patterns) {
+                        let match;
+                        pattern.regex.lastIndex = 0;
+                        
+                        while ((match = pattern.regex.exec(line.text)) !== null) {
+                            const matchStart = match.index;
+                            const matchEnd = matchStart + match[0].length;
+                            
+                            for (const map of line.mappings) {
+                                if (Math.max(map.start, matchStart) < Math.min(map.end, matchEnd)) {
+                                    itemsToRedact.add(map.item);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                for (const item of itemsToRedact) {
+                    const fontHeight = Math.abs(item.transform[3]) || item.height || 10;
+                    const tx = item.transform[4];
+                    const ty = item.transform[5];
+                    
+                    const pdfRect = [tx, ty, tx + (item.width || item.str.length * fontHeight * 0.5), ty + fontHeight];
+                    const viewRect = viewport.convertToViewportRectangle(pdfRect);
+                    
+                    const x = Math.min(viewRect[0], viewRect[2]);
+                    const y = Math.min(viewRect[1], viewRect[3]);
+                    const w = Math.abs(viewRect[2] - viewRect[0]);
+                    const h = Math.abs(viewRect[3] - viewRect[1]);
+                    
+                    // Boundary check to prevent off-page or invisible metadata redactions
+                    if (x < -2 || y < -2 || x > viewport.width + 2 || y > viewport.height + 2 || w <= 0 || h <= 0) {
+                        continue;
+                    }
+                    
+                    const padding = 1.5;
+                    const boxX = Math.max(0, x - padding);
+                    const boxY = Math.max(0, y - padding);
+                    const boxW = w + (padding * 2);
+                    const boxH = h + (padding * 2);
+                    
+                    const alreadyExists = state.redactions[i - 1].some(r => 
+                        Math.abs(r.x - boxX) < 3 && Math.abs(r.y - boxY) < 3 && Math.abs(r.w - boxW) < 5
+                    );
+                    
+                    if (!alreadyExists) {
+                        state.redactions[i - 1].push({
+                            id: Date.now() + Math.random().toString(36).substr(2, 9),
+                            x: boxX,
+                            y: boxY,
+                            w: boxW,
+                            h: boxH
+                        });
+                        totalMatches++;
+                    }
+                }
+                
+                drawRedactionOverlays(i);
+                updateSidebarBadge(i);
+            }
+            
+            if (totalMatches > 0) {
+                showToast(`Pattern scan complete: redacted ${totalMatches} items.`);
+                state.isDirty = true;
+            } else {
+                showToast("No pattern matches found.");
+            }
+        }
+
+        async function autoRedactAllSensitive() {
+            if (confirm("This will scan the document and auto-redact account numbers, card details, balances, credit limits, payments, and other sensitive keywords + their values. Proceed?")) {
+                const allKeywords = [
+                    'account no', 'account number', 'account #', 'acct no', 'acct number', 'acct #', 'account:', 'account value',
+                    'card number', 'card no', 'card #', 'credit card', 'primary cardholder', 'cardholder',
+                    'ssn', 'social security', 'tax id',
+                    'ending balance', 'new balance', 'current balance', 'closing balance',
+                    'points balance', 'reward points', 'available points', 'td rewards', 'td points', 'new points balance', 'previous points',
+                    'previous balance', 'prev balance', 'last balance', 'prior balance',
+                    'credit limit', 'credit line', 'limit:', 'available credit',
+                    'last payment', 'recent payment', 'payment due', 'amount due', 'due date',
+                    'minimum payment', 'min payment', 'min. payment',
+                    'statement period', 'statement date', 'billing cycle', 'period:', 'billing period',
+                    'total deposits', 'deposits:', 'total withdrawals', 'withdrawals:'
+                ];
+                
+                // 1. Run keyword & value smart scanning
+                await autoRedactKeywords(allKeywords, true);
+                
+                // 2. Run regex pattern scanning
+                await autoRedactRegexPatterns();
+
+                // 3. Run AI PII Entity scanning (Names & Places/Addresses)
+                await autoRedactNLP('people');
+                await autoRedactNLP('places');
+            }
+        }
+
+        async function autoRedactBalancesAndLimits() {
+            const keywords = [
+                'account balance', 'ending balance', 'new balance', 'current balance', 'closing balance', 'statement balance',
+                'points balance', 'reward points', 'new points balance', 'previous points', 'available points', 'td rewards', 'td points',
+                'previous balance', 'prev balance', 'last balance', 'prior balance',
+                'payments & limits', 'payments and limits', 'payment & limits', 'payment due', 'minimum payment', 'min payment', 'min. payment',
+                'credit limit', 'credit line', 'available credit'
+            ];
+            showToast("Redacting balances, limits, and values...");
+            await autoRedactKeywords(keywords, true);
+        }
+
+        async function autoRedactNLP(entityType) {
+            if (!state.pdfDoc) return;
+            if (!window.nlp) {
+                showToast("AI library (compromise.js) failed to load.");
+                return;
+            }
+            
+            const labelMap = {
+                'people': 'Names',
+                'organizations': 'Businesses/Orgs',
+                'places': 'Locations/Addresses',
+                'dates': 'Dates',
+                'contact': 'Contact Info',
+                'values': 'Numbers & Amounts'
+            };
+            
+            showToast(`AI Scanning pages for ${labelMap[entityType] || entityType}...`);
+            let totalMatches = 0;
+            
+            for (let i = 1; i <= state.pdfDoc.numPages; i++) {
+                const page = await state.pdfDoc.getPage(i);
+                const textContent = await page.getTextContent();
+                const viewport = page.getViewport({ scale: 1.0 });
+                
+                // Reconstruct lines on this page
+                const lines = reconstructLines(textContent.items);
+                const itemsToRedact = new Set();
+                
+                for (const line of lines) {
+                    let matchedPhrases = [];
+                    const doc = nlp(line.text);
+                    
+                    if (entityType === 'people') {
+                        matchedPhrases = doc.people().out('array');
+                    } else if (entityType === 'organizations') {
+                        matchedPhrases = doc.organizations().out('array');
+                    } else if (entityType === 'places') {
+                        matchedPhrases = doc.places().out('array');
+                    } else if (entityType === 'dates') {
+                        matchedPhrases = doc.dates().out('array');
+                    } else if (entityType === 'contact') {
+                        matchedPhrases = [
+                            ...doc.emails().out('array'),
+                            ...doc.phoneNumbers().out('array')
+                        ];
+                    } else if (entityType === 'values') {
+                        matchedPhrases = doc.values().out('array');
+                    }
+                    
+                    // Deduplicate phrases found on this line
+                    matchedPhrases = Array.from(new Set(matchedPhrases));
+                    
+                    for (const phrase of matchedPhrases) {
+                        const cleanPhrase = phrase.trim();
+                        // Ignore trivial matches
+                        if (cleanPhrase.length < 3) continue;
+                        
+                        const lowerText = line.text.toLowerCase();
+                        const lowerPhrase = cleanPhrase.toLowerCase();
+                        let idx = 0;
+                        
+                        while ((idx = lowerText.indexOf(lowerPhrase, idx)) !== -1) {
+                            const matchStart = idx;
+                            const matchEnd = matchStart + lowerPhrase.length;
+                            
+                            for (const map of line.mappings) {
+                                if (Math.max(map.start, matchStart) < Math.min(map.end, matchEnd)) {
+                                    itemsToRedact.add(map.item);
+                                }
+                            }
+                            idx += lowerPhrase.length;
+                        }
+                    }
+                }
+                
+                for (const item of itemsToRedact) {
+                    const fontHeight = Math.abs(item.transform[3]) || item.height || 10;
+                    const tx = item.transform[4];
+                    const ty = item.transform[5];
+                    
+                    const pdfRect = [tx, ty, tx + (item.width || item.str.length * fontHeight * 0.5), ty + fontHeight];
+                    const viewRect = viewport.convertToViewportRectangle(pdfRect);
+                    
+                    const x = Math.min(viewRect[0], viewRect[2]);
+                    const y = Math.min(viewRect[1], viewRect[3]);
+                    const w = Math.abs(viewRect[2] - viewRect[0]);
+                    const h = Math.abs(viewRect[3] - viewRect[1]);
+                    
+                    // Boundary check to prevent off-page or invisible metadata redactions
+                    if (x < -2 || y < -2 || x > viewport.width + 2 || y > viewport.height + 2 || w <= 0 || h <= 0) {
+                        continue;
+                    }
+                    
+                    const padding = 1.5;
+                    const boxX = Math.max(0, x - padding);
+                    const boxY = Math.max(0, y - padding);
+                    const boxW = w + (padding * 2);
+                    const boxH = h + (padding * 2);
+                    
+                    const alreadyExists = state.redactions[i - 1].some(r => 
+                        Math.abs(r.x - boxX) < 3 && Math.abs(r.y - boxY) < 3 && Math.abs(r.w - boxW) < 5
+                    );
+                    
+                    if (!alreadyExists) {
+                        state.redactions[i - 1].push({
+                            id: Date.now() + Math.random().toString(36).substr(2, 9),
+                            x: boxX,
+                            y: boxY,
+                            w: boxW,
+                            h: boxH
+                        });
+                        totalMatches++;
+                    }
+                }
+                
+                drawRedactionOverlays(i);
+                updateSidebarBadge(i);
+            }
+            
+            if (totalMatches > 0) {
+                showToast(`AI Scan complete: redacted ${totalMatches} items.`);
+                state.isDirty = true;
+            } else {
+                showToast(`No matches found for ${labelMap[entityType] || entityType}.`);
+            }
+        }
+
+        // Expense / Transaction Selection Management
+        let scannedTransactions = [];
+
+        async function openTxSelector() {
+            if (!state.pdfDoc) return;
+            
+            showToast("Scanning pages for transaction line items...", 3000);
+            scannedTransactions = [];
+            
+            // Transaction detection heuristics
+            const datePatterns = [
+                /\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\.?\s+\d{1,2}\b/i,
+                /\b\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i,
+                /\b\d{1,2}[-\/]\d{1,2}(?:[-\/]\d{2,4})?\b/,
+                /\b\d{4}[-\/]\d{1,2}[-\/]\d{1,2}\b/
+            ];
+            const amountPattern = /-?\$?\d{1,3}(?:,\d{3})*(?:\.\d{2})/;
+            
+            for (let pageNum = 1; pageNum <= state.pdfDoc.numPages; pageNum++) {
+                if (state.deletedPages.has(pageNum)) continue;
+                
+                const page = await state.pdfDoc.getPage(pageNum);
+                const textContent = await page.getTextContent();
+                const viewport = page.getViewport({ scale: 1.0 });
+                
+                const lines = reconstructLines(textContent.items);
+                
+                for (const line of lines) {
+                    let hasDate = false;
+                    let dateStr = "";
+                    for (const pattern of datePatterns) {
+                        const match = line.text.match(pattern);
+                        if (match) {
+                            hasDate = true;
+                            dateStr = match[0];
+                            break;
+                        }
+                    }
+                    
+                    const amountMatch = line.text.match(amountPattern);
+                    
+                    if (hasDate && amountMatch) {
+                        const amountStr = amountMatch[0];
+                        
+                        // Extract description by removing date and amount
+                        let desc = line.text
+                            .replace(dateStr, '')
+                            .replace(amountStr, '')
+                            .replace(/[\s\-\:\.\,]+/g, ' ')
+                            .trim();
+                        
+                        if (!desc || desc.length < 2) desc = "Transaction Detail";
+                        
+                        scannedTransactions.push({
+                            id: 'tx-' + Math.random().toString(36).substr(2, 9),
+                            pageNum,
+                            date: dateStr,
+                            description: desc,
+                            amount: amountStr,
+                            line: line,
+                            viewport: viewport
+                        });
+                    }
+                }
+            }
+            
+            if (scannedTransactions.length === 0) {
+                alert("No transaction lines were automatically detected on the active pages.");
+                return;
+            }
+            
+            // Populate Modal Table
+            const tbody = document.getElementById('txTableBody');
+            tbody.innerHTML = '';
+            
+            scannedTransactions.forEach((tx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 border-b border-gray-100 transition-colors';
+                tr.innerHTML = `
+                    <td class="p-3 text-center">
+                        <input type="checkbox" id="check-${tx.id}" checked class="tx-keep-check w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500 cursor-pointer" />
+                    </td>
+                    <td class="p-3 text-gray-500 font-semibold">Page ${tx.pageNum}</td>
+                    <td class="p-3 font-medium text-gray-900 whitespace-nowrap">${tx.date}</td>
+                    <td class="p-3 font-sans truncate max-w-[240px]" title="${tx.description}">${tx.description}</td>
+                    <td class="p-3 font-semibold text-right whitespace-nowrap text-brand-600">${tx.amount}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            
+            // Set up Apply Button event listener
+            const applyBtn = document.getElementById('btnApplyTxRedactions');
+            applyBtn.onclick = () => {
+                applyTxRedactions();
+            };
+            
+            // Show modal
+            const modal = document.getElementById('txSelectorModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            lucide.createIcons();
+        }
+
+        function closeTxSelector() {
+            const modal = document.getElementById('txSelectorModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        function toggleAllTxs(keepAll) {
+            const checkboxes = document.querySelectorAll('.tx-keep-check');
+            checkboxes.forEach(cb => {
+                cb.checked = keepAll;
+            });
+        }
+
+        function applyTxRedactions() {
+            let redactCount = 0;
+            
+            scannedTransactions.forEach((tx) => {
+                const cb = document.getElementById(`check-${tx.id}`);
+                // If user UNCHECKED the box, it means they want to REDACT it.
+                if (cb && !cb.checked) {
+                    const line = tx.line;
+                    const pageNum = tx.pageNum;
+                    
+                    // We redact all text items on this transaction line
+                    line.mappings.forEach((map) => {
+                        const item = map.item;
+                        const fontHeight = Math.abs(item.transform[3]) || item.height || 10;
+                        const txX = item.transform[4];
+                        const txY = item.transform[5];
+                        
+                        const pdfRect = [txX, txY, txX + (item.width || item.str.length * fontHeight * 0.5), txY + fontHeight];
+                        const viewRect = tx.viewport.convertToViewportRectangle(pdfRect);
+                        
+                        const x = Math.min(viewRect[0], viewRect[2]);
+                        const y = Math.min(viewRect[1], viewRect[3]);
+                        const w = Math.abs(viewRect[2] - viewRect[0]);
+                        const h = Math.abs(viewRect[3] - viewRect[1]);
+                        
+                        // Boundary check to prevent off-page or invisible metadata redactions
+                        if (x < -2 || y < -2 || x > tx.viewport.width + 2 || y > tx.viewport.height + 2 || w <= 0 || h <= 0) {
+                            return;
+                        }
+                        
+                        const padding = 2.0;
+                        const boxX = Math.max(0, x - padding);
+                        const boxY = Math.max(0, y - padding);
+                        const boxW = w + (padding * 2);
+                        const boxH = h + (padding * 2);
+                        
+                        const alreadyExists = state.redactions[pageNum - 1].some(r => 
+                            Math.abs(r.x - boxX) < 3 && Math.abs(r.y - boxY) < 3 && Math.abs(r.w - boxW) < 5
+                        );
+                        
+                        if (!alreadyExists) {
+                            state.redactions[pageNum - 1].push({
+                                id: Date.now() + Math.random().toString(36).substr(2, 9),
+                                x: boxX,
+                                y: boxY,
+                                w: boxW,
+                                h: boxH
+                            });
+                            redactCount++;
+                        }
+                    });
+                }
+            });
+            
+            closeTxSelector();
+            
+            // Draw redaction overlays for all pages that had changes
+            for (let i = 1; i <= state.pdfDoc.numPages; i++) {
+                drawRedactionOverlays(i);
+                updateSidebarBadge(i);
+            }
+            
+            if (redactCount > 0) {
+                state.isDirty = true;
+                showToast(`Redacted personal expense lines successfully.`);
+            } else {
+                showToast("No personal expenses redacted.");
+            }
+        }
+
+        async function autoRedactText(query) {
+            if (!query || !state.pdfDoc) return;
+            
+            showToast(`Scanning document for "${query}"...`);
+            let totalMatches = 0;
+            const lowerQuery = query.toLowerCase();
+            
+            for (let i = 1; i <= state.pdfDoc.numPages; i++) {
+                const page = await state.pdfDoc.getPage(i);
+                const textContent = await page.getTextContent();
+                const viewport = page.getViewport({ scale: 1.0 });
+                
+                const lines = reconstructLines(textContent.items);
+                
+                for (const line of lines) {
+                    const lowerText = line.text.toLowerCase();
+                    let idx = 0;
+                    
+                    while ((idx = lowerText.indexOf(lowerQuery, idx)) !== -1) {
+                        const matchStart = idx;
+                        const matchEnd = matchStart + lowerQuery.length;
+                        
+                        const matchedItems = [];
+                        for (const map of line.mappings) {
+                            if (Math.max(map.start, matchStart) < Math.min(map.end, matchEnd)) {
+                                matchedItems.push(map.item);
+                            }
+                        }
+                        
+                        for (const item of matchedItems) {
+                            const fontHeight = Math.abs(item.transform[3]) || item.height || 10;
+                            const tx = item.transform[4];
+                            const ty = item.transform[5];
+                            
+                            const pdfRect = [tx, ty, tx + (item.width || item.str.length * fontHeight * 0.5), ty + fontHeight];
+                            const viewRect = viewport.convertToViewportRectangle(pdfRect);
+                            
+                            const x = Math.min(viewRect[0], viewRect[2]);
+                            const y = Math.min(viewRect[1], viewRect[3]);
+                            const w = Math.abs(viewRect[2] - viewRect[0]);
+                            const h = Math.abs(viewRect[3] - viewRect[1]);
+                            
+                            const padding = 1.5;
+                            const boxX = Math.max(0, x - padding);
+                            const boxY = Math.max(0, y - padding);
+                            const boxW = w + (padding * 2);
+                            const boxH = h + (padding * 2);
+                            
+                            const alreadyExists = state.redactions[i - 1].some(r => 
+                                Math.abs(r.x - boxX) < 3 && Math.abs(r.y - boxY) < 3 && Math.abs(r.w - boxW) < 5
+                            );
+                            
+                            if (!alreadyExists) {
+                                state.redactions[i - 1].push({
+                                    id: Date.now() + Math.random().toString(36).substr(2, 9),
+                                    x: boxX,
+                                    y: boxY,
+                                    w: boxW,
+                                    h: boxH
+                                });
+                                totalMatches++;
+                            }
+                        }
+                        
+                        idx += lowerQuery.length;
+                    }
+                }
+                
+                drawRedactionOverlays(i);
+                updateSidebarBadge(i);
+            }
+            
+            if (totalMatches > 0) {
+                showToast(`Auto-redacted ${totalMatches} matches for "${query}".`, 3500);
+                state.isDirty = true;
+            } else {
+                showToast(`No matches found for "${query}".`, 3000);
+            }
+        }
+
+
+        // Compile and export flattened secure PDF
+        async function exportRedactedPdf() {
+            if (!state.pdfDoc) return;
+            
+            const exportModal = document.getElementById('exportModal');
+            exportModal.classList.remove('hidden');
+            exportModal.classList.add('flex');
+            
+            const progressBar = document.getElementById('exportProgress');
+            const progressText = document.getElementById('exportProgressText');
+            progressBar.style.width = '0%';
+            progressText.textContent = 'Initializing document compiler...';
+            
+            try {
+                const { jsPDF } = window.jspdf;
+                let pdfOutput = null;
+                const numPages = state.pdfDoc.numPages;
+                const renderScale = 3.0; // Render at 3.0x (216 DPI) for laser-sharp text readability
+                let isFirstPageAdded = false;
+                
+                for (let i = 1; i <= numPages; i++) {
+                    // Skip deleted pages
+                    if (state.deletedPages.has(i)) {
+                        continue;
+                    }
+                    
+                    progressText.textContent = `Processing page ${i} of ${numPages}...`;
+                    progressBar.style.width = `${Math.round(((i - 1) / numPages) * 100)}%`;
+                    
+                    const page = await state.pdfDoc.getPage(i);
+                    const viewport = page.getViewport({ scale: renderScale });
+                    
+                    // Dynamic canvas construction
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = viewport.width;
+                    tempCanvas.height = viewport.height;
+                    const tempCtx = tempCanvas.getContext('2d');
+                    
+                    // Render page base image
+                    await page.render({
+                        canvasContext: tempCtx,
+                        viewport: viewport
+                    }).promise;
+                    
+                    // Draw permanent solid black boxes on top of canvas context
+                    tempCtx.fillStyle = '#000000';
+                    const pageRedactions = state.redactions[i - 1];
+                    pageRedactions.forEach(box => {
+                        // Coordinates must be scaled to render scale (3.0)
+                        const rx = box.x * renderScale;
+                        const ry = box.y * renderScale;
+                        const rw = box.w * renderScale;
+                        const rh = box.h * renderScale;
+                        tempCtx.fillRect(rx, ry, rw, rh);
+                    });
+                    
+                    // Compress and format to JPEG
+                    const imgData = tempCanvas.toDataURL('image/jpeg', 0.85);
+                    
+                    // Retrieve standard sizes (scale 1.0) for jsPDF points layout
+                    const originalViewport = page.getViewport({ scale: 1.0 });
+                    const w = originalViewport.width;
+                    const h = originalViewport.height;
+                    
+                    if (!isFirstPageAdded) {
+                        pdfOutput = new jsPDF({
+                            orientation: w > h ? 'landscape' : 'portrait',
+                            unit: 'pt',
+                            format: [w, h]
+                        });
+                        isFirstPageAdded = true;
+                    } else {
+                        pdfOutput.addPage([w, h], w > h ? 'landscape' : 'portrait');
+                    }
+                    
+                    pdfOutput.addImage(imgData, 'JPEG', 0, 0, w, h);
+                }
+                
+                if (!isFirstPageAdded) {
+                    alert("Error: Cannot export an empty PDF. Please restore at least one page.");
+                    exportModal.classList.remove('flex');
+                    exportModal.classList.add('hidden');
+                    return;
+                }
+                
+                progressText.textContent = 'Saving flat file...';
+                progressBar.style.width = '95%';
+                
+                const originalName = state.pdfFile.name || 'statement.pdf';
+                let redactedName;
+                if (originalName.toLowerCase().endsWith('.pdf')) {
+                    redactedName = originalName.replace(/\.pdf$/i, '_redacted.pdf');
+                } else {
+                    redactedName = originalName + '_redacted.pdf';
+                }
+                pdfOutput.save(redactedName);
+                
+                progressBar.style.width = '100%';
+                progressText.textContent = 'Successfully saved!';
+                
+                setTimeout(() => {
+                    exportModal.classList.remove('flex');
+                    exportModal.classList.add('hidden');
+                    showToast('Secure PDF downloaded.');
+                    state.isDirty = false;
+                }, 1000);
+            } catch (err) {
+                console.error("Export compilation failure:", err);
+                alert("Failed to compile secure PDF document: " + err.message);
+                exportModal.classList.remove('flex');
+                exportModal.classList.add('hidden');
+            }
+        }
+
+        // Warn user before leaving page with changes
+        window.addEventListener('beforeunload', (e) => {
+            if (state.isDirty) {
+                e.preventDefault();
+                e.returnValue = 'You have unsaved changes. Are you sure you want to discard your redactions?';
+            }
+        });
+    </script>
+</body>
+
+</html>
