@@ -1,299 +1,377 @@
-<!-- https://gemini.google.com/app/7ad3748ef3211e75 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UWindsor Faculty Travel Policy Guide (2024-2026)</title>
+    <title>UWindsor Faculty Travel Policy Guide - Faculty Tools</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%230d9488'/%3E%3Cpath d='M50,18 A22,22 0 0,0 30.5,54.5 C34.5,58.8 37,63.2 37,69 L63,69 C63,63.2 65.5,58.8 69.5,54.5 A22,22 0 0,0 50,18 Z M42,74 L58,74 A2,2 0 0,1 56,79 L44,79 A2,2 0 0,1 42,74 Z' fill='white'/%3E%3C/svg%3E">
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            200: '#bae0fd',
+                            500: '#005596', // UWindsor Blue
+                            600: '#004478',
+                            700: '#00355e',
+                            900: '#002542',
+                        },
+                        gold: {
+                            50: '#fffdf0',
+                            100: '#fef8c3',
+                            500: '#ffce00', // UWindsor Gold
+                            600: '#e0b500',
+                            700: '#b89400',
+                            900: '#735800',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         @media print {
             .no-print { display: none !important; }
-            body { background: white; }
-            .shadow-lg { box-shadow: none !important; }
-            .card { break-inside: avoid; border: 1px solid #ddd; }
-            a { text-decoration: none; color: black; }
-            a::after { content: " (" attr(href) ")"; font-size: 0.8em; color: #555; }
+            body { background: white; color: black; }
+            .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl { box-shadow: none !important; }
+            .border { border-color: #ddd !important; }
+            .card { break-inside: avoid; }
         }
-        .bg-uwindsor-blue { background-color: #005596; }
-        .text-uwindsor-blue { color: #005596; }
-        .bg-uwindsor-gold { background-color: #FFCE00; }
-        .hover-bg-uwindsor-blue:hover { background-color: #00447a; }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+<body class="bg-gray-50 text-gray-800 font-sans antialiased flex flex-col min-h-screen">
 
-    <!-- Navbar -->
-    <header class="bg-uwindsor-blue text-white sticky top-0 z-50 shadow-md">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm backdrop-blur-md bg-white/90">
+        <div class="max-w-none px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-graduation-cap text-2xl text-yellow-400"></i>
+                <div class="bg-brand-50 text-brand-500 p-2 rounded-lg border border-brand-100">
+                    <i data-lucide="plane-takeoff" class="h-5.5 w-5.5"></i>
+                </div>
                 <div>
-                    <h1 class="text-lg font-bold leading-tight">University of Windsor</h1>
-                    <p class="text-xs text-blue-100 uppercase tracking-wider">Faculty Travel Pocket Guide</p>
+                    <h1 class="text-xl font-bold text-gray-900 leading-tight">Faculty Travel Policy Guide</h1>
+                    <p class="text-sm text-gray-500">Official reference for University of Windsor business travel and WUFA per diem rules</p>
                 </div>
             </div>
-            <div class="flex gap-2">
-                <a href="https://www.uwindsor.ca/finance/uwinsite-finance" target="_blank" class="no-print bg-blue-800 hover:bg-blue-700 px-3 py-2 rounded text-xs font-semibold transition">
-                    <i class="fa-solid fa-arrow-right-to-bracket mr-1"></i> UWinsite Login
+            <div class="flex items-center gap-3 no-print">
+                <a href="https://www.uwindsor.ca/finance/uwinsite-finance" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 px-4 py-2 rounded-lg shadow-sm transition-colors border border-brand-600">
+                    <i data-lucide="external-link" class="w-4 h-4"></i>
+                    UWinsite Login
                 </a>
-                <button onclick="window.print()" class="no-print bg-white text-uwindsor-blue hover:bg-yellow-400 hover:text-blue-900 px-4 py-2 rounded text-sm font-semibold transition shadow-sm">
-                    <i class="fa-solid fa-print mr-2"></i> Save PDF
+                <button onclick="window.print()" class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 px-4 py-2 rounded-lg border border-gray-300 shadow-sm transition-colors">
+                    <i data-lucide="printer" class="w-4 h-4"></i>
+                    Save PDF / Print
                 </button>
+                <a href="index.html" class="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-brand-500 transition-colors bg-gray-100 hover:bg-brand-50 px-4 py-2 rounded-lg border border-gray-200">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    Back to Dashboard
+                </a>
             </div>
         </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4 py-8 space-y-8">
+    <!-- Main Content -->
+    <main class="flex-grow max-w-none px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
 
-        <!-- Critical Alerts -->
-        <div class="bg-blue-50 border-l-4 border-uwindsor-blue p-4 rounded-r shadow-sm flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-            <div>
-                <h2 class="font-bold text-uwindsor-blue flex items-center">
-                    <i class="fa-solid fa-circle-exclamation mr-2"></i> New Protocol: Risk Management (Nov 2025)
-                </h2>
-                <p class="text-sm text-slate-600 mt-1 max-w-2xl">
-                    All international travel (and optional domestic) must be registered. Travel to "Avoid Non-Essential Travel" zones requires special Vice-Presidential approval.
-                </p>
+        <!-- Critical Alerts / Risk Assessment -->
+        <div class="bg-blue-50/70 border-l-4 border-brand-500 p-4 rounded-r-xl border border-gray-200 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center shadow-sm">
+            <div class="flex gap-3">
+                <div class="p-2 bg-brand-100 text-brand-500 rounded-lg shrink-0 h-fit">
+                    <i data-lucide="alert-circle" class="w-5.5 h-5.5"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-brand-700 text-base flex items-center gap-1.5">
+                        Mandatory International Travel Risk Protocol (Updated Nov 2025)
+                    </h2>
+                    <p class="text-sm text-gray-600 mt-1 max-w-4xl leading-relaxed">
+                        All international travel must be registered with Campus Safety prior to departure. Any academic travel to high-risk zones ("Avoid Non-Essential Travel") requires formal approval from the corresponding Vice-President or Provost.
+                    </p>
+                </div>
             </div>
-            <div class="flex gap-2 text-xs no-print">
-                <a href="https://www.uwindsor.ca/campus-safety/sites/uwindsor.ca.campus-safety/files/travel_risk_management_policy_-_v4_final.pdf" target="_blank" class="bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200">
-                    <i class="fa-solid fa-file-pdf mr-1"></i> Read Policy
+            <div class="flex gap-2 text-sm shrink-0 w-full lg:w-auto justify-end no-print">
+                <a href="https://www.uwindsor.ca/campus-safety/sites/uwindsor.ca.campus-safety/files/travel_risk_management_policy_-_v4_final.pdf" target="_blank" class="inline-flex items-center gap-1.5 bg-white text-brand-500 border border-brand-200 px-3 py-1.5 rounded-lg hover:bg-brand-50 transition-colors">
+                    <i data-lucide="file-text" class="w-4 h-4"></i> Read Full Policy
                 </a>
-                <a href="https://travel.gc.ca/travelling/advisories" target="_blank" class="bg-red-100 text-red-800 px-3 py-1 rounded hover:bg-red-200">
-                    <i class="fa-solid fa-globe mr-1"></i> Check Advisories
+                <a href="https://travel.gc.ca/travelling/advisories" target="_blank" class="inline-flex items-center gap-1.5 bg-red-50 text-red-700 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">
+                    <i data-lucide="globe" class="w-4 h-4"></i> GC Advisories
                 </a>
             </div>
         </div>
 
-        <!-- Pre-Travel Approval -->
-        <section id="approval" class="card bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
-            <div class="bg-slate-800 text-white px-6 py-4 flex justify-between items-center">
-                <h2 class="text-xl font-bold"><i class="fa-solid fa-clipboard-check mr-2 text-yellow-400"></i> Pre-Travel Approval</h2>
-                <a href="https://www.uwindsor.ca/finance/sites/uwindsor.ca.finance/files/travel_policy_and_procedures_2023-09-28.pdf" target="_blank" class="text-xs text-blue-200 hover:text-white underline no-print">Ref: Finance Policy Sec 3</a>
-            </div>
-            <div class="p-6 grid md:grid-cols-3 gap-6">
-                <!-- One-Up Approval -->
-                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <h3 class="font-bold text-uwindsor-blue mb-2 flex items-center">
-                        <i class="fa-solid fa-user-check mr-2"></i> "One-Up" Approval
-                    </h3>
-                    <p class="text-sm text-slate-700">All travel must be authorized in advance by the person to whom you report (e.g., Department Head for Faculty, Dean for Heads). This is mandatory prior to booking.</p>
-                </div>
-                <!-- Duty Coverage -->
-                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <h3 class="font-bold text-uwindsor-blue mb-2 flex items-center">
-                        <i class="fa-solid fa-person-chalkboard mr-2"></i> Absence from Duties
-                    </h3>
-                    <p class="text-sm text-slate-700">Faculty must ensure appropriate coverage for teaching, grading, or administrative duties while away from campus, subject to Head/Dean approval.</p>
-                </div>
-                <!-- Funding Verification -->
-                <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                    <h3 class="font-bold text-uwindsor-blue mb-2 flex items-center">
-                        <i class="fa-solid fa-piggy-bank mr-2"></i> Funding Verification
-                    </h3>
-                    <p class="text-sm text-slate-700">Ensure sufficient Professional Development (PD) funds or specific grant accounts are available prior to incurring expenses. Over-expenditures require secondary approval.</p>
-                </div>
-            </div>
-        </section>
+        <!-- Columns Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <!-- Section 1: Per Diem Rates -->
-        <section id="rates" class="card bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
-            <div class="bg-slate-800 text-white px-6 py-4 flex justify-between items-center">
-                <h2 class="text-xl font-bold"><i class="fa-solid fa-utensils mr-2 text-yellow-400"></i> Meal Allowances (Per Diem)</h2>
-                <a href="https://www.wufa.ca/article-173/travel-information" target="_blank" class="text-xs text-blue-200 hover:text-white underline no-print">Ref: WUFA Rates</a>
-            </div>
-            <div class="p-6">
-                <p class="text-sm text-slate-500 mb-6">
-                    <strong>Applicability:</strong> Faculty travelling on University business. No receipts required for meals if claiming these rates.
-                </p>
-                
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center mb-6">
-                    <!-- Rates Blocks -->
-                    <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                        <div class="text-xs text-slate-500 uppercase font-bold">Breakfast</div>
-                        <div class="text-xl font-bold text-uwindsor-blue">$17.00</div>
+            <!-- Left Column: Pre-Travel & Meal Allowances -->
+            <div class="lg:col-span-2 flex flex-col gap-6">
+
+                <!-- Pre-Travel & Authorizations -->
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden card">
+                    <div class="bg-brand-900 text-white px-5 py-3.5 flex justify-between items-center">
+                        <h2 class="text-base font-bold flex items-center gap-2">
+                            <i data-lucide="check-square" class="w-4 h-4 text-gold-500"></i> Pre-Travel Authorization
+                        </h2>
+                        <a href="https://www.uwindsor.ca/finance/sites/uwindsor.ca.finance/files/travel_policy_and_procedures_2023-09-28.pdf" target="_blank" class="text-xs text-brand-200 hover:text-white underline inline-flex items-center gap-1.5 transition-colors">
+                            Finance Policy Sec. 3 <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                        </a>
                     </div>
-                    <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                        <div class="text-xs text-slate-500 uppercase font-bold">Lunch</div>
-                        <div class="text-xl font-bold text-uwindsor-blue">$22.00</div>
-                    </div>
-                    <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                        <div class="text-xs text-slate-500 uppercase font-bold">Dinner</div>
-                        <div class="text-xl font-bold text-uwindsor-blue">$43.00</div>
-                    </div>
-                    <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                        <div class="text-xs text-slate-500 uppercase font-bold">Incidentals</div>
-                        <div class="text-xl font-bold text-uwindsor-blue">$17.00</div>
-                    </div>
-                    <div class="p-3 bg-yellow-50 rounded-lg border-2 border-yellow-400 transform scale-105 shadow-md">
-                        <div class="text-xs text-yellow-800 uppercase font-bold">Daily Total</div>
-                        <div class="text-2xl font-black text-blue-900">$99.00</div>
+                    <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200/80">
+                            <h3 class="font-bold text-sm text-brand-500 mb-1.5 flex items-center gap-1.5">
+                                <i data-lucide="user-check" class="w-4.5 h-4.5"></i> "One-Up" Rule
+                            </h3>
+                            <p class="text-sm text-gray-600 leading-relaxed">All travel must be authorized in writing/system by the person to whom you report (e.g. Department Head for Faculty, Dean for Heads) prior to booking.</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200/80">
+                            <h3 class="font-bold text-sm text-brand-500 mb-1.5 flex items-center gap-1.5">
+                                <i data-lucide="calendar" class="w-4.5 h-4.5"></i> Absence from Duties
+                            </h3>
+                            <p class="text-sm text-gray-600 leading-relaxed">Faculty members are responsible for arranging appropriate coverage of their teaching, exams, student consultations, or administrative duties, subject to Head/Dean approval.</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200/80">
+                            <h3 class="font-bold text-sm text-brand-500 mb-1.5 flex items-center gap-1.5">
+                                <i data-lucide="wallet" class="w-4.5 h-4.5"></i> Fund Verification
+                            </h3>
+                            <p class="text-sm text-gray-600 leading-relaxed">Ensure sufficient balance is available in your Professional Development (PD) account or specific Research Grant prior to booking. Over-expenditures require secondary approval.</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Additional Provisions: Meals -->
-                <div class="bg-slate-50 rounded-lg p-4 text-sm border border-slate-200">
-                    <h3 class="font-bold text-slate-700 mb-2 border-b pb-1">Additional Provisions & Exceptions</h3>
-                    <ul class="space-y-2 text-slate-600">
-                        <li class="flex items-start">
-                            <i class="fa-solid fa-wine-glass-empty text-red-400 mt-1 mr-2 w-4"></i>
-                            <span><strong>Alcohol:</strong> Strictly <u>not reimbursable</u> under Travel Policy. Must be on a separate receipt. Exception: Pre-approved "Hospitality" events (requires Dean/VP approval).</span>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fa-solid fa-users text-blue-400 mt-1 mr-2 w-4"></i>
-                            <span><strong>Hosting Guests:</strong> If you pay for a guest's meal, you cannot use Per Diem. You must submit the itemized receipt for the whole table and claim it as "Entertainment" (names/affiliations required).</span>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fa-solid fa-globe text-green-400 mt-1 mr-2 w-4"></i>
-                            <span><strong>Currency:</strong> Rates are in CAD. For USA/International, you may claim the actual cost converted to CAD, or agree with your Dean on a USD equivalent prior to travel.</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 2: Transportation -->
-        <section id="transport" class="card bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
-            <div class="bg-slate-800 text-white px-6 py-4 flex justify-between items-center">
-                <h2 class="text-xl font-bold"><i class="fa-solid fa-car mr-2 text-yellow-400"></i> Transportation & Vehicle Use</h2>
-                <div class="space-x-2 text-xs no-print">
-                    <a href="https://www.wufa.ca/article-108/article-k-car-allowance" target="_blank" class="text-blue-200 hover:text-white underline">Ref: Article K</a>
-                    <span class="text-slate-500">|</span>
-                    <a href="https://www.uwindsor.ca/legal-services/309/rental-vehicles-insurance" target="_blank" class="text-blue-200 hover:text-white underline">Ref: Insurance</a>
-                </div>
-            </div>
-            <div class="p-6 grid md:grid-cols-2 gap-8">
-                
-                <!-- Mileage Details -->
-                <div>
-                    <h3 class="font-bold text-lg text-slate-800 mb-3 border-b pb-2">Personal Vehicle (Mileage)</h3>
-                    <div class="flex items-center mb-3">
-                        <span class="text-3xl font-bold text-uwindsor-blue mr-3">$0.55</span>
-                        <div class="text-xs text-slate-500 leading-tight">per kilometer<br>Effective July 1, 2021</div>
+                <!-- Meal Allowances (Per Diems) -->
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden card">
+                    <div class="bg-brand-900 text-white px-5 py-3.5 flex justify-between items-center">
+                        <h2 class="text-base font-bold flex items-center gap-2">
+                            <i data-lucide="coffee" class="w-4 h-4 text-gold-500"></i> Meal Allowances (WUFA Per Diem)
+                        </h2>
+                        <a href="https://www.wufa.ca/article-173/travel-information" target="_blank" class="text-xs text-brand-200 hover:text-white underline inline-flex items-center gap-1.5 transition-colors">
+                            Agreement Ref. Schedule A <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                        </a>
                     </div>
-                    <ul class="text-sm space-y-3 text-slate-700">
-                        <li class="flex items-start">
-                            <i class="fa-solid fa-ban text-red-500 mt-1 mr-2 w-4"></i>
-                            <span><strong>Economy Cap:</strong> If driving a long distance (e.g., to Ottawa), reimbursement is limited to the cost of the equivalent economy airfare/train ticket.</span>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fa-solid fa-file-lines text-slate-400 mt-1 mr-2 w-4"></i>
-                            <span><strong>Proof:</strong> Attach a Google Maps screenshot showing start/end points and total kilometers.</span>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fa-solid fa-car-side text-slate-400 mt-1 mr-2 w-4"></i>
-                            <span><strong>Carpooling:</strong> Only the driver may claim mileage. Passengers cannot claim transport costs.</span>
-                        </li>
-                    </ul>
-                </div>
+                    <div class="p-5">
+                        <div class="flex justify-between items-center mb-4">
+                            <p class="text-sm text-gray-500 font-medium">No receipts are required when claiming the per-diem rates. Claims are made in CAD.</p>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gold-100 text-gold-900 border border-gold-200">Receipts Not Required</span>
+                        </div>
 
-                <!-- Rental & Insurance -->
-                <div>
-                    <h3 class="font-bold text-lg text-slate-800 mb-3 border-b pb-2">Rentals & Insurance</h3>
-                    <ul class="text-sm space-y-3 text-slate-700">
-                        <li class="flex items-start">
-                            <i class="fa-solid fa-shield-halved text-green-600 mt-1 mr-2 w-4"></i>
-                            <span><strong>Insurance Rule (Ontario):</strong> Not strictly required if using UWindsor Corporate Card (check coverage).</span>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fa-solid fa-triangle-exclamation text-red-500 mt-1 mr-2 w-4"></i>
-                            <span><strong>Insurance Rule (Outside ON):</strong> Legal Services mandates purchasing the <strong>Collision Damage Waiver (CDW)</strong> from the rental agency for all rentals outside Ontario.</span>
-                        </li>
-                        <li class="flex items-start">
-                            <i class="fa-solid fa-gas-pump text-slate-400 mt-1 mr-2 w-4"></i>
-                            <span><strong>Gas:</strong> Claim actual gas receipts for rental cars (do not claim mileage).</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </section>
+                        <!-- Per Diem Blocks -->
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
+                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-center">
+                                <div class="text-xs text-gray-400 font-bold uppercase tracking-wider">Breakfast</div>
+                                <div class="text-lg font-bold text-brand-500 mt-0.5">$17.00</div>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-center">
+                                <div class="text-xs text-gray-400 font-bold uppercase tracking-wider">Lunch</div>
+                                <div class="text-lg font-bold text-brand-500 mt-0.5">$22.00</div>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-center">
+                                <div class="text-xs text-gray-400 font-bold uppercase tracking-wider">Dinner</div>
+                                <div class="text-lg font-bold text-brand-500 mt-0.5">$43.00</div>
+                            </div>
+                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-center">
+                                <div class="text-xs text-gray-400 font-bold uppercase tracking-wider">Incidentals</div>
+                                <div class="text-lg font-bold text-brand-500 mt-0.5">$17.00</div>
+                            </div>
+                            <div class="p-3 bg-brand-50 rounded-xl border border-brand-200 text-center col-span-2 sm:col-span-1 shadow-sm flex flex-col justify-center">
+                                <div class="text-xs text-brand-900 font-extrabold uppercase tracking-wider">Daily Total</div>
+                                <div class="text-2xl font-black text-brand-700 mt-0.5">$99.00</div>
+                            </div>
+                        </div>
 
-        <!-- Section 3: Receipt Requirements -->
-        <section id="receipts" class="card bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
-            <div class="bg-slate-800 text-white px-6 py-4 flex justify-between items-center">
-                <h2 class="text-xl font-bold"><i class="fa-solid fa-file-invoice-dollar mr-2 text-yellow-400"></i> Receipt Standards</h2>
-                <a href="https://www.uwindsor.ca/finance/sites/uwindsor.ca.finance/files/travel_policy_and_procedures_2023-09-28.pdf" target="_blank" class="text-xs text-blue-200 hover:text-white underline no-print">Ref: Finance Policy</a>
-            </div>
-            <div class="p-6">
-                <div class="grid md:grid-cols-2 gap-6">
-                    <!-- Acceptable -->
-                    <div class="bg-green-50 p-4 rounded-lg border border-green-100">
-                        <h3 class="text-green-800 font-bold mb-2"><i class="fa-solid fa-check-circle mr-2"></i>Valid Documentation</h3>
-                        <ul class="text-sm space-y-2 text-slate-700">
-                            <li><strong>Itemized Receipts:</strong> Must show specific items ordered (e.g., "Burger", "Coffee"), not just the total.</li>
-                            <li><strong>Zero Balance:</strong> Hotel bills must show the payment was made and balance is $0.00.</li>
-                            <li><strong>Boarding Passes:</strong> Mandatory for all flights. Digital screenshots are accepted.</li>
-                            <li><strong>Exchange Rate:</strong> Credit card statement showing the CAD amount charged.</li>
-                        </ul>
-                    </div>
-                    <!-- Issues -->
-                    <div class="bg-red-50 p-4 rounded-lg border border-red-100">
-                        <h3 class="text-red-800 font-bold mb-2"><i class="fa-solid fa-times-circle mr-2"></i>Common Rejections</h3>
-                        <ul class="text-sm space-y-2 text-slate-700">
-                            <li><strong>Credit Card Slips:</strong> The small slip with just the total is <span class="font-bold underline">not</span> a valid receipt.</li>
-                            <li><strong>Booking Confirmations:</strong> An email saying "You are booked" is not a receipt. You need the final invoice.</li>
-                            <li><strong>Lost Receipts:</strong> If lost, you must complete a "Missing Receipt Affidavit" (Finance Form). Repeated use is monitored/flagged.</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 4: Special Scenarios & Deadlines -->
-        <section id="special-scenarios" class="card bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
-            <div class="bg-slate-800 text-white px-6 py-4">
-                <h2 class="text-xl font-bold"><i class="fa-solid fa-lightbulb mr-2 text-yellow-400"></i> Special Scenarios & Deadlines</h2>
-            </div>
-            <div class="p-6 grid md:grid-cols-2 gap-6">
-                <!-- Deadlines & Advances -->
-                <div class="space-y-4">
-                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <h3 class="font-bold text-uwindsor-blue mb-2"><i class="fa-solid fa-clock mr-2"></i> Claims & Advances</h3>
-                        <ul class="text-sm space-y-2 text-slate-700">
-                            <li><strong>Submission Deadline:</strong> Claims should be submitted in UWinsite within <strong>15 working days</strong> of returning.</li>
-                            <li><strong>Travel Advances:</strong> You can request a cash advance prior to the trip for major out-of-pocket costs (like international flights) to avoid carrying the financial burden.</li>
-                        </ul>
-                    </div>
-                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                        <h3 class="font-bold text-uwindsor-blue mb-2"><i class="fa-solid fa-bed mr-2"></i> Accommodations</h3>
-                        <ul class="text-sm space-y-2 text-slate-700">
-                            <li><strong>Private Stays:</strong> If staying with friends or family, you may claim a gratuitous lodging allowance (no receipt needed, typically around $30/night).</li>
-                            <li><strong>Airbnb/Short-Term Rentals:</strong> Permitted if the cost is demonstrably equal to or less than a standard commercial hotel in the area.</li>
-                        </ul>
+                        <!-- Additional Per Diem Considerations -->
+                        <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                            <h3 class="text-sm font-bold text-gray-700 mb-2 border-b pb-1.5 flex items-center gap-1.5">
+                                <i data-lucide="help-circle" class="w-4 h-4 text-brand-500"></i> Rules & Considerations
+                            </h3>
+                            <ul class="space-y-2 text-sm text-gray-600">
+                                <li class="flex items-start">
+                                    <i data-lucide="ban" class="w-4 h-4 text-red-500 mt-0.5 mr-2 shrink-0"></i>
+                                    <span><strong>Meals Provided:</strong> You cannot claim per diem for meals that are already provided by a conference, workshop, flight, or hotel stay.</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i data-lucide="droplet" class="w-4 h-4 text-amber-500 mt-0.5 mr-2 shrink-0"></i>
+                                    <span><strong>Alcohol Exclusion:</strong> Alcohol is strictly non-reimbursable. If ordering meals based on actual cost instead of per diems, ensure any alcohol is charged on a separate receipt. Refer to <a href="https://www.uwindsor.ca/finance/sites/uwindsor.ca.finance/files/travel_policy_and_procedures_2023-09-28.pdf#page=10" target="_blank" class="text-brand-500 hover:underline inline-flex items-center gap-0.5">Finance Policy Sec. 6.1 <i data-lucide="external-link" class="w-3 h-3"></i></a>.</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i data-lucide="users" class="w-4 h-4 text-brand-500 mt-0.5 mr-2 shrink-0"></i>
+                                    <span><strong>Business Hosting:</strong> If hosting a guest or business dinner, you must claim actual meal costs using an itemized receipt (names and organizational affiliations of attendees required). You cannot claim per diems for hosting.</span>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Complex Travel -->
-                <div class="space-y-4">
-                    <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 h-full">
-                        <h3 class="font-bold text-uwindsor-blue mb-2"><i class="fa-solid fa-plane-departure mr-2"></i> Complex Travel Rules</h3>
-                        <ul class="text-sm space-y-3 text-slate-700">
-                            <li class="flex items-start">
-                                <i class="fa-solid fa-umbrella-beach text-orange-400 mt-1 mr-2 w-4"></i>
-                                <span><strong>Combined Personal Travel:</strong> If extending a business trip for vacation, you must obtain a quote for the business-only flight <em>at the exact time of booking</em>. You will only be reimbursed up to the cost of the business-only itinerary.</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fa-solid fa-user-group text-slate-400 mt-1 mr-2 w-4"></i>
-                                <span><strong>Spousal/Companion Travel:</strong> Travel costs for companions are strictly <u>not</u> reimbursable unless they have a pre-approved, documented University business purpose.</span>
-                            </li>
-                            <li class="flex items-start">
-                                <i class="fa-solid fa-passport text-blue-400 mt-1 mr-2 w-4"></i>
-                                <span><strong>Visas & Immunizations:</strong> Required travel documents and mandatory health immunizations specifically required for the destination are generally reimbursable.</span>
-                            </li>
-                        </ul>
+            </div>
+
+            <!-- Right Column: Transportation, Lodging, and Receipts -->
+            <div class="flex flex-col gap-6">
+
+                <!-- Transportation & Rentals -->
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden card">
+                    <div class="bg-brand-900 text-white px-5 py-3.5 flex justify-between items-center">
+                        <h2 class="text-base font-bold flex items-center gap-2">
+                            <i data-lucide="car" class="w-4 h-4 text-gold-500"></i> Transportation Policies
+                        </h2>
+                        <a href="https://www.wufa.ca/article-108/article-k-car-allowance" target="_blank" class="text-xs text-brand-200 hover:text-white underline inline-flex items-center gap-1.5 transition-colors">
+                            WUFA Mileage Rate <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                        </a>
+                    </div>
+                    <div class="p-5 flex flex-col gap-4">
+                        <!-- Personal Mileage -->
+                        <div class="flex items-center gap-4 border-b border-gray-150 pb-3">
+                            <div class="text-center p-3 bg-brand-50 rounded-xl border border-brand-100 shrink-0">
+                                <span class="text-xs text-brand-600 font-bold block uppercase tracking-wider">Per KM</span>
+                                <span class="text-2xl font-extrabold text-brand-700">$0.55</span>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-gray-800">Personal Car Allowance</h3>
+                                <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">Reimbursed for authorized driving. Limited to the cost of equivalent economy flight/rail if driving long-distance (e.g. Windsor to Ottawa).</p>
+                            </div>
+                        </div>
+
+                        <!-- Rental Rules -->
+                        <div class="space-y-2.5 text-sm text-gray-700">
+                            <div class="flex gap-2">
+                                <i data-lucide="shield" class="w-4.5 h-4.5 text-green-600 shrink-0 mt-0.5"></i>
+                                <span><strong>Insurance (Ontario):</strong> Use corporate card where possible. Purchasing rental CDW inside Ontario is generally optional.</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <i data-lucide="shield-alert" class="w-4.5 h-4.5 text-amber-500 shrink-0 mt-0.5"></i>
+                                <span><strong>Insurance (Outside Ontario):</strong> Mandatory to purchase agency's <strong>Collision Damage Waiver (CDW)</strong> for all rental vehicles out-of-province/country. See <a href="https://www.uwindsor.ca/legal-services/309/rental-vehicles-insurance" target="_blank" class="text-brand-500 hover:underline inline-flex items-center gap-0.5">Legal Services Rules <i data-lucide="external-link" class="w-3 h-3"></i></a>.</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <i data-lucide="plane" class="w-4.5 h-4.5 text-brand-500 shrink-0 mt-0.5"></i>
+                                <span><strong>Combined Personal Travel:</strong> If extending travel with vacation, you must print a quote of the business-only itinerary on the same day you book to establish the reimbursable cap.</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <footer class="text-center text-slate-400 text-xs py-6 border-t mt-8">
-            <p class="mb-2"><strong>Disclaimer:</strong> This guide summarizes the <em>Travel and Business Expense Policy</em> and <em>WUFA Collective Agreement</em>.</p>
-            <p>In case of discrepancy, the official PDF documents on the <a href="https://www.uwindsor.ca/finance/glossary-policies-procedures-forms" class="text-blue-500 hover:underline">Finance Department website</a> take precedence.</p>
-        </footer>
+                <!-- Lodging Guidelines -->
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden card">
+                    <div class="bg-brand-900 text-white px-5 py-3.5 flex justify-between items-center">
+                        <h2 class="text-base font-bold flex items-center gap-2">
+                            <i data-lucide="home" class="w-4 h-4 text-gold-500"></i> Accommodations
+                        </h2>
+                        <a href="https://www.uwindsor.ca/finance/sites/uwindsor.ca.finance/files/travel_policy_and_procedures_2023-09-28.pdf#page=12" target="_blank" class="text-xs text-brand-200 hover:text-white underline inline-flex items-center gap-1.5 transition-colors">
+                            Lodging Rules <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                        </a>
+                    </div>
+                    <div class="p-5 flex flex-col gap-4">
+                        <!-- Gratuitous stay -->
+                        <div class="flex items-center gap-4 border-b border-gray-150 pb-3">
+                            <div class="text-center p-3 bg-brand-50 rounded-xl border border-brand-100 shrink-0">
+                                <span class="text-xs text-brand-600 font-bold block uppercase tracking-wider">Per Night</span>
+                                <span class="text-2xl font-extrabold text-brand-700">$30.00</span>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-gray-800">Gratuitous Lodging Allowance</h3>
+                                <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">Claimable without receipts if staying privately with friends or family instead of a commercial hotel. Encourages cost savings.</p>
+                            </div>
+                        </div>
+
+                        <!-- Hotel Guidelines -->
+                        <div class="space-y-2.5 text-sm text-gray-700">
+                            <div class="flex gap-2">
+                                <i data-lucide="check" class="w-4.5 h-4.5 text-green-600 shrink-0 mt-0.5"></i>
+                                <span><strong>Standard Commercial Room:</strong> Reimbursement is limited to a single standard room rate. Luxury rooms/suites require VP approval.</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <i data-lucide="check" class="w-4.5 h-4.5 text-green-600 shrink-0 mt-0.5"></i>
+                                <span><strong>Short-Term Rentals (Airbnb):</strong> Allowed if equivalent or cheaper than local standard commercial hotels. Final invoice/receipt is mandatory.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Receipt & Claim Standards -->
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden card">
+                    <div class="bg-brand-900 text-white px-5 py-3.5 flex justify-between items-center">
+                        <h2 class="text-base font-bold flex items-center gap-2">
+                            <i data-lucide="file-text" class="w-4 h-4 text-gold-500"></i> Receipt Standards & Timelines
+                        </h2>
+                        <a href="https://www.uwindsor.ca/finance/travel-and-entertainment-expenses" target="_blank" class="text-xs text-brand-200 hover:text-white underline inline-flex items-center gap-1.5 transition-colors">
+                            Submission Rules <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                        </a>
+                    </div>
+                    <div class="p-5 flex flex-col gap-3">
+                        <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-sm leading-relaxed text-gray-600 space-y-2">
+                            <p><strong>UWinsite Submission:</strong> Claims must be submitted via UWinsite Finance Expenses module within <strong>15 working days</strong> of return.</p>
+                            <p><strong>Itemized Requirement:</strong> Booking receipts must show individual itemization (e.g. specific flight, ticket details, itemized foods). Credit card transaction slips with just the total are <u>not acceptable</u>.</p>
+                            <p><strong>Research Grants (Tri-Agency):</strong> Stricter guidelines apply. Original boarding passes (physical or digital screenshots) are mandatory to prove travel occurred.</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs no-print">
+                            <div class="bg-green-50 text-green-700 p-2.5 rounded-lg border border-green-100 flex flex-col gap-1">
+                                <span class="font-bold flex items-center gap-1"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Valid</span>
+                                <span class="text-xs leading-tight text-green-950">Hotel folio showing zero balance, itemized meal invoices, plane boarding passes.</span>
+                            </div>
+                            <div class="bg-red-50 text-red-700 p-2.5 rounded-lg border border-red-100 flex flex-col gap-1">
+                                <span class="font-bold flex items-center gap-1"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Invalid</span>
+                                <span class="text-xs leading-tight text-red-950">Credit card purchase slips, booking confirmation emails without final invoice, credit card statements.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
 
     </main>
 
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-4 mt-auto">
+        <div class="max-w-none px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+            <div class="flex items-center gap-1.5 font-medium text-gray-700">
+                <i data-lucide="lightbulb" class="w-4 h-4 text-brand-500"></i>
+                <span>Faculty Tools by A. Rahimi</span>
+            </div>
+            <div class="text-center sm:text-left leading-relaxed">
+                <strong>Disclaimer:</strong> This pocket reference acts as a guide. The official Travel & Expense Policies and the WUFA Collective Agreement govern all final claims.
+            </div>
+            <div class="flex space-x-3 text-brand-500 font-semibold no-print">
+                <a href="https://www.uwindsor.ca/finance/travel-and-entertainment-expenses" target="_blank" class="hover:underline">Finance Page</a>
+                <span>&bull;</span>
+                <a href="https://www.wufa.ca/article-173/travel-information" target="_blank" class="hover:underline">WUFA Travel</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Lucide Icons Initialization -->
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>
