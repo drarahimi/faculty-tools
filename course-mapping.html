@@ -23,34 +23,70 @@
         /* Generic Elective Default */
         .card-elective { background-color: #f8fafc; border-color: #94a3b8; border-style: dashed; color: #475569; }
         .card-elective:hover { border-color: #64748b; border-style: solid; }
+
+        /* Named Technical Elective Default (specific courses that can fulfill a Technical Elective slot) */
+        .card-elective-named { background-color: #eef2ff; border-color: #a5b4fc; border-style: dotted; border-width: 2px; color: #3730a3; }
+        .card-elective-named:hover { border-color: #818cf8; border-style: solid; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.15); }
         
         /* Hover State (The node currently being hovered) */
         .card-hovered { background-color: #2563eb !important; border-color: #1d4ed8 !important; border-style: solid !important; color: white !important; transform: translateY(-2px) scale(1.02); z-index: 10; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
         .card-hovered .text-sub { color: #bfdbfe !important; }
         .card-hovered .text-main { color: white !important; }
-        
+        .card-hovered .text-instr { color: #dbeafe !important; }
+
         /* Direct Prerequisite Highlight */
         .card-prereq-direct { background-color: #fff7ed !important; border-color: #f97316 !important; border-style: solid !important; box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.4) !important; z-index: 5; }
         .card-prereq-direct .text-sub { color: #c2410c !important; }
         .card-prereq-direct .text-main { color: #7c2d12 !important; }
+        .card-prereq-direct .text-instr { color: #9a3412 !important; }
 
         /* Indirect Prerequisite Highlight */
         .card-prereq-indirect { background-color: #fffbeb !important; border-color: #f59e0b !important; border-style: dashed !important; box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important; z-index: 4; }
         .card-prereq-indirect .text-sub { color: #b45309 !important; }
         .card-prereq-indirect .text-main { color: #78350f !important; }
+        .card-prereq-indirect .text-instr { color: #92400e !important; }
 
         /* Direct Dependent/Unlock Highlight */
         .card-dependent-direct { background-color: #ecfdf5 !important; border-color: #10b981 !important; border-style: solid !important; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4) !important; z-index: 5; }
         .card-dependent-direct .text-sub { color: #047857 !important; }
         .card-dependent-direct .text-main { color: #064e3b !important; }
+        .card-dependent-direct .text-instr { color: #065f46 !important; }
 
         /* Indirect Dependent/Unlock Highlight */
         .card-dependent-indirect { background-color: #f0fdfa !important; border-color: #14b8a6 !important; border-style: dashed !important; box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.2) !important; z-index: 4; }
         .card-dependent-indirect .text-sub { color: #0f766e !important; }
         .card-dependent-indirect .text-main { color: #134e4a !important; }
+        .card-dependent-indirect .text-instr { color: #115e59 !important; }
 
         /* Dimmed State (Nodes not involved in the hover chain) */
         .card-dimmed { opacity: 0.35; filter: grayscale(60%); }
+
+        /* Fixed-size course cards: clamp title to exactly 2 lines so every card is the same height,
+           regardless of how long the course name is (prevents ragged/misaligned cards). */
+        .course-card { height: 6.25rem; }
+        .clamp-title {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+        }
+
+        /* Work Term divider: a slim column marking a co-op semester with no courses */
+        .work-term-divider {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+
+        /* Program-level toggle (Undergraduate / Graduate) */
+        .level-btn { color: #94a3b8; }
+        .level-btn.level-active { background-color: #ffffff; color: #0f172a; }
+
+        /* Graduate course card: confirmed Fall 2026 offering vs. general catalog entry */
+        .card-grad-confirmed { background-color: #ecfeff; border-color: #22d3ee; color: #164e63; }
+        .card-grad-confirmed:hover { border-color: #06b6d4; box-shadow: 0 4px 6px -1px rgba(6, 182, 212, 0.15); }
+        .card-grad-catalog { background-color: #f8fafc; border-color: #cbd5e1; border-style: dashed; color: #475569; }
+        .card-grad-catalog:hover { border-color: #94a3b8; border-style: solid; }
 
         /* Custom horizontal scrollbar */
         .custom-scrollbar::-webkit-scrollbar { height: 12px; }
@@ -78,28 +114,24 @@
                         <h1 class="text-xl font-bold text-slate-900 leading-tight">MAME Integrated Program Flow</h1>
                         <p class="text-sm text-slate-500 font-medium">UWindsor Mechanical Engineering • Core & Option Tracks</p>
                         <a href="https://www.uwindsor.ca/registrar/485/academic-calendars" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm font-medium me-5">Source Site</a>
-                        <a href="https://www.uwindsor.ca/secretariat/sites/uwindsor.ca.secretariat/files/undergraduate_calendar_spring_2026_0.pdf" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Download PDF</a>
+                        <a href="https://www.uwindsor.ca/secretariat/sites/uwindsor.ca.secretariat/files/undergraduate_calendar_fall_2026.pdf" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Download PDF (Fall 2026)</a>
                     </div>
                 </div>
                 
-                <!-- Track Selector -->
-                <div class="w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 no-scrollbar">
-                    <div class="flex items-center bg-slate-100 p-1 rounded-lg min-w-max" id="track-selector">
-                        <button onclick="setProgram('general')" data-track="general" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all bg-white shadow-sm text-slate-900 ring-1 ring-slate-200">
-                            General Program
+                <!-- Level + Track Selector -->
+                <div class="w-full lg:w-auto flex flex-col items-start lg:items-end gap-2">
+                    <div class="flex items-center bg-slate-900 p-1 rounded-lg" id="level-selector">
+                        <button onclick="setLevel('undergrad')" data-level="undergrad" class="level-btn px-3.5 py-1.5 text-xs font-bold rounded-md transition-all">
+                            Undergraduate
                         </button>
-                        <button onclick="setProgram('aerospace')" data-track="aerospace" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-200/50">
-                            Aerospace Option
+                        <button onclick="setLevel('graduate')" data-level="graduate" class="level-btn px-3.5 py-1.5 text-xs font-bold rounded-md transition-all">
+                            Graduate (MEng)
                         </button>
-                        <button onclick="setProgram('automotive')" data-track="automotive" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-200/50">
-                            Automotive Option
-                        </button>
-                        <button onclick="setProgram('materials')" data-track="materials" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-200/50">
-                            Materials Option
-                        </button>
-                        <button onclick="setProgram('environmental')" data-track="environmental" class="track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-200/50">
-                            Environmental Option
-                        </button>
+                    </div>
+                    <div class="w-full lg:w-auto overflow-x-auto pb-2 lg:pb-0 no-scrollbar">
+                        <div class="flex items-center bg-slate-100 p-1 rounded-lg min-w-max" id="track-selector">
+                            <!-- Track buttons injected via JS (differ by level) -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -107,10 +139,11 @@
     </header>
 
     <!-- Main Content Area -->
-    <main class="flex-1 w-full mx-auto p-4 sm:p-6 lg:p-8 overflow-x-auto custom-scrollbar relative bg-slate-50">
-        
-        <!-- Legend -->
-        <div class="flex flex-wrap gap-4 mb-8 bg-white/80 backdrop-blur-md p-3 rounded-xl border border-slate-200 shadow-sm w-fit sticky left-0 z-10">
+    <main class="flex-1 w-full mx-auto p-3 sm:p-4 lg:p-6 overflow-x-auto custom-scrollbar relative bg-slate-50">
+
+        <!-- Legend + Search -->
+        <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+        <div id="undergrad-legend" class="flex flex-wrap gap-3 bg-white/80 backdrop-blur-md p-2.5 rounded-xl border border-slate-200 shadow-sm w-fit sticky left-0 z-10">
             <div class="flex items-center gap-2 text-xs font-semibold text-slate-600 uppercase tracking-wide">
                 <div class="w-3.5 h-3.5 rounded-sm bg-white border-2 border-slate-300"></div> Core
             </div>
@@ -118,7 +151,10 @@
                 <div class="w-3.5 h-3.5 rounded-sm bg-purple-100 border-2 border-purple-400"></div> Option Track
             </div>
             <div class="flex items-center gap-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                <div class="w-3.5 h-3.5 rounded-sm bg-slate-50 border-2 border-slate-400 border-dashed"></div> Elective
+                <div class="w-3.5 h-3.5 rounded-sm bg-slate-50 border-2 border-slate-400 border-dashed"></div> Elective Slot
+            </div>
+            <div class="flex items-center gap-2 text-xs font-semibold text-indigo-700 uppercase tracking-wide">
+                <div class="w-3.5 h-3.5 rounded-sm bg-indigo-50 border-2 border-indigo-300" style="border-style: dotted;"></div> Named Elective Option
             </div>
             <div class="w-px h-4 bg-slate-300 mx-2"></div>
             
@@ -137,11 +173,72 @@
             <div class="flex items-center gap-2 text-xs font-semibold text-teal-600 uppercase tracking-wide">
                 <div class="w-3.5 h-3.5 rounded-full bg-teal-50 border-2 border-teal-400 border-dashed"></div> Indirect Unlock
             </div>
+
+            <div class="w-px h-4 bg-slate-300 mx-2"></div>
+
+            <a href="#elective-pool-section" class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-indigo-600 hover:text-indigo-800">
+                Jump to Technical Electives &darr;
+            </a>
         </div>
 
-        <!-- Dynamic Curriculum Board -->
-        <div id="board-container" class="flex gap-1 min-w-max pb-6 items-start">
-            <!-- Columns injected via JS -->
+        <!-- Search Bar (right of legend) -->
+        <div class="relative w-full sm:w-72 shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.3-4.3"></path>
+            </svg>
+            <input
+                type="text"
+                id="course-search"
+                placeholder="Search courses, codes, instructors..."
+                oninput="applySearchFilter(this.value)"
+                class="w-full pl-9 pr-8 py-2 text-sm rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-slate-300 placeholder:text-slate-400 shadow-sm"
+            >
+            <button
+                id="course-search-clear"
+                onclick="clearSearchFilter()"
+                class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden"
+                title="Clear search"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+            </button>
+        </div>
+        </div>
+
+        <!-- ===================== UNDERGRADUATE VIEW ===================== -->
+        <div id="undergrad-view">
+            <!-- Dynamic Curriculum Board -->
+            <div id="board-container" class="flex gap-1 min-w-max pb-4 items-stretch">
+                <!-- Columns injected via JS -->
+            </div>
+
+            <!-- Technical Electives Reference Pool (separate section, not part of the horizontal term scroller) -->
+            <div id="elective-pool-section" class="mt-1 max-w-screen-2xl">
+                <div class="flex flex-col items-start mb-2 pb-1.5 border-b-2 border-indigo-200">
+                    <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Reference Pool</span>
+                    <span class="text-base font-bold text-indigo-900">Technical Electives</span>
+                    <span id="elective-pool-count" class="text-xs text-indigo-500"></span>
+                </div>
+                <div id="elective-pool-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                    <!-- Elective cards injected via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================== GRADUATE VIEW (MEng) ===================== -->
+        <div id="graduate-view" class="hidden max-w-screen-2xl">
+            <div class="flex items-start gap-2 mb-4 p-3 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-800 text-xs leading-relaxed">
+                <svg xmlns="http://www.w3.org/2000/svg" class="shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <span>MEng is a course-based graduate degree (8 courses, no thesis/prereq chain), so this view lists courses by category instead of a term sequence. Sourced primarily from the official Fall 2026 Graduate Academic Calendar (the university's approved, permanent course catalog), cross-checked against the live MAME Fall 2026 Graduate Course Offerings page for the handful of sections actually confirmed this term. A few departments (Mechanical, Materials, Industrial, Environmental) also have a single flexible "Special Topics / Directed Studies" course number whose specific content rotates by section &ndash; those appear as one umbrella card listing illustrative past/current topics rather than as separate fixed courses. <strong>There is no dedicated Aerospace graduate stream</strong> at UWindsor &mdash; the MEng program areas are General/Mechanical, Automotive (including the newer MEng in Automotive Engineering's AUTO-8xxx courses), Materials, Environmental, and Industrial &amp; Systems. Solid teal cards are confirmed offered Fall 2026 (with instructor/schedule); dashed cards are real calendar courses whose current-term offering wasn't confirmed &mdash; verify with the department before registering.</span>
+            </div>
+            <div class="flex flex-col items-start mb-2 pb-1.5 border-b-2 border-cyan-200">
+                <span class="text-[10px] font-black text-cyan-500 uppercase tracking-widest">MEng Course Catalog</span>
+                <span id="grad-course-heading" class="text-base font-bold text-cyan-900">Graduate Courses</span>
+                <span id="grad-course-count" class="text-xs text-cyan-600"></span>
+            </div>
+            <div id="grad-course-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 pb-4">
+                <!-- Grad course cards injected via JS -->
+            </div>
         </div>
     </main>
 
@@ -163,7 +260,27 @@
                         Course description goes here...
                     </div>
 
-                    <div class="pt-2">
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Instructor:</span>
+                        <span id="modal-instructor" class="font-semibold text-slate-700"></span>
+                    </div>
+
+                    <div id="modal-grad-fields" class="space-y-2 hidden">
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Schedule:</span>
+                            <span id="modal-schedule" class="font-semibold text-slate-700"></span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Capacity:</span>
+                            <span id="modal-capacity" class="font-semibold text-slate-700"></span>
+                        </div>
+                        <div id="modal-crosslist-row" class="flex items-center gap-2 text-sm hidden">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Cross-listed:</span>
+                            <span id="modal-crosslist" class="font-semibold text-slate-700"></span>
+                        </div>
+                    </div>
+
+                    <div id="modal-prereqs-block" class="pt-2">
                         <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Direct Prerequisites</h4>
                         <div id="modal-prereqs" class="flex flex-wrap gap-2">
                             <!-- Prereqs injected via JS -->
@@ -188,125 +305,324 @@
          */
         const allCourses = [
             // --- TERM 1 (Fall Y1) ---
-            { id: "GENG-1101", term: 1, title: "Engineering I", type: "core", programs: ["all"], prereqs: [], summary: "Introduction to engineering design, problem-solving, teamwork, and the engineering profession." },
-            { id: "GENG-1102", term: 1, title: "Engineering Graphics", type: "core", programs: ["all"], prereqs: [], summary: "Principles of engineering graphics, technical drawing, and 3D CAD tools for design visualization." },
-            { id: "MATH-1720", term: 1, title: "Differential Calculus", type: "core", programs: ["all"], prereqs: [], summary: "Limits, derivatives, and applications of differentiation relevant to engineering." },
-            { id: "MATH-1270", term: 1, title: "Linear Algebra", type: "core", programs: ["all"], prereqs: [], summary: "Systems of linear equations, matrices, determinants, and vector spaces." },
-            { id: "PHYS-1400", term: 1, title: "Introductory Physics I", type: "core", programs: ["all"], prereqs: [], summary: "Mechanics, kinematics, and dynamics forming the basis of engineering physics." },
+            { id: "GENG-1101", term: 1, title: "Engineering I", type: "core", programs: ["all"], prereqs: [], summary: "Introduction to engineering design, problem-solving, teamwork, and the engineering profession.", instructor: "Stagner, Jacqueline" },
+            { id: "GENG-1102", term: 1, title: "Engineering Graphics", type: "core", programs: ["all"], prereqs: [], summary: "Principles of engineering graphics, technical drawing, and 3D CAD tools for design visualization.", instructor: "Pusca, Daniela" },
+            { id: "MATH-1720", term: 1, title: "Differential Calculus", type: "core", programs: ["all"], prereqs: [], summary: "Limits, derivatives, and applications of differentiation relevant to engineering.", instructor: "" },
+            { id: "MATH-1270", term: 1, title: "Linear Algebra", type: "core", programs: ["all"], prereqs: [], summary: "Systems of linear equations, matrices, determinants, and vector spaces.", instructor: "" },
+            { id: "PHYS-1400", term: 1, title: "Introductory Physics I", type: "core", programs: ["all"], prereqs: [], summary: "Mechanics, kinematics, and dynamics forming the basis of engineering physics.", instructor: "" },
 
             // --- TERM 2 (Winter Y1) ---
-            { id: "GENG-1110", term: 2, title: "Engineering Mechanics I", type: "core", programs: ["all"], prereqs: ["PHYS-1400", "MATH-1720"], summary: "Statics of particles, rigid bodies, trusses, frames, and machines." },
-            { id: "GENG-1201", term: 2, title: "Cornerstone Design", type: "core", programs: ["all"], prereqs: ["GENG-1101", "GENG-1102"], summary: "Team-based cornerstone engineering design project with hands-on application." },
-            { id: "GENG-1202", term: 2, title: "Intro Electrical & Comp Eng", type: "core", programs: ["all"], prereqs: [], summary: "Fundamentals of electrical circuits, electronics, and basic computing concepts." },
-            { id: "MATH-1730", term: 2, title: "Integral Calculus", type: "core", programs: ["all"], prereqs: ["MATH-1720"], summary: "Techniques of integration, applications of the definite integral, and infinite series." },
-            { id: "CHEM-1103", term: 2, title: "Topics in General Chemistry", type: "core", programs: ["all"], prereqs: [], summary: "Chemical principles relevant to engineering materials, thermochemistry, and electrochemistry." },
+            { id: "GENG-1110", term: 2, title: "Engineering Mechanics I", type: "core", programs: ["all"], prereqs: ["PHYS-1400", "MATH-1720"], summary: "Statics of particles, rigid bodies, trusses, frames, and machines.", instructor: "" },
+            { id: "GENG-1201", term: 2, title: "Cornerstone Design", type: "core", programs: ["all"], prereqs: ["GENG-1101", "GENG-1102"], summary: "Team-based cornerstone engineering design project with hands-on application.", instructor: "Johrendt, Jennifer" },
+            { id: "GENG-1202", term: 2, title: "Intro Electrical & Comp Eng", type: "core", programs: ["all"], prereqs: [], summary: "Fundamentals of electrical circuits, electronics, and basic computing concepts.", instructor: "" },
+            { id: "MATH-1730", term: 2, title: "Integral Calculus", type: "core", programs: ["all"], prereqs: ["MATH-1720"], summary: "Techniques of integration, applications of the definite integral, and infinite series.", instructor: "" },
+            { id: "CHEM-1103", term: 2, title: "Topics in General Chemistry", type: "core", programs: ["all"], prereqs: [], summary: "Chemical principles relevant to engineering materials, thermochemistry, and electrochemistry.", instructor: "" },
 
             // --- TERM 3 (Fall Y2) ---
-            { id: "GENG-2101", term: 3, title: "Engineering II", type: "core", programs: ["all"], prereqs: [], summary: "Further development of engineering design methodologies, communication, and professional skills." },
-            { id: "MATH-2780", term: 3, title: "Vector Calculus", type: "core", programs: ["all"], prereqs: ["MATH-1730"], summary: "Calculus of vector functions, partial derivatives, and multiple integrals in diverse coordinate systems." },
-            { id: "GENG-2102", term: 3, title: "Programming and Algorithms", type: "core", programs: ["all"], prereqs: [], summary: "Introduction to structured programming, algorithmic logic, and numerical problem solving." },
-            { id: "PHYS-2100", term: 3, title: "Topics in Physics", type: "core", programs: ["all"], prereqs: ["PHYS-1400"], summary: "Oscillations, wave motion, electromagnetism, and introductory modern physics." },
-            { id: "GENG-2190", term: 3, title: "Engineering Materials Fund.", type: "core", programs: ["all"], prereqs: [], summary: "Microstructure, phase diagrams, properties, and applications of metals, polymers, and ceramics." },
-            { id: "MECH-2210", term: 3, title: "Dynamics", type: "core", programs: ["all"], prereqs: ["GENG-1110"], summary: "Kinematics and kinetics of particles and rigid bodies using Newton-Euler equations and energy methods." },
+            { id: "GENG-2101", term: 3, title: "Engineering II", type: "core", programs: ["all"], prereqs: [], summary: "Further development of engineering design methodologies, communication, and professional skills.", instructor: "" },
+            { id: "MATH-2780", term: 3, title: "Vector Calculus", type: "core", programs: ["all"], prereqs: ["MATH-1730"], summary: "Calculus of vector functions, partial derivatives, and multiple integrals in diverse coordinate systems.", instructor: "" },
+            { id: "GENG-2102", term: 3, title: "Programming and Algorithms", type: "core", programs: ["all"], prereqs: [], summary: "Introduction to structured programming, algorithmic logic, and numerical problem solving.", instructor: "Ting, David" },
+            { id: "PHYS-2100", term: 3, title: "Topics in Physics", type: "core", programs: ["all"], prereqs: ["PHYS-1400"], summary: "Oscillations, wave motion, electromagnetism, and introductory modern physics.", instructor: "" },
+            { id: "GENG-2190", term: 3, title: "Engineering Materials Fund.", type: "core", programs: ["all"], prereqs: [], summary: "Microstructure, phase diagrams, properties, and applications of metals, polymers, and ceramics.", instructor: "Bowers, Randy / Edrisy, Afsaneh" },
+            { id: "GENG-2180", term: 3, title: "Mechanics of Deformable Bodies", type: "core", programs: ["all"], prereqs: ["GENG-1110", "MATH-1720"], summary: "Stress, strain, and deformation of solid materials under axial, torsional, and flexural loading.", instructor: "Cherniaev, Aleksandr" },
 
             // --- TERM 4 (Winter Y2) ---
-            { id: "GENG-2201", term: 4, title: "Engineering Design II", type: "core", programs: ["all"], prereqs: ["GENG-1201"], summary: "Second-year comprehensive engineering design project emphasizing teamwork and methodology." },
-            { id: "MATH-2790", term: 4, title: "Differential Equations", type: "core", programs: ["all"], prereqs: ["MATH-1730"], summary: "First and higher order ordinary differential equations and Laplace transforms." },
-            { id: "GENG-2220", term: 4, title: "Probability and Statistics", type: "core", programs: ["all"], prereqs: ["MATH-1720"], summary: "Statistical methods, probability theory, distributions, and experimental data analysis." },
-            { id: "MECH-2230", term: 4, title: "Adv Engineering and Design", type: "core", programs: ["all"], prereqs: [], summary: "Advanced techniques in engineering design, graphical analysis, and tolerancing." },
-            { id: "GENG-2180", term: 4, title: "Mechanics of Deformable Bodies", type: "core", programs: ["all"], prereqs: ["GENG-1110", "MATH-1720"], summary: "Stress, strain, and deformation of solid materials under axial, torsional, and flexural loading." },
-            { id: "COMP-1", term: 4, title: "Complementary Studies", type: "elective", programs: ["all"], prereqs: [], summary: "Elective course covering humanities, social sciences, or business to broaden societal perspectives." },
+            { id: "GENG-2201", term: 4, title: "Engineering Design II", type: "core", programs: ["all"], prereqs: ["GENG-1201"], summary: "Second-year comprehensive engineering design project emphasizing teamwork and methodology.", instructor: "Adhikari, Ram" },
+            { id: "MATH-2790", term: 4, title: "Differential Equations", type: "core", programs: ["all"], prereqs: ["MATH-1730"], summary: "First and higher order ordinary differential equations and Laplace transforms.", instructor: "" },
+            { id: "GENG-2220", term: 4, title: "Probability and Statistics", type: "core", programs: ["all"], prereqs: ["MATH-1720"], summary: "Statistical methods, probability theory, distributions, and experimental data analysis.", instructor: "Kim, Eunsik" },
+            { id: "MECH-2230", term: 4, title: "Adv Engineering and Design", type: "core", programs: ["all"], prereqs: [], summary: "Advanced techniques in engineering design, graphical analysis, and tolerancing.", instructor: "Pusca, Daniela" },
+            { id: "MECH-2210", term: 4, title: "Dynamics", type: "core", programs: ["all"], prereqs: ["GENG-1110"], summary: "Kinematics and kinetics of particles and rigid bodies using Newton-Euler equations and energy methods.", instructor: "Bruck, Lucas" },
+            { id: "COMP-1", term: 4, title: "Complementary Studies", type: "elective", programs: ["all"], prereqs: [], summary: "Elective course covering humanities, social sciences, or business to broaden societal perspectives.", instructor: "" },
 
             // --- TERM 5 (Fall Y3) ---
-            { id: "GENG-3130", term: 5, title: "Engineering Economics", type: "core", programs: ["all"], prereqs: [], summary: "Principles of engineering economics, cost analysis, time value of money, and financial decision making." },
-            { id: "MECH-3211", term: 5, title: "Stress Analysis", type: "core", programs: ["all"], prereqs: ["GENG-2180", "MATH-2790"], summary: "Advanced stress analysis, combined loading, failure theories, and structural components." },
-            { id: "MECH-3212", term: 5, title: "Thermodynamics", type: "core", programs: ["all"], prereqs: [], summary: "First and second laws of thermodynamics, thermodynamic properties, and introductory power cycles." },
-            { id: "MECH-3223", term: 5, title: "Machine Dynamics", type: "core", programs: ["all"], prereqs: ["MECH-2210"], summary: "Kinematic and dynamic analysis of planar mechanisms, cams, and gear trains." },
-            { id: "MECH-3233", term: 5, title: "Fluid Mechanics I", type: "core", programs: ["all"], prereqs: ["PHYS-2100"], summary: "Fluid properties, statics, kinematics, and conservation laws of fluid dynamics." },
-            { id: "COMP-2", term: 5, title: "Complementary Studies", type: "elective", programs: ["all"], prereqs: [], summary: "Second elective course covering humanities, social sciences, or business." },
+            { id: "GENG-3130", term: 5, title: "Engineering Economics", type: "core", programs: ["all"], prereqs: [], summary: "Principles of engineering economics, cost analysis, time value of money, and financial decision making.", instructor: "Wang, Michael Hunglin" },
+            { id: "MECH-3211", term: 5, title: "Stress Analysis", type: "core", programs: ["all"], prereqs: ["GENG-2180"], summary: "Advanced stress analysis, combined loading, failure theories, and structural components.", instructor: "Green, Daniel" },
+            { id: "MECH-3212", term: 5, title: "Thermodynamics", type: "core", programs: ["all"], prereqs: ["PHYS-2100"], summary: "First and second laws of thermodynamics, thermodynamic properties, and introductory power cycles.", instructor: "Fartaj, Amir" },
+            { id: "MECH-3223", term: 5, title: "Machine Dynamics", type: "core", programs: ["all"], prereqs: ["MECH-2210"], summary: "Kinematic and dynamic analysis of planar mechanisms, cams, and gear trains.", instructor: "Adhikari, Ram" },
+            { id: "MECH-3233", term: 5, title: "Fluid Mechanics I", type: "core", programs: ["all"], prereqs: ["PHYS-2100"], summary: "Fluid properties, statics, kinematics, and conservation laws of fluid dynamics.", instructor: "Zhou, Biao" },
+            { id: "COMP-2", term: 5, title: "Complementary Studies", type: "elective", programs: ["all"], prereqs: [], summary: "Second elective course covering humanities, social sciences, or business.", instructor: "" },
 
             // --- TERM 6 (Summer Y3) - Core base + Option Specific additions ---
-            { id: "GENG-3201", term: 6, title: "Engineering Design III", type: "core", programs: ["all"], prereqs: ["GENG-2201"], summary: "Third-year engineering design project emphasizing system-level integration and open-ended problem solving." },
-            { id: "MECH-3217", term: 6, title: "Applied Thermodynamics", type: "core", programs: ["all"], prereqs: ["MECH-3212"], summary: "Thermodynamics of gas mixtures, combustion, refrigeration, and advanced power cycles." },
-            { id: "MECH-3220", term: 6, title: "Fluid Mechanics II", type: "core", programs: ["all"], prereqs: ["MECH-3233"], summary: "Advanced fluid mechanics, navier-stokes equations, boundary layers, and compressible flow." },
-            { id: "MECH-3228", term: 6, title: "Heat Transfer", type: "core", programs: ["all"], prereqs: ["MATH-2790"], summary: "Principles of conduction, convection, and radiation heat transfer with practical applications." },
-            { id: "MECH-4259", term: 6, title: "Computer Aided Engineering", type: "core", programs: ["all"], prereqs: ["MECH-3211"], summary: "Introduction to finite element analysis (FEA) and computer-aided engineering (CAE) software tools." },
-            
+            { id: "GENG-3201", term: 6, title: "Engineering Design III", type: "core", programs: ["all"], prereqs: ["GENG-2201"], summary: "Third-year engineering design project emphasizing system-level integration and open-ended problem solving.", instructor: "Minaker, Bruce / Riahi, Reza" },
+            { id: "MECH-3217", term: 6, title: "Applied Thermodynamics", type: "core", programs: ["all"], prereqs: ["MECH-3212"], summary: "Thermodynamics of gas mixtures, combustion, refrigeration, and advanced power cycles.", instructor: "Stoilov, Vesselin" },
+            { id: "MECH-3220", term: 6, title: "Fluid Mechanics II", type: "core", programs: ["all"], prereqs: ["MECH-3233"], summary: "Advanced fluid mechanics, navier-stokes equations, boundary layers, and compressible flow.", instructor: "Roussinova, Vesselina" },
+            { id: "MECH-3228", term: 6, title: "Heat Transfer", type: "core", programs: ["all"], prereqs: ["MATH-2790"], summary: "Principles of conduction, convection, and radiation heat transfer with practical applications.", instructor: "Jianu, Ofelia" },
+            { id: "MECH-4259", term: 6, title: "Computer Aided Engineering", type: "core", programs: ["all"], prereqs: ["MECH-3211"], summary: "Introduction to finite element analysis (FEA) and computer-aided engineering (CAE) software tools.", instructor: "Zamani, Nader" },
+
             // Track Additions
-            { id: "MECH-3670", term: 6, title: "Aerospace Eng. Fundamentals", type: "option", programs: ["aerospace"], prereqs: ["MATH-2780", "MATH-2790"], summary: "Introduction to aerodynamics, propulsion, and general aerospace vehicle performance." },
-            { id: "MECH-3430", term: 6, title: "Automotive Eng. Fundamentals", type: "option", programs: ["automotive"], prereqs: ["MECH-2210"], summary: "Introduction to automotive engineering, vehicle dynamics, architecture, and systems." },
-            { id: "MECH-3830", term: 6, title: "Materials Eng. Fundamentals", type: "option", programs: ["materials"], prereqs: ["GENG-2190"], summary: "Advanced principles of materials engineering, crystallography, and failure analysis." },
-            { id: "ENVE-3620", term: 6, title: "Air Pollution Control", type: "option", programs: ["environmental"], prereqs: [], summary: "Principles, design, and regulatory aspects of air pollution control systems." },
+            { id: "MECH-3670", term: 6, title: "Aerospace Eng. Fundamentals", type: "option", programs: ["aerospace"], prereqs: ["MATH-2780", "MATH-2790"], summary: "Introduction to aerodynamics, propulsion, and general aerospace vehicle performance.", instructor: "Defoe, Jeff" },
+            { id: "MECH-3430", term: 6, title: "Automotive Eng. Fundamentals", type: "option", programs: ["automotive"], prereqs: [], summary: "Overview of primary automotive systems: engine types/configurations, combustion, emission control, vehicle performance, powertrain, suspension, frame and chassis, materials and fabrication issues. Engine and vehicle dissection lab. (Restricted to Automotive Option students, Semester 6+; no course prerequisite.)", instructor: "Eaves, Nick" },
+            { id: "MECH-3830", term: 6, title: "Materials and Their Properties", type: "option", programs: ["materials"], prereqs: ["GENG-2190"], summary: "Relationship of the engineering properties of materials to atomic structure, bonding, crystal structure, imperfections, and microstructure. Crystal structure determination, phase diagrams, diffusion, phase transformations, solidification, heat treatment, and deformation.", instructor: "Alpas, Ahmet" },
+            { id: "ENVE-3640", term: 6, title: "Materials Recovery & Waste Mgmt.", type: "option", programs: ["environmental"], prereqs: [], summary: "Principles of materials recovery, reuse, recycling, and solid-waste management as applied to engineering practice. Part of the Mechanical Engineering Environmental Option's Semester 6/7 course pool (alongside MECH-4228 and MECH-4255). Note: as of Fall 2025, UWindsor is not admitting new students into the Mechanical Engineering Environmental Option -- this track now serves continuing students only.", instructor: "" },
 
             // --- TERM 7 (Winter Y4) ---
-            { id: "MECH-4200A", term: 7, title: "Capstone Design Project A", type: "core", programs: ["all"], prereqs: [], summary: "First phase of the culminating engineering design project. Requires problem definition, planning, and initial conceptual design." },
-            { id: "MECH-3224", term: 7, title: "Engineering Measurements", type: "core", programs: ["all"], prereqs: ["GENG-2102"], summary: "Measurement theory, sensors, data acquisition, signal processing, and experimental uncertainty." },
-            { id: "MECH-4221", term: 7, title: "Machine Design", type: "core", programs: ["all"], prereqs: ["MECH-3223", "MECH-3211"], summary: "Design and analysis of machine elements such as gears, bearings, shafts, and fasteners." },
-            
+            { id: "MECH-4200A", term: 7, title: "Capstone Design Project A", type: "core", programs: ["all"], prereqs: [], summary: "First phase of the culminating engineering design project. Requires problem definition, planning, and initial conceptual design.", instructor: "Danelon, Darryl (Capstone Coordinator)" },
+            { id: "MECH-3224", term: 7, title: "Engineering Measurements", type: "core", programs: ["all"], prereqs: ["GENG-2102"], summary: "Measurement theory, sensors, data acquisition, signal processing, and experimental uncertainty.", instructor: "Altenhof, William" },
+            { id: "MECH-4221", term: 7, title: "Machine Design", type: "core", programs: ["all"], prereqs: ["MECH-3223", "MECH-3211"], summary: "Design and analysis of machine elements such as gears, bearings, shafts, and fasteners.", instructor: "Oriet, Leo" },
+
             // General Electives
-            { id: "TECH-1", term: 7, title: "Technical Elective I", type: "elective", programs: ["general"], prereqs: [], summary: "First technical elective to broaden engineering knowledge in specialized fields." },
-            { id: "TECH-2", term: 7, title: "Technical Elective II", type: "elective", programs: ["general"], prereqs: [], summary: "Second technical elective to broaden engineering knowledge in specialized fields." },
-            
-            // Aerospace 
-            { id: "MECH-4670", term: 7, title: "Aerospace Propulsion", type: "option", programs: ["aerospace"], prereqs: ["MECH-3217", "MECH-3220", "MECH-3670"], summary: "Design and analysis of aerospace propulsion systems, including gas turbines, jet engines, and rockets." },
-            { id: "MECH-3671", term: 7, title: "Aerospace Materials & Mfg.", type: "option", programs: ["aerospace"], prereqs: ["MECH-3670"], summary: "Materials selection and specialized manufacturing processes specific to aerospace components." },
-            { id: "MECH-4673", term: 7, title: "Aerospace Structures", type: "option", programs: ["aerospace"], prereqs: ["MECH-3211"], summary: "Analysis, design, and fatigue testing of aerospace structures under varied flight loads." },
-            
+            { id: "TECH-1", term: 7, title: "Technical Elective I", type: "elective", programs: ["general"], prereqs: [], summary: "First technical elective to broaden engineering knowledge in specialized fields.", instructor: "" },
+            { id: "TECH-2", term: 7, title: "Technical Elective II", type: "elective", programs: ["general"], prereqs: [], summary: "Second technical elective to broaden engineering knowledge in specialized fields.", instructor: "" },
+
+            // Aerospace
+            { id: "MECH-4670", term: 7, title: "Aerospace Propulsion", type: "option", programs: ["aerospace"], prereqs: ["MECH-3217", "MECH-3220", "MECH-3670"], summary: "Design and analysis of aerospace propulsion systems, including gas turbines, jet engines, and rockets.", instructor: "Defoe, Jeff" },
+            { id: "MECH-4671", term: 7, title: "Aerodynamics & Performance", type: "option", programs: ["aerospace"], prereqs: ["MECH-3220", "MECH-3670"], summary: "Analysis of aircraft configurations; viscous and compressibility effects; maneuvering loads and load factors; implications of maneuverability on thrust requirements; aircraft stability and control.", instructor: "Rahimi, Afshin" },
+            { id: "MECH-3671", term: 7, title: "Aerospace Materials & Mfg.", type: "option", programs: ["aerospace", "materials"], prereqs: ["MECH-3670"], summary: "Properties and selection of metals, ceramics, polymers, and composites for aerospace applications; structural and gas-turbine alloys; machining, casting, forming, heat treating, and joining for manufacture and repair; in-service materials degradation. Shared elective between the Aerospace and Materials options.", instructor: "Riahi, Reza" },
+
             // Automotive
-            { id: "MECH-4463", term: 7, title: "Vehicle Dynamics", type: "option", programs: ["automotive"], prereqs: ["MECH-3430"], summary: "In-depth analysis of vehicle ride, handling, cornering, and braking performance." },
-            { id: "MECH-4467", term: 7, title: "Vehicle Thermal Mgmt.", type: "option", programs: ["automotive"], prereqs: ["MECH-3217", "MECH-3228", "MECH-3233"], summary: "Thermal management strategies for vehicle powertrains, cabins, and battery systems." },
-            
+            { id: "MECH-4463", term: 7, title: "Vehicle Dynamics", type: "option", programs: ["automotive"], prereqs: ["MECH-3430"], summary: "In-depth analysis of vehicle ride, handling, cornering, and braking performance.", instructor: "Bruck, Lucas" },
+            { id: "MECH-4467", term: 7, title: "Vehicle Thermal Mgmt.", type: "option", programs: ["automotive"], prereqs: ["MECH-3217", "MECH-3228", "MECH-3233"], summary: "Thermal management strategies for vehicle powertrains, cabins, and battery systems.", instructor: "Fartaj, Amir" },
+
             // Materials
-            { id: "MECH-4832", term: 7, title: "Modern Steels", type: "option", programs: ["materials"], prereqs: ["MECH-3830"], summary: "Metallurgy, processing, and properties of modern advanced high-strength steels." },
-            { id: "MECH-4834", term: 7, title: "Polymers", type: "option", programs: ["materials"], prereqs: ["MECH-3830"], summary: "Structure, processing, and application engineering of polymer materials." },
-            
+            { id: "MECH-4832", term: 7, title: "Modern Steels", type: "option", programs: ["materials"], prereqs: ["MECH-3830"], summary: "Traditional and advanced high-strength steels, automotive sheet steels, stainless and tool steels, and cast irons; the Canadian steel industry; mechanical and microstructural characterization laboratories.", instructor: "" },
+
             // Environmental
-            { id: "ENVE-4810", term: 7, title: "Sustainability in Eng.", type: "option", programs: ["environmental"], prereqs: [], summary: "Application of sustainability principles, life-cycle analysis, and green design in engineering." },
-            { id: "ENVE-4820", term: 7, title: "Hydrogeological Engineering", type: "option", programs: ["environmental"], prereqs: [], summary: "Principles of groundwater flow, well hydraulics, and contaminant transport modeling." },
+            { id: "MECH-4228", term: 7, title: "Sustainability in Engineering", type: "option", programs: ["environmental"], prereqs: ["GENG-2101"], summary: "Environmental impact assessment; biophysical and socioeconomic impacts from engineering activities, processes, and projects; human health and environmental risk concepts; corporate/industrial environmental management systems; waste reduction, reuse, recycling, and reclamation. (Cross-listed with ENVE-4810 in Civil Engineering -- Mechanical Engineering students register under MECH-4228.)", instructor: "" },
+            { id: "MECH-4255", term: 7, title: "Enviro Effects & Control of Noise", type: "option", programs: ["environmental"], prereqs: [], summary: "Physical properties of sound and noise, measurement of noise, noise control, hearing characteristics and environmental effects of noise.", instructor: "Novak, C." },
 
             // --- TERM 8 (Summer Y4) ---
-            { id: "MECH-3221", term: 8, title: "Control Theory", type: "core", programs: ["all"], prereqs: ["MATH-2780", "MATH-2790"], summary: "Mathematical modeling, analysis, and design of dynamic feedback control systems." },
-            { id: "MECH-4211", term: 8, title: "Deformation & Fracture", type: "core", programs: ["all"], prereqs: ["MECH-3211", "MECH-3223"], summary: "Mechanisms of deformation, fatigue, creep, and fracture mechanics in engineering materials." },
-            { id: "MECH-4200B", term: 8, title: "Capstone Design Project B", type: "core", programs: ["all"], prereqs: ["MECH-4200A"], summary: "Final phase of the capstone project. Requires detailed design, prototyping, testing, and final presentation." },
-            
+            { id: "MECH-3221", term: 8, title: "Control Theory", type: "core", programs: ["all"], prereqs: ["MATH-2780", "MATH-2790"], summary: "Mathematical modeling, analysis, and design of dynamic feedback control systems.", instructor: "Azab, Ahmed / Alirezaee, Shahpour" },
+            { id: "MECH-4211", term: 8, title: "Deformation, Fracture and Failure Prevention", type: "core", programs: ["all"], prereqs: ["MECH-3211", "MECH-3223"], summary: "Mechanics of deformation, fracture, and failure in engineering materials, structures, and components. Stress and strain analysis including stress concentrations and strain energy; mechanisms of material failure (brittle/ductile fracture, fatigue, creep); design principles, failure analysis, and material characterization/selection.", instructor: "" },
+            { id: "MECH-4200B", term: 8, title: "Capstone Design Project B", type: "core", programs: ["all"], prereqs: ["MECH-4200A"], summary: "Final phase of the capstone project. Requires detailed design, prototyping, testing, and final presentation.", instructor: "Novak, C. (Capstone Coordinator)" },
+
             // General Electives
-            { id: "TECH-3", term: 8, title: "Technical Elective III", type: "elective", programs: ["general"], prereqs: [], summary: "Third technical elective to broaden engineering knowledge in specialized fields." },
-            { id: "TECH-4", term: 8, title: "Technical Elective IV", type: "elective", programs: ["general"], prereqs: [], summary: "Fourth technical elective to broaden engineering knowledge in specialized fields." },
-            
+            { id: "TECH-3", term: 8, title: "Technical Elective III", type: "elective", programs: ["general"], prereqs: [], summary: "Third technical elective to broaden engineering knowledge in specialized fields.", instructor: "" },
+            { id: "TECH-4", term: 8, title: "Technical Elective IV", type: "elective", programs: ["general"], prereqs: [], summary: "Fourth technical elective to broaden engineering knowledge in specialized fields.", instructor: "" },
+
             // Aerospace
-            { id: "MECH-4671", term: 8, title: "Aerodynamics & Performance", type: "option", programs: ["aerospace"], prereqs: ["MECH-3220", "MECH-3670"], summary: "Advanced study of airfoil theory, wing aerodynamics, and flight performance characteristics." },
-            { id: "MECH-4672", term: 8, title: "Flight Dynamics", type: "option", programs: ["aerospace"], prereqs: ["MECH-3670"], summary: "Equations of motion, stability, control, and dynamic response of flight vehicles." },
-            
+            { id: "MECH-4673", term: 8, title: "Aerospace Structures", type: "option", programs: ["aerospace"], prereqs: ["MECH-3211"], summary: "Loads acting on aircraft and individual parts; structural idealization; bending/shear/torsion of thin-walled beams; stress analysis of wing spars, box beams, fuselages, and wings.", instructor: "Cherniaev, Aleksandr" },
+            { id: "MECH-4672", term: 8, title: "Flight Dynamics", type: "option", programs: ["aerospace"], prereqs: ["MECH-3670", "MECH-4671"], summary: "Flight dynamics modelling for fixed-wing aircraft and rotorcraft; low-Reynolds-number considerations for UAVs; control theory and state-space controller design; labs involving control of virtual and/or physical UAV models.", instructor: "Rahimi, Afshin" },
+
             // Automotive
-            { id: "MECH-4465", term: 8, title: "Internal Combustion Engines", type: "option", programs: ["automotive"], prereqs: ["MECH-3217", "MECH-3220"], summary: "Thermodynamics, design, and operation of spark-ignition and compression-ignition internal combustion engines." },
-            { id: "MECH-4469", term: 8, title: "Sustainable Propulsion", type: "option", programs: ["automotive"], prereqs: ["MECH-3217"], summary: "Electric, hybrid-electric, fuel cell, and alternative sustainable vehicle propulsion architectures." },
-            
+            { id: "MECH-4465", term: 8, title: "Internal Combustion Engines", type: "option", programs: ["automotive"], prereqs: ["MECH-3217", "MECH-3220"], summary: "Thermodynamics, design, and operation of spark-ignition and compression-ignition internal combustion engines.", instructor: "Eaves, Nick" },
+            { id: "MECH-4469", term: 8, title: "Sustainable Propulsion", type: "option", programs: ["automotive"], prereqs: ["MECH-3217"], summary: "Fundamentals of sustainable propulsion systems for automotive applications: energy sources and energy density; advanced clean combustion strategies (fuel properties, lean-burn stoichiometry, fuel injection, turbocharging); future propulsion trends including engine electrification, smart hybridization, and carbon-neutral renewable fuels.", instructor: "" },
+
             // Materials
-            { id: "MECH-4831", term: 8, title: "Light Alloys", type: "option", programs: ["materials"], prereqs: ["MECH-3830"], summary: "Metallurgy and applications of lightweight structural alloys such as aluminum, magnesium, and titanium." },
-            { id: "MECH-4835", term: 8, title: "Composites", type: "option", programs: ["materials"], prereqs: ["MECH-3830"], summary: "Mechanics, manufacturing processes, and structural design using composite materials." },
-            
+            { id: "MECH-4820", term: 8, title: "Ceramic Materials", type: "option", programs: ["materials"], prereqs: [], summary: "Uses of traditional and advanced ceramics; monolithic and composite ceramics; comparison with metals and alloys; processing (raw material preparation, forming, sintering, quality control); properties including modulus of rupture, creep, corrosion, erosion, and electrical/magnetic/optical properties.", instructor: "" },
+            { id: "MECH-3831", term: 8, title: "Thermo. and Kinetics of Materials", type: "option", programs: ["materials"], prereqs: ["MECH-3212"], summary: "Thermodynamics review (First/Second Laws, Gibbs free energy, alloy phase equilibria, Ellingham diagrams) and kinetics (reaction rates, activation energy, Arrhenius' Law) applied to selected problems in materials processing.", instructor: "" },
+
             // Environmental
-            { id: "ENVE-4460", term: 8, title: "Enviro Effects & Control of Noise", type: "option", programs: ["environmental"], prereqs: [], summary: "Acoustics theory, environmental noise assessment, regulation, and mitigation strategies." },
-            { id: "ENVE-4610", term: 8, title: "Water Quality Modeling", type: "option", programs: ["environmental"], prereqs: [], summary: "Mathematical modeling of water quality and pollutant transport in natural and engineered systems." },
+            { id: "ENVE-3620", term: 8, title: "Air Pollution Control", type: "option", programs: ["environmental"], prereqs: ["GENG-2101"], summary: "Regulations and methods of source testing and monitoring; nomenclature of organic compounds; dispersion modelling; air pollution control methods, designs, and their relative effectiveness.", instructor: "" },
+            { id: "ENVE-3630", term: 8, title: "Water & Wastewater Treatment", type: "option", programs: ["environmental"], prereqs: [], summary: "Water and wastewater quality, guidelines and standards, flow fluctuation, and design capacity; design of unit operations and processes in water and wastewater treatment.", instructor: "" },
+
+            // --- NAMED TECHNICAL ELECTIVES ---
+            // Specific courses students can choose to fulfill a "Technical Elective" (TECH-1..4) slot in Terms 7-8.
+            // Not required on their own -- shown here as a reference pool, not a fixed term requirement.
+            { id: "MECH-4258", term: 9, title: "Computational Fluid Dynamics (CFD)", type: "elective-named", programs: ["all"], prereqs: ["MECH-3233"], summary: "Fundamentals of finite volume methods for problem solving in fluid flow and heat transfer, using CFD computer programs. Fulfills a Technical Elective slot. (Prerequisite: MECH-3233; Co-requisite: MECH-3220.)", instructor: "Defoe, Jeff" },
+            { id: "MECH-4212", term: 9, title: "Mechatronics", type: "elective-named", programs: ["all"], prereqs: [], summary: "Review of electromechanical components and practical application of microcontrollers in electromechanical systems. Hands-on, laboratory-based course. Fulfills a Technical Elective slot. (Semester 7 or 8 standing.)", instructor: "Ahamed, Jalal" },
+            { id: "MECH-4240", term: 9, title: "Advanced Mechatronics (Special Topics)", type: "elective-named", programs: ["all"], prereqs: [], summary: "Special-topics course; content varies by term (e.g. advanced mechatronic systems, biomedical instrumentation/signal processing). Fulfills a Technical Elective slot.", instructor: "Ahamed, Jalal" },
+            { id: "MECH-4440", term: 9, title: "Electric Vehicle Battery Systems (Special Topics)", type: "elective-named", programs: ["all"], prereqs: [], summary: "Special-topics course on battery systems, battery management, and design considerations for electric vehicles. Fulfills a Technical Elective slot.", instructor: "Schuelke-Leech, Beth-Anne" },
+            { id: "MECH-4850", term: 9, title: "Welding Engineering", type: "elective-named", programs: ["all"], prereqs: [], summary: "Design and qualification of arc welding procedures, welding metallurgy, and control of hydrogen-assisted cracking. Fulfills a Technical Elective slot. (Semester 7 or higher standing.)", instructor: "Bowers, Randy" },
+            { id: "MECH-4471", term: 9, title: "Automotive Materials & Manufacturing Methods", type: "elective-named", programs: ["all"], prereqs: [], summary: "Materials selection and manufacturing methods specific to automotive components (also offered as MECH-4871). Fulfills a Technical Elective slot. (Semester 7 or higher standing.)", instructor: "Hu, Henry" },
+            { id: "MECH-4253", term: 9, title: "Heating, Ventilation & Air Conditioning", type: "elective-named", programs: ["all"], prereqs: ["MECH-3217"], summary: "Principles of environmental air quality, occupant comfort control, and psychrometric analysis of buildings. Fulfills a Technical Elective slot. (Prerequisite: MECH-3217.)", instructor: "Jianu, Ofelia" },
+            { id: "MECH-3215", term: 9, title: "Mechanical Vibrations", type: "elective-named", programs: ["all"], prereqs: ["MECH-2210"], summary: "Free, damped, and forced vibration of single and multi-degree-of-freedom systems; vibration isolation and transducers. Fulfills a Technical Elective slot. (Prerequisite: MECH-2210 and Semester 6 or higher standing.)", instructor: "Zamani, Nader" },
+            { id: "MECH-4218", term: 9, title: "Thermofluid Systems Design", type: "elective-named", programs: ["all"], prereqs: ["MECH-3212", "MECH-3233", "MECH-3228", "MECH-3217"], summary: "Evaluation of major thermofluid systems: HVAC&R, power generation, heat exchangers, and turbines. Fulfills a Technical Elective slot. (Prerequisites: MECH-3212, MECH-3233, MECH-3228; and either MECH-3217 or MECH-3220.)", instructor: "Zhou, Biao" },
+            { id: "MECH-4241", term: 9, title: "Directed Studies in Mechanical Engineering", type: "elective-named", programs: ["all"], prereqs: [], summary: "A special course of studies in Mechanical Engineering with content and direction approved by the Department Head. Fulfills a Technical Elective slot. (Semester 7 or higher standing with a 70% average or better; may be offered as a cross-career course with CIVL-8006, ENVE-8006, and MECH-8006.)", instructor: "" },
+            { id: "MECH-4250", term: 9, title: "Gas Dynamics", type: "elective-named", programs: ["all"], prereqs: ["MECH-3220"], summary: "Basic concepts and one-dimensional flow equations of gas dynamics; isentropic flows in variable-area ducts, Fanno/Rayleigh/isothermal flows, normal and oblique shock waves, Prandtl-Meyer expansion waves. Fulfills a Technical Elective slot. (Prerequisite: MECH-3220.)", instructor: "" },
+            { id: "MECH-4251", term: 9, title: "Turbomachines", type: "elective-named", programs: ["all"], prereqs: ["MECH-3220"], summary: "Dimensional analysis and similitude; efficiency definitions; 2D analysis of axial-flow turbines and compressors; 3D flow; centrifugal pumps and compressors. Fulfills a Technical Elective slot. (Prerequisite: MECH-3220.)", instructor: "" },
+            { id: "INDE-4350", term: 9, title: "DOE Techniques for Manufacturing", type: "elective-named", programs: ["all"], prereqs: [], summary: "Use of designed experiments (DOE) in product/process design: single-factor experiments, ANOVA, randomized blocks, Latin squares, factorial and fractional designs, and the Taguchi method. Fulfills a Technical Elective slot. (Industrial Engineering cross-listed course; prerequisite INDE-3270.)", instructor: "" },
+            { id: "MECH-4242", term: 9, title: "Special Topics in Environmental Engineering", type: "elective-named", programs: ["environmental"], prereqs: [], summary: "Selected topics of current interest in environmental engineering. Part of the Mechanical Engineering Environmental Option's Semester 8 course pool. (No detailed calendar course description published; consult the department.)", instructor: "" },
+            { id: "MECH-4243", term: 9, title: "Directed Studies in Environmental Engineering", type: "elective-named", programs: ["environmental"], prereqs: [], summary: "A special course of studies in Environmental Engineering with content and direction approved by the Department Head. Part of the Mechanical Engineering Environmental Option's Semester 8 course pool. (No detailed calendar course description published; consult the department.)", instructor: "" },
         ];
 
+        /**
+         * GRADUATE (MEng/MASc/PhD) COURSE DATA MODEL
+         * PRIMARY SOURCE: the official "graduate_calendar_fall_2026_0.pdf" (Fall 2026 Academic Calendar),
+         * sections for Environmental Engineering (ENVE-), Mechanical/Automotive/Materials Engineering (MATL-),
+         * Industrial and Manufacturing Engineering (INDE-), Mechanical Engineering (MECH-), Automotive
+         * Engineering (AUTO-), and General Engineering (GENG-) -- these are the permanent, calendar-approved
+         * course numbers. Supplemented with the live MAME "Fall 2026 Graduate Course Offerings" page for
+         * instructor/day-time/capacity on the handful of sections actually being taught this term.
+         *
+         * Several departments (Mechanical, Materials, Industrial, Environmental) also have ONE flexible
+         * "Special Topics / Directed Studies" course number (MECH-8000, MECH-8290, MATL-8890, INDE-8900,
+         * ENVE-8900) whose specific content rotates by term under different section numbers -- these appear
+         * here as a single card each, with illustrative topics that have run under that umbrella.
+         * The MEng program has no dedicated Aerospace stream; categories are general/mechanical, automotive
+         * (including the newer MEng in Automotive Engineering's dedicated AUTO-8xxx core courses), materials,
+         * environmental, and industrial & systems. Thesis/dissertation/major-paper/seminar placeholders are
+         * omitted since they have no fixed content.
+         *
+         * `confirmed: true` = this specific section is on the live Fall 2026 offerings page with instructor/
+         *   day-time/capacity. `confirmed: false` = a real, calendar-approved course, but not confirmed as
+         *   taught this specific term (many calendar courses explicitly state "will not necessarily be offered
+         *   in any given year"). `crossListed` = the same course delivered under another department's code.
+         */
+        const allGradCourses = [
+            // --- GENERAL / MECHANICAL (MECH-8xxx fixed catalog + GENG-8xxx cross-program courses) ---
+            { id: "MECH-8000", title: "Special Topics in Automotive Engineering", programs: ["general", "automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Selected advanced topics in the field of automotive engineering. Flexible special-topics number whose content rotates by section/term; has run as Hybrid Power Train, Controls of Electric Vehicle, Materials and Manufacturing Methods, and Self-Driving Vehicle Design and Development in recent GA notices." },
+            { id: "MECH-8006", title: "Life Cycle Thinking for Engineering Projects", programs: ["general", "environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "CIVL-8006 / ENVE-8006", summary: "Practical and theoretical applications of life cycle thinking in engineering projects, products, and processes. International standards/methods in Life Cycle Assessment (LCA), Life Cycle Costing (LCC), and Social Life Cycle Assessment (S-LCA); analyzing, interpreting, and critiquing sustainability claims." },
+            { id: "MECH-8011", title: "Bluff Body Aerodynamics", programs: ["general", "automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Atmospheric boundary layers; flow around bluff bodies, separation and wakes; lift/drag and pressure/force coefficients; wind-tunnel testing and similarity requirements. Vehicle aerodynamics (drag/lift of passenger cars, crosswind stability), architectural aerodynamics, and wind-turbine aerodynamics. (Prerequisite: undergraduate Engineering Mechanics, Fluid Mechanics.)" },
+            { id: "MECH-8029", title: "Automotive Paint and Industrial Coatings", programs: ["general", "automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Functionality and application methods of automotive coating layers; polymer chemistry and suspensions; coatings formulation; dip/spray application; curing; appearance measurement and durability testing; adhesion, corrosion resistance, and surface pretreatment; powder coating and coating plastics." },
+            { id: "MECH-8091", title: "Engineering Venture Formation", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "In-depth study of drawing up the blueprint for a new enterprise: developing business ideas/concepts, feasibility studies, choosing a legal business form, writing business plans, identifying and approaching funding sources, and assembling resources to start an enterprise." },
+            { id: "MECH-8203", title: "Turbulent Flow", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "General turbulence theories, wall turbulence, and free turbulence." },
+            { id: "MECH-8206", title: "Thermal Systems Design", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Advanced systems design requiring the application of economics, heat transfer, simulation, and optimization." },
+            { id: "MECH-8207", title: "Experimental Techniques in Flow Measurements", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Theory of flow and velocity measurement, with emphasis on hot-wire instruments and turbulence measurements." },
+            { id: "MECH-8209", title: "Multiphase, Multicomponent Flows", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Techniques for analyzing one-dimensional multi-phase, multicomponent flows to predict flow regimes, pressure drop, etc., with practical applications in fluidization, sedimentation, and boiling heat transfer." },
+            { id: "MECH-8216", title: "Industrial and Motor Vehicle Noise", programs: ["general", "automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Hearing damage risk criteria and in-plant noise regulations; permissible exposure levels for continuous/intermittent noise; machine-noise measurement and standard procedures; motor vehicle and traffic noise characteristics, control legislation, and measurement procedures." },
+            { id: "MECH-8230", title: "Combustion Engineering", programs: ["general", "automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Introductory graduate combustion engineering: chemical thermodynamics and kinetics, flames and combustion rates, and detonation of gaseous mixtures, with an emphasis on combustion processes in practical systems." },
+            { id: "MECH-8231", title: "Numerical Heat Transfer and Fluid Flow", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Numerical methods to predict heat transfer, fluid flow, and related processes: introduction to CFD, governing differential equations, discretization methods, numerical treatment of conduction/convection/diffusion, and flow-field calculations." },
+            { id: "MECH-8232", title: "Modeling of Thermo-fluid Systems", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Lumped and distributed-parameter mathematical models of thermo-fluid systems, solved analytically and numerically (Simulink, Maple, Fluent, Wave): two-phase flow, transient flow, turbulence, non-Newtonian flow, boiling, evaporation, condensation, and fluid-structure interaction." },
+            { id: "MECH-8233", title: "Turbulent Reacting Flows", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Experimental investigation of flames; thermodynamics of combustion, transport phenomena, chemical kinetics and reaction mechanisms; laminar premixed/diffusion flames; the Navier-Stokes equations for reacting flows; turbulent premixed/non-premixed flames; low-temperature oxidation, engine knock, and pollutant formation." },
+            { id: "MECH-8234", title: "Introduction to Computational Fluid Dynamics", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Basic knowledge to initiate research/applications in CFD: numerical methods for hyperbolic, parabolic, and elliptic model equations; difference-scheme analysis and stability; explicit/implicit methods, artificial viscosity, linearization, approximate factorization, preconditioning, SOR/SLOR/ADI; structured grid generation; introduction to finite-volume methods." },
+            { id: "MECH-8235", title: "Advanced Topics in Computational Fluid Dynamics", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Continuation of MECH-8234: structured/unstructured grid generation on surfaces and in 3D, Navier-Stokes and Euler solvers, finite-volume applications, turbulence modeling, and current issues in CFD, with project work using commercial CFD packages. (Prerequisite: MECH-8234.)" },
+            { id: "MECH-8236", title: "Fundamentals of Clean Engine Technology", programs: ["general", "automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Fuel properties, combustion processes, exhaust emissions, and pollution prevention in diesel and other lean-burn IC engines, with an introduction to Stirling and other external-combustion engines." },
+            { id: "MECH-8240", title: "Applied Finite Element Analysis", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Modelling aspects of the finite element method using commercial FEA software (DYNA, IDEAS, ANSYS): stress-analysis problems in 2D/3D, static and dynamic, validated against theoretical/experimental results. Final report and oral presentation required." },
+            { id: "MECH-8241", title: "Introduction to Vibration Measurement and Modal Analysis", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Basic concepts of modal theory and modal parameter analysis, single-degree-of-freedom methods, frequency response functions, and multi-degree-of-freedom/global methods; FFT accuracy and windowing; measurement/calibration techniques and a validated case-study lab experiment." },
+            { id: "MECH-8242", title: "Advanced Topics in Mechanical Design", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Design and analysis of welded/bonded joints, minimum-constraint design, fluid power and mobile hydraulic systems, project planning, optimization, ISO/QS9000 quality methods, concurrent engineering, design for manufacture/assembly/quality/minimum cost, GD&T, Taguchi methods, and product warranties." },
+            { id: "MECH-8243", title: "Product Design and Development", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "New-product-creation process: the product development team and cycle, conceptual development (technology-push, platform, process-intensive, customized products), needs analysis, specifications, concept generation/selection, product architecture, industrial design/ergonomics, prototyping, and project management." },
+            { id: "MECH-8244", title: "Finite Element Methods for Crashworthiness and Impact Analysis", programs: ["general", "automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "History of numerical tools in automotive/impact analysis; explicit/implicit time integration; shell/solid FE formulations for impact; hourglassing and hourglass control; large-displacement material modeling; contact modeling, mesh adaptivity, and ALE meshes; implicit integration and quasistatic simulations for impact." },
+            { id: "MECH-8245", title: "Automotive Control Systems", programs: ["general", "automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "ELEC-8360", summary: "Advanced control design for automotive systems: applying control-system design to engine operation and vehicle mechanics, plus parameter/model identification and estimation of automotive systems, for both mechanical and electrical engineering graduate students. (Prerequisite: MECH-4212.)" },
+            { id: "MECH-8250", title: "Advanced Manufacturing", programs: ["general", "industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "INDE-8460", summary: "Advanced manufacturing with an emphasis on computer-aided machining (CAM): practices for product realization, advanced manufacturing processes, CNC programming and virtual manufacturing, and process planning with advanced CAD/CAM tools, using Autodesk online teaching tools. (Prerequisite: MECH-2230 or INDE-8360 or equivalent CAD course; INDE-3210 or equivalent manufacturing-processes course.)" },
+            { id: "MECH-8293", title: "Introduction to Finite Element Analysis", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Fundamentals of FEA with emphasis on solid mechanics and stress analysis, using variational principles (virtual work, total potential energy) for springs, axially loaded bars, beams, and 2D/axisymmetric/3D continuum elements in static and dynamic analysis. Includes a mandatory 2-hour computer lab using commercial FEA software." },
+            { id: "MECH-8290", title: "Directed Special Studies", programs: ["general", "automotive", "industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "ELEC-8900 / MATL-8890", summary: "A special course of studies with content and direction approved by the student's advisor; no formal lectures, but carries the weight of 3 lecture hours. This is the flexible \"Directed Special Studies\" number whose specific section topic rotates by term — recent and current sections have covered Air Conditioning, Computer-Aided Design, Optimization, Vehicle Dynamics, Fuel Cells, Practical CFD and Turbulence Modeling, Advanced Vibrations, Heat Exchanger Design, Advanced Energy Storage Systems, Advanced Body Structure, and Automotive Materials, among others (see the confirmed Fall 2026 sections below for what's actually being taught this term)." },
+            { id: "GENG-8000", title: "Engineering Technical Communications", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Prepares MEng students to communicate technical information clearly and concisely in written, oral, and graphical form; organizing advanced concepts, technical writing styles, and team-based preparation/presentation of a major technical paper. (Open to MEng students, excluding the MEng Auto program.)" },
+            { id: "GENG-8010", title: "Engineering Mathematics", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Advanced modern engineering mathematics for graduate-level study: Fourier series/transforms and frequency-domain modelling, solving PDEs (continuum mechanics, electromagnetism), and integral equations (acoustics, aerodynamics). (Open to MEng students, excluding the MEng Auto program.)" },
+            { id: "GENG-8020", title: "Engineering Project Management", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Principles, concepts, and tools for project management: defining project scope, time, cost, risk, procurement, and stakeholder management, applied through a major course project. (Open to MEng and MEM students, excluding the MEng Auto program.)" },
+            { id: "GENG-8030", title: "Computational Methods and Modeling for Engineering Applications", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Basics of computational analysis for real-world engineering applications: programming and modeling fundamentals in MATLAB, model building, hardware for real-time testing, and sensor data acquisition, culminating in a real-world project." },
+            { id: "GENG-8040", title: "Engineering Management Capstone", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "BUSI-8400", summary: "Jointly instructed by Engineering and the Odette School of Business; the final, entirely project-based course in the Master of Engineering Management program, completing an engineering management report, feasibility study, or new-venture business plan. (Prerequisite: all 6 mandatory MEM core courses; 2-semester, 6.0-credit course.)" },
+            { id: "GENG-8050", title: "Data Analytics and Decision-Making", programs: ["general", "industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Fundamental concepts of data analytics and their application to decision-making in a complex engineering management environment: developing/validating decision models, data-based decision skills, sensitivity analysis, optimization, and predictive analysis." },
+            { id: "GENG-8060", title: "Strategic Entrepreneurial Management", programs: ["general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "INDE-8900 (Section 1)", summary: "Principles and techniques of start-up creation: assessing commercial viability, identifying/validating value propositions, lean-startup methodology, market segmentation, MVP design, market-entry risk, and financial/legal/sustainability aspects of a startup. Restricted to Master of Engineering Management students." },
+
+            // --- AUTOMOTIVE (dedicated MEng in Automotive Engineering core courses, AUTO-8xxx) ---
+            { id: "AUTO-8010", title: "Mobility and Society", programs: ["automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Societal context of road-vehicle transportation: economics and infrastructure changes from mass EV adoption and charging systems; EDI/Indigenous and urbanization/demographic issues; life-cycle impact of EVs on sustainability and public infrastructure (charging, hydrogen fueling)." },
+            { id: "AUTO-8015", title: "Automotive Body Structures and Components", programs: ["automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Body/chassis types, construction methods, and materials (steel, aluminum, magnesium, fiberglass, carbon fibre) and their relative merits; structural analysis using FEA software; influence on occupant safety/comfort, NVH, ride and handling, crashworthiness, and durability of powertrain components, battery packs, and payloads." },
+            { id: "AUTO-8020", title: "Vehicle Systems", programs: ["automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Primary automotive systems: engine types/configurations, vehicle dynamics, powertrain and propulsion, ADAS, tractive effort, duty cycles, regenerative braking, and emissions/fuel-economy standards across ICE/EV/hybrid/fuel-cell propulsion, plus safety standards (FMVSS/CMVSS, NCAP, ECE) and emerging standards (SAE J1772/J3400, J2601, ISO-26262)." },
+            { id: "AUTO-8025", title: "Sensors and Controls of EVs", programs: ["automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Sensors, software, and controls for connected/autonomous/secure/electric vehicles: ADAS, SAE J1939 CAN Bus, high-voltage interlock loop (HVIL) safety systems, sensors/optics/lighting, image representation and classification, 3D imaging, GPS/radar/lidar, night vision, and sensor integration/fusion." },
+            { id: "AUTO-8030", title: "Engineering Project Management, Automotive Lean and Quality Processes", programs: ["automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Project management principles (scope, time, cost, risk, procurement, stakeholders) combined with lean-manufacturing process principles (5 Lean Principles, House of Value, 6S) and automotive quality processes (DFMEA, PPAP, APQP), plus Poka-Yoke and DFMA to reduce waste and improve efficiency." },
+            { id: "AUTO-8040", title: "Vehicle Propulsion", programs: ["automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Propulsion systems including clean-burning IC engines, EV propulsion (battery, hybrid, plug-in hybrid), and fuel-cell electric vehicle propulsion: combustion processes and pollution prevention, chemical/material properties for electric propulsion, key performance metrics, and charging-system integration with the electric power grid." },
+            { id: "AUTO-8050", title: "Vehicle Energy and Thermal Management", programs: ["automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Control of the passenger-compartment environment, occupant comfort, and powertrain thermal management across propulsion types (ICE, battery-electric, hybrid, hydrogen fuel cell), plus energy-management topics, using software for system/component sizing and performance calculations." },
+            { id: "AUTO-8060", title: "Powertrain Systems", programs: ["automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Vehicle electric drive systems: e-motors and motor controllers at different voltage levels, battery cell formats/chemistries (including solid-state), performance metrics (cruise, acceleration, range), E-motor material/magnet design, gearboxes, EV powertrain manufacturing, and on-board safety for EV/hydrogen energy storage." },
+            { id: "AUTO-8070", title: "Manufacturing and Robotic Fundamentals", programs: ["automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Basics of robotically assisted manufacturing: modeling, design, planning, and control of robot and manufacturing systems; Global Robotic Specifications; developing multi-robot work-cells as an introduction to dexterous manipulation (DM) using advanced DM work-cell design." },
+
+            // --- MATERIALS (MATL-8xxx fixed catalog) ---
+            { id: "MATL-8801", title: "Advanced Crystallography", programs: ["materials"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Application of X-ray diffraction principles to the study of materials: Fourier series application, single-crystal techniques, studies of preferred orientation, and imperfections." },
+            { id: "MATL-8802", title: "Phase Transformations", programs: ["materials"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Phenomenological treatment of transformation processes: diffusion-controlled and diffusionless (martensitic) transformations; thermodynamic and phenomenological rate laws applied to nucleation, recrystallization, precipitation, spinodal decomposition, ordering, and eutectoid decomposition." },
+            { id: "MATL-8805", title: "Strengthening Mechanisms in Materials", programs: ["materials"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Dislocation-particle interactions, strengthening by dislocation substructures, particle and fiber reinforcement, and strong microstructures developed from the melt and from the solid state." },
+            { id: "MATL-8806", title: "Microscopy of Materials", programs: ["materials"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Theoretical and technical aspects of studying microstructure and composition: optical and electron microscopy (scanning and transmission), electron diffraction, image analysis, electron microanalysis, x-ray topography, field-ion microscopy, and relating observed microstructures to macroscopic properties." },
+            { id: "MATL-8807", title: "Fracture Mechanics", programs: ["materials"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "The fracture-mechanics approach to design: physical significance and measurement of fracture toughness, non-destructive inspection techniques, principles of fracture-safe design, the relation between microscopic and macroscopic aspects of plane-strain fracture, and fracture of specific metallic/non-metallic materials." },
+            { id: "MATL-8810", title: "Solidification Fundamentals", programs: ["materials"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Fundamental principles of solidification theory: thermodynamics, kinetics, solid-liquid interface morphology, and growth mechanics; solidification of pure metals; heat-flow phenomena in casting and crystal growth, applied to casting and welding processes." },
+            { id: "MATL-8811", title: "Casting: Modeling and Simulation", programs: ["materials"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Casting fundamentals and mathematical model formulation; control-volume finite-difference methods to predict mold filling, heat transfer, and solidification; treatment of gates, runners, risers, overflow, and mesh generation; commercial casting-simulation software applied to lightweight automotive components." },
+            { id: "MATL-8812", title: "Metal Casting Technology", programs: ["materials"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "History and overview of casting; casting processes, mould design and materials, and metallurgical simulation; liquid metal treatment, heat treatment, casting defects and their prevention; challenges faced by today's foundries." },
+            { id: "MATL-8813", title: "Tribology: Materials and Manufacturing Aspects", programs: ["materials"], confirmed: true, instructor: "Dr. Alpas", schedule: "Wednesday, 2:30pm–5:20pm", capacity: "15–20 seats", crossListed: "MECH-8290 (Section 93)", summary: "Experimental and analytical work on the materials and manufacturing aspects of tribology: wear equations and testing methods, micromechanisms of wear, surface-contact modeling, frictional heating, IC-engine tribology, machining friction/wear, and wear control via surface coatings." },
+            { id: "MATL-8890", title: "Special Topics in Materials", programs: ["materials", "automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "ELEC-8900 / MECH-8290", summary: "Selected advanced topics in engineered materials; flexible special-topics number whose content rotates by section/term. Per the calendar, current/recent topics include Creep of Metals and Alloys, Microscopy of Materials II, Wear of Materials, Composite Materials, Fatigue of Metals and Alloys, Polymers, Ceramics, Welding, Materials Degradation, Polymer Injection Molding, Thin Films and Coatings, Computational Contact Mechanics in Tribology, and Automotive Materials (see the confirmed Fall 2026 section below)." },
+
+            // --- ENVIRONMENTAL (ENVE-8xxx fixed catalog) ---
+            { id: "ENVE-8006", title: "Life Cycle Thinking for Engineering Projects", programs: ["environmental", "general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "CIVL-8006 / MECH-8006", summary: "Practical and theoretical applications of life cycle thinking in engineering projects, products, and processes: Life Cycle Assessment (LCA), Life Cycle Costing (LCC), and Social Life Cycle Assessment (S-LCA); analyzing, interpreting, and critiquing sustainability claims." },
+            { id: "ENVE-8300", title: "Water Pollution Control", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Water quality criteria; wastewater disposal methods and their ecological effects; theory and design of unit operations/processes for water purification and wastewater treatment; reuse and recycling of wastewater." },
+            { id: "ENVE-8310", title: "Advanced Water Pollution Control", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Recent advances in the design of water and wastewater treatment plants and new developments in water-pollution-control practice. (Prerequisite: ENVE-8300 or equivalent.)" },
+            { id: "ENVE-8330", title: "Solid Waste Management", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Municipal and industrial solid wastes: quantities, composition, and methods of disposal or reclamation, and the economic viability of various methods relative to quantities involved." },
+            { id: "ENVE-8340", title: "Environmental Separation Processes", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Application of surface-chemistry principles to separation processes: phase equilibria, ion exchange, membrane separation, adsorption, absorption, flocculation, spherical agglomeration, sedimentation, filtration, and centrifugation." },
+            { id: "ENVE-8350", title: "Water Quality Management", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Water quality criteria and wastewater-disposal effects on ecology; stoichiometry, reaction kinetics, and material balance; movement of contaminants in water bodies; modelling of water quality in natural systems." },
+            { id: "ENVE-8370", title: "Kinetics", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Basic concepts of chemical reaction kinetics; characterization of chemical and biochemical systems; reactor flow models and consideration of non-ideality." },
+            { id: "ENVE-8380", title: "Biological Treatment of Wastewater", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Wastewater characteristics and biological kinetics; flow and loading variation; treatment processes and mass balances; aeration, sedimentation, lagoons, fixed-film processes, and sludge characteristics." },
+            { id: "ENVE-8390", title: "Industrial Wastewater Treatment", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Sources and characteristics of industrial wastewater; pre-treatment, primary, physical, chemical, and biological treatment; waste minimization; treatment of wastes from various industries." },
+            { id: "ENVE-8400", title: "Numerical Modeling of Heat and Mass Transfer and Flow in Porous Media", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Finite difference and finite element approaches for simulating diffusion and advection-dispersion: 1-D/2-D transient heat transfer with nonlinear conductance/source-sinks, 1-D/2-D mass transport with reaction, and 1-D/2-D heat transfer via finite elements." },
+            { id: "ENVE-8420", title: "Air Pollution Modelling", programs: ["environmental"], confirmed: true, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Air quality standards; emission inventory and source estimation; development of transport models; models with chemical reactions." },
+            { id: "ENVE-8430", title: "Occupational Hygiene and Pollution Prevention", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "The indoor environment as an area of environmental engineering, plus pollution prevention (P2) in industrial settings: environmental stressors, provincial/federal regulations, contaminant toxicology, workplace surveys, airborne-contaminant measurement, engineering controls, and P2 steps." },
+            { id: "ENVE-8440", title: "Climate Change and Infrastructure", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "CIVL-8441", summary: "Climate change adaptation and mitigation measures; engineering risk management; resilience and systems thinking applied to engineered systems." },
+            { id: "ENVE-8450", title: "Water and Wastewater Treatment", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "CIVL-8450", summary: "Water and wastewater quality, guidelines, standards, flow fluctuation, and design capacity; design of unit operations and processes in water and wastewater treatment." },
+            { id: "ENVE-8500", title: "Sustainability: Principles and Practices", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Evaluation, design, and management of products, processes, or projects to achieve sustainability: assessing environmental effects, eco-balance approaches, life cycle assessment, design-for-environment principles, and sustainability decision-making, with class projects on real examples (automobiles, infrastructure, electronics)." },
+            { id: "ENVE-8620", title: "Contaminants Fate and Transport in the Environment", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "CIVL-8620", summary: "Key environmental media and properties; persistent organic pollutants (chemical classes/properties); real and evaluative environments; partition coefficients and multimedia partitioning; chemical loss processes; multimedia fate-and-transport mass-balance models for natural and engineered systems." },
+            { id: "ENVE-8660", title: "Solar Energy Engineering", programs: ["environmental", "general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "MECH-8660", summary: "History, types, and parts of solar energy collection systems; the solar resource (solar time, angles, shadows, irradiation); solar thermal collectors (construction, thermal analysis, testing, performance) and their applications; photovoltaic system components/sizing; economic analysis." },
+            { id: "ENVE-8800", title: "MEng Research Course", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "MEng students conduct an investigation, design, and/or analysis, present a progress seminar, and produce a technical report based on their work; selection is competitive. (Prerequisite: one ENVE-8XXX level course.)" },
+            { id: "ENVE-8900", title: "Special Topics in Environmental Engineering", programs: ["environmental"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Selected advanced topics in environmental engineering; flexible special-topics number whose content rotates by section/term. Recent department course-offering pages have listed sections on Hydrogeological Engineering, Climate Change Adaptation, and GIS Data Modeling." },
+
+            // --- INDUSTRIAL & SYSTEMS (INDE-8xxx fixed catalog) ---
+            { id: "INDE-8200", title: "Optimization", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Classical theory of optimization and Kuhn-Tucker conditions; unconstrained optimization (gradient, conjugate-gradient, variable-metric, search methods) and constrained optimization (approximation, projection, reduced-gradient, penalty-function methods); computational algorithms and software. (Prerequisite: INDE-3120 or equivalent.)" },
+            { id: "INDE-8210", title: "Industrial Experimentation and Applied Statistics", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Distributions of functions of variables, estimation and hypothesis testing, power of tests, non-parametric tests, sampling techniques, analysis of variance, randomized blocks, Latin squares, and factorial experiments. (Prerequisite: INDE-3270 or equivalent.)" },
+            { id: "INDE-8220", title: "Manufacturing Systems Simulation", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Discrete-event system simulation: random-number/stochastic-variate generation, input-parameter identification/estimation, output analysis and confidence intervals, design of experiments (single/multifactor, fractional designs, response surfaces), the regeneration method, and Monte Carlo optimization." },
+            { id: "INDE-8230", title: "Production and Inventory Control Systems", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Analysis of production-inventory systems: deterministic single/multi-item models, quantity discounts, stochastic single-period/periodic/continuous-review models; static/dynamic demand production planning; operations scheduling (job-shop, line balancing). (Prerequisite: INDE-4130 or equivalent.)" },
+            { id: "INDE-8240", title: "Advanced Operations Research I", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Theory and computation for linear/integer programming: theoretical foundations of the simplex algorithm, duality and sensitivity analysis, network-flow methods, branch-and-bound/implicit-enumeration/cutting-plane methods, interior-point methods, and recent developments. (Prerequisite: INDE-3120 or equivalent.)" },
+            { id: "INDE-8250", title: "Advanced Operations Research II", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Probabilistic O.R. models: Markovian decision processes; single/multichannel queueing theory with general arrival/service patterns; bulk and priority queues and their applications; probabilistic dynamic programming. (Prerequisite: INDE-4120 or equivalent.)" },
+            { id: "INDE-8260", title: "Computer-Aided Modeling of Complex Surfaces", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Complex surfaces, design, and mathematical modeling/manipulation, with a mathematical foundation in sculptured surfaces (emphasis on NURBS): geometric modeling, curve/surface representation, B-spline basis functions, and reverse engineering of complex surfaces. (Prerequisite: INDE-3110 and INDE-3150, or equivalent.)" },
+            { id: "INDE-8270", title: "Advances in Industrial Ergonomics", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Ergonomics and work design; human workload measurement in industry; visual display terminals; signal detection and visual inspection; user-computer interaction; human factors in flexible manufacturing systems; effects of environmental stressors on human performance." },
+            { id: "INDE-8280", title: "Reliability Engineering", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Basic reliability distributions (exponential, Poisson process); time-dependent failure models (Weibull, normal, log-normal); Markov analysis of state-dependent systems; system structure functions; reliability-growth testing; design for reliability; maintainability and availability. (Prerequisite: INDE-3270.)" },
+            { id: "INDE-8290", title: "Computer-Integrated Manufacturing", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Development of CIM and the CIM pyramid's key functions; system integration and communication standards (MAP); databases as the hub of CIM; simulation, decision-support, and expert systems; sensor technology, robot vision, group technology, and the factory of the future." },
+            { id: "INDE-8300", title: "Advanced Engineering Economy", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Engineering analysis of industrial projects/operations: economic decision criteria, project investment analysis, gain/loss estimation, and economic optimization under constraints, including risk/uncertainty via probabilistic techniques. (Prerequisite: GENG-3130 or equivalent.)" },
+            { id: "INDE-8310", title: "Stochastic Processes", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "The Poisson process and its relationship to exponential/Erlang/uniform distributions; Markov chains and continuous-time Markov chains (birth-death processes); renewal theory; Brownian motion and stationary processes. (Prerequisite: INDE-4120 or equivalent.)" },
+            { id: "INDE-8320", title: "Manufacturing Systems Paradigms", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Evolution of manufacturing-systems paradigms, their drivers, characteristics, and operating principles; variant-oriented systems (Flexible/Reconfigurable Manufacturing Systems); Industry 4.0 and future manufacturing paradigms. (Prerequisite: INDE-4310 or equivalent, with instructor permission.)" },
+            { id: "INDE-8340", title: "Engineering Design, Methodology and Applications", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Engineering design as a creative, iterative, open-ended process: conceptual/embodiment design, product-realization theories, parametric/probabilistic/industrial design, concurrent engineering, materials selection, design-for-x, and a product/process design realization project." },
+            { id: "INDE-8350", title: "Artificial Intelligence Applications in Manufacturing", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "How AI techniques apply to manufacturing operations: knowledge representation and problem-solving methods, search algorithms, AI high-level languages, the CLIPS shell, and AI applications in design, operations management, diagnosis, and control." },
+            { id: "INDE-8360", title: "Computer-Aided Design (CAD)", programs: ["industrial", "general"], confirmed: true, instructor: "Dr. Zamani", schedule: "Thursday, 11:30am–2:20pm", capacity: "40 seats (MECH-8290 section) / 10 seats (INDE-8360 section)", crossListed: "MECH-8290 (Section 9)", summary: "Computer-aided methods and applications: engineering design and the role of CAD, geometric modelling systems, curve/surface representation and modelling, solid modelling, parametric representation, assembly modelling, CAE, distributed collaborative design, and digital mock-up. (Prerequisite: INDE-3110 or equivalent.)" },
+            { id: "INDE-8370", title: "Automotive Assembly Work Measurement", programs: ["industrial", "automotive"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Graduate study of manufacturing-driven product designs assembled in a human-oriented workplace: the science of work measurement to evaluate designs against best practices, using hands-on product teardowns to develop innovative, patentable redesign proposals supporting a lean-enterprise balanced scorecard." },
+            { id: "INDE-8380", title: "Manufacturing Systems: Modelling, Analysis and Performance Measures", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Performance issues in Automated Manufacturing Systems (AMS): efficient analytical modeling tools illustrated on serial and Flexible Manufacturing Systems, plus reliability and maintainability techniques integrated into AMS design, analysis, and modeling. (Prerequisite: INDE-3120.)" },
+            { id: "INDE-8390", title: "Work Organization: Analysis and Design", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Applications of organization theory to the analysis/design of work organizations: integration of social and technical systems, classical organization theories, group decision processes, organizational culture/ethics, knowledge-worker management, innovation/change management, organizational risk, and globalization's impact on strategy. (Prerequisite: graduate standing in Engineering or Business.)" },
+            { id: "INDE-8400", title: "Engineering Applications in Health Care", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Technological and organizational issues in health care: instrumentation for medical diagnostics (biomedical sensors, medical imaging), health-care information technology, evidence-based medicine, prosthetics/orthotics, lab automation and surgical robotics, manufacturing in health care, and quality/facilities management." },
+            { id: "INDE-8410", title: "Sustainable Manufacturing", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "How manufacturing activities affect the environment and how that impact can be measured and reduced: sustainable development concepts, environmentally conscious design/manufacturing, recycling/reuse, material selection/compatibility, de-/re-manufacturing, life-cycle assessment, and ISO 14000." },
+            { id: "INDE-8420", title: "Supply Chain Management and Logistics", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Technical and managerial issues in supply chain/logistics management: network design, inventory models and theories, transportation/logistics planning, outsourcing and pricing, and case studies, with an emphasis on analytical decision-support tools. (Prerequisite: INDE-3120 or INDE-3910, or equivalent.)" },
+            { id: "INDE-8430", title: "Product Innovation and Design Management", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Critical factors affecting product development and innovation, and the common characteristics of successful new products: product design and innovation, idea-generation techniques, and design/innovation project management." },
+            { id: "INDE-8440", title: "Advanced Topics in Discrete Optimization", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Integer-programming theory and techniques: algorithm analysis, modeling/applications of discrete optimization, dynamic programming, branch-and-cut, Lagrangian duality, modern metaheuristics, nonlinear/stochastic integer programming, and discrete-programming software. (Prerequisite: INDE-3120 or equivalent.)" },
+            { id: "INDE-8450", title: "Products Variety Management", programs: ["industrial"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "", summary: "Product variety types, sources, and implications; design for variety (DFV); modularity; design structural matrices; product grouping/families/platforms; mass customization and personalization; variety-oriented manufacturing systems. (Prerequisite: INDE-4310 or equivalent, with instructor permission.)" },
+            { id: "INDE-8460", title: "Advanced Manufacturing", programs: ["industrial", "general"], confirmed: false, instructor: "", schedule: "", capacity: "", crossListed: "MECH-8250", summary: "Advanced manufacturing with emphasis on computer-aided machining (CAM): practices for product realization, advanced manufacturing processes, CNC programming/virtual manufacturing, and process planning with advanced CAD/CAM tools, using Autodesk online teaching tools. (Prerequisite: INDE-3110 or INDE-8360 or equivalent CAD course; INDE-3210 or equivalent.)" },
+            { id: "INDE-8900", title: "Special Topics", programs: ["industrial"], confirmed: true, instructor: "Dr. Azab (Sec. 06/07 confirmed Fall 2026)", schedule: "Data Science and ML: Thu 4:00–6:50pm; Scheduling and Sequencing: Wed 4:00–6:50pm", capacity: "30 seats each", crossListed: "", summary: "Selected advanced topics in Industrial Engineering; flexible special-topics number whose content rotates by section/term. Confirmed Fall 2026 sections: Data Science and Machine Learning (data workflow, EDA, feature engineering, supervised/unsupervised learning, model validation) and Scheduling and Sequencing (scheduling theory/algorithms for manufacturing and service systems, mathematical-programming formulations, exact/heuristic/AI-assisted methods). Recent GA notices also show sections on Robotics Fundamentals and Programming, Additive Manufacturing, Lean Manufacturing and Process Improvement, Statistical Quality Control, and Human Factors & Ergonomics Research Methods." },
+        ];
+
+        let currentLevel = 'undergrad';
         let currentProgram = 'general';
         let activeCourses = [];
         let allDOMCards = [];
 
+        const trackConfig = {
+            undergrad: [
+                { key: "general", label: "General Program" },
+                { key: "aerospace", label: "Aerospace Option" },
+                { key: "automotive", label: "Automotive Option" },
+                { key: "materials", label: "Materials Option" },
+                { key: "environmental", label: "Environmental Option" },
+            ],
+            graduate: [
+                { key: "general", label: "General / Mechanical" },
+                { key: "automotive", label: "Automotive" },
+                { key: "materials", label: "Materials" },
+                { key: "environmental", label: "Environmental" },
+                { key: "industrial", label: "Industrial & Systems" },
+            ],
+        };
+
         // Initialization
         document.addEventListener('DOMContentLoaded', () => {
-            setProgram('general');
+            setLevel('undergrad');
         });
+
+        function setLevel(level) {
+            currentLevel = level;
+
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.classList.toggle('level-active', btn.dataset.level === level);
+            });
+
+            document.getElementById('undergrad-view').classList.toggle('hidden', level !== 'undergrad');
+            document.getElementById('graduate-view').classList.toggle('hidden', level !== 'graduate');
+            document.getElementById('undergrad-legend').classList.toggle('hidden', level !== 'undergrad');
+
+            renderTrackSelector();
+            setProgram(trackConfig[level][0].key);
+        }
+
+        function renderTrackSelector() {
+            const container = document.getElementById('track-selector');
+            container.innerHTML = '';
+            trackConfig[currentLevel].forEach(track => {
+                const btn = document.createElement('button');
+                btn.dataset.track = track.key;
+                btn.textContent = track.label;
+                btn.onclick = () => setProgram(track.key);
+                btn.className = 'track-btn px-4 py-2 text-sm font-medium rounded-md transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-200/50';
+                container.appendChild(btn);
+            });
+        }
 
         function setProgram(programKey) {
             currentProgram = programKey;
-            
-            // Filter unified array: keep "all" and keep specific selected track
-            activeCourses = allCourses.filter(c => 
-                c.programs.includes('all') || c.programs.includes(programKey)
-            );
-            
+
+            if (currentLevel === 'undergrad') {
+                // Filter unified array: keep "all" and keep specific selected track
+                activeCourses = allCourses.filter(c =>
+                    c.programs.includes('all') || c.programs.includes(programKey)
+                );
+            }
+
             // Update UI Track Tabs
             document.querySelectorAll('.track-btn').forEach(btn => {
                 if (btn.dataset.track === programKey) {
@@ -316,77 +632,310 @@
                 }
             });
 
-            renderBoard();
+            if (currentLevel === 'undergrad') {
+                renderBoard();
+            } else {
+                renderGradCourses();
+            }
+        }
+
+        // Builds a single course card <button>, shared by the term board and the elective reference pool
+        function createCourseCard(course) {
+            const card = document.createElement('button');
+
+            // Determine base CSS class based on course type
+            let typeClass = "card-core";
+            let titleColor = "text-slate-800";
+            let subColor = "text-slate-500";
+
+            if (course.type === 'option') {
+                typeClass = "card-option border-2";
+                titleColor = "text-purple-900";
+                subColor = "text-purple-600";
+            } else if (course.type === 'elective') {
+                typeClass = "card-elective";
+                titleColor = "text-slate-700";
+                subColor = "text-slate-400";
+            } else if (course.type === 'elective-named') {
+                typeClass = "card-elective-named";
+                titleColor = "text-indigo-900";
+                subColor = "text-indigo-500";
+            }
+
+            card.className = `course-card ${typeClass} relative flex flex-col p-2 rounded-lg border text-left w-full justify-center overflow-hidden`;
+            card.dataset.id = course.id;
+            card.dataset.type = course.type;
+
+            const hasPrereqs = course.prereqs && course.prereqs.length > 0;
+            const hintDot = hasPrereqs ? `<div class="absolute top-1.5 right-1.5 flex gap-0.5 hint-dot transition-opacity"><div class="w-1.5 h-1.5 rounded-full bg-slate-300"></div></div>` : '';
+
+            const hasInstructor = course.instructor && course.instructor.trim();
+            const instructorLine = hasInstructor
+                ? `<span class="text-instr text-[11px] font-medium leading-tight mt-1 text-slate-400 transition-colors truncate block">${course.instructor}</span>`
+                : `<span class="text-instr text-[11px] font-medium italic leading-tight mt-1 text-slate-300 transition-colors truncate block">Staff TBA</span>`;
+
+            card.innerHTML = `
+                <span class="text-sub text-xs font-bold uppercase tracking-wider mb-0.5 ${subColor} transition-colors truncate block">${course.id}</span>
+                <span class="text-main clamp-title text-sm font-semibold leading-tight ${titleColor} transition-colors">${course.title}</span>
+                ${instructorLine}
+                ${hintDot}
+            `;
+
+            // Interaction Events
+            card.addEventListener('mouseenter', () => handleHoverState(course.id));
+            card.addEventListener('mouseleave', () => resetHoverState());
+            card.addEventListener('click', () => openModal(course));
+
+            return card;
         }
 
         function renderBoard() {
             const container = document.getElementById('board-container');
             container.innerHTML = '';
-            
-            // 8 standard academic terms
+
+            // 8 standard study terms. The MAME schedule is co-op-integrated, so one semester
+            // each year is a mandatory Work Term (no courses) and isn't one of the 8 -- e.g.
+            // Summer Y1, Summer Y2, Winter Y3, and Fall Y4 are skipped from the study sequence below.
+            // We render a slim "Work Term" divider after the term that precedes each gap so the
+            // missing semester is visible and explained, rather than just silently absent.
             const terms = [1, 2, 3, 4, 5, 6, 7, 8];
             const termNames = ["Fall Y1", "Winter Y1", "Fall Y2", "Winter Y2", "Fall Y3", "Summer Y3", "Winter Y4", "Summer Y4"];
+            const workTermAfter = {
+                2: "Summer Y1",
+                4: "Summer Y2",
+                5: "Winter Y3",
+                6: "Fall Y4"
+            };
 
             terms.forEach((termIndex, i) => {
                 const coursesInTerm = activeCourses.filter(c => c.term === termIndex);
-                
+
                 const colDiv = document.createElement('div');
-                colDiv.className = 'w-56 flex flex-col gap-3 shrink-0';
-                
+                colDiv.className = 'w-52 flex flex-col gap-1.5 shrink-0';
+                colDiv.dataset.termCol = termIndex;
+
                 // Column Header
                 colDiv.innerHTML = `
-                    <div class="flex flex-col items-start mb-1 pb-3 border-b-2 border-slate-200">
+                    <div class="flex flex-col items-start mb-0.5 pb-1.5 border-b-2 border-slate-200">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Term ${termIndex}</span>
                         <span class="text-sm font-bold text-slate-800">${termNames[i]}</span>
-                        <span class="text-[10px] text-slate-500 mt-0.5">${coursesInTerm.length} Courses</span>
+                        <span class="text-[10px] text-slate-500" id="count-term-${termIndex}" data-total="${coursesInTerm.length}">${coursesInTerm.length} Courses</span>
                     </div>
                 `;
 
                 // Render specific courses
                 coursesInTerm.forEach(course => {
-                    const card = document.createElement('button');
-                    
-                    // Determine base CSS class based on course type
-                    let typeClass = "card-core";
-                    let titleColor = "text-slate-800";
-                    let subColor = "text-slate-500";
-                    
-                    if (course.type === 'option') {
-                        typeClass = "card-option border-2";
-                        titleColor = "text-purple-900";
-                        subColor = "text-purple-600";
-                    } else if (course.type === 'elective') {
-                        typeClass = "card-elective";
-                        titleColor = "text-slate-700";
-                        subColor = "text-slate-400";
-                    }
-
-                    card.className = `course-card ${typeClass} relative flex flex-col p-3.5 rounded-xl border text-left w-full h-full min-h-[5.5rem] justify-center`;
-                    card.dataset.id = course.id;
-                    card.dataset.type = course.type;
-                    
-                    const hasPrereqs = course.prereqs && course.prereqs.length > 0;
-                    const hintDot = hasPrereqs ? `<div class="absolute top-2 right-2 flex gap-0.5 hint-dot transition-opacity"><div class="w-1.5 h-1.5 rounded-full bg-slate-300"></div></div>` : '';
-
-                    card.innerHTML = `
-                        <span class="text-sub text-[10px] font-bold uppercase tracking-wider mb-1 ${subColor} transition-colors">${course.id}</span>
-                        <span class="text-main text-sm font-semibold leading-tight ${titleColor} transition-colors">${course.title}</span>
-                        ${hintDot}
-                    `;
-
-                    // Interaction Events
-                    card.addEventListener('mouseenter', () => handleHoverState(course.id));
-                    card.addEventListener('mouseleave', () => resetHoverState());
-                    card.addEventListener('click', () => openModal(course));
-
-                    colDiv.appendChild(card);
+                    colDiv.appendChild(createCourseCard(course));
                 });
 
                 container.appendChild(colDiv);
+
+                // Insert a "Work Term" divider where a semester is intentionally skipped
+                if (workTermAfter[termIndex]) {
+                    const divDiv = document.createElement('div');
+                    divDiv.className = 'w-10 flex flex-col items-center justify-center shrink-0 self-stretch';
+                    divDiv.innerHTML = `
+                        <div class="work-term-divider flex-1 flex items-center justify-center text-[10px] font-bold uppercase tracking-widest text-amber-600 bg-amber-50 border border-dashed border-amber-300 rounded-lg px-1 py-3 w-full">
+                            ${workTermAfter[termIndex]} &mdash; Co-op Work Term (no courses)
+                        </div>
+                    `;
+                    container.appendChild(divDiv);
+                }
             });
 
-            // Cache DOM nodes for super fast graph traversal styling
-            allDOMCards = Array.from(document.querySelectorAll('.course-card'));
+            renderElectivePool();
+
+            // Cache DOM nodes for super fast graph traversal styling (both the term board and elective pool).
+            // Scoped to the undergrad view only so hidden graduate cards never leak into the hover/search logic.
+            allDOMCards = Array.from(document.querySelectorAll('#undergrad-view .course-card'));
+
+            // Re-apply any active search term to the freshly rendered cards (e.g. after switching program tabs)
+            applySearchFilter();
+        }
+
+        // Renders the "Technical Electives" reference pool as its own section beneath the term board,
+        // so it's always visible without relying on horizontal scrolling of the term board.
+        function renderElectivePool() {
+            const poolCourses = activeCourses.filter(c => c.type === 'elective-named');
+            const section = document.getElementById('elective-pool-section');
+            const container = document.getElementById('elective-pool-container');
+            const countLabel = document.getElementById('elective-pool-count');
+
+            container.innerHTML = '';
+
+            if (poolCourses.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+            section.classList.remove('hidden');
+            countLabel.dataset.total = poolCourses.length;
+            countLabel.textContent = `${poolCourses.length} named options — choose to fill Technical Elective slots (Terms 7–8)`;
+
+            poolCourses.forEach(course => {
+                container.appendChild(createCourseCard(course));
+            });
+        }
+
+        // Builds a single graduate course card <button>. Graduate courses have no term/prereq graph --
+        // they're a flat catalog grouped by category -- so styling only distinguishes "confirmed Fall 2026
+        // offering" (solid teal) from "general catalog, offering not confirmed this term" (dashed slate).
+        function createGradCourseCard(course) {
+            const card = document.createElement('button');
+            const typeClass = course.confirmed ? 'card-grad-confirmed' : 'card-grad-catalog';
+            const titleColor = course.confirmed ? 'text-cyan-900' : 'text-slate-700';
+            const subColor = course.confirmed ? 'text-cyan-600' : 'text-slate-400';
+
+            card.className = `course-card ${typeClass} relative flex flex-col p-2 rounded-lg border text-left w-full justify-center overflow-hidden`;
+            card.dataset.id = course.id;
+            card.dataset.type = 'graduate';
+
+            const statusLine = course.confirmed
+                ? `<span class="text-instr text-[11px] font-medium leading-tight mt-1 ${subColor} transition-colors truncate block">${course.instructor || 'TBA'} &middot; ${course.schedule}</span>`
+                : `<span class="text-instr text-[11px] font-medium italic leading-tight mt-1 text-slate-400 transition-colors truncate block">Catalog course &mdash; confirm offering</span>`;
+
+            card.innerHTML = `
+                <span class="text-sub text-xs font-bold uppercase tracking-wider mb-0.5 ${subColor} transition-colors truncate block">${course.id}</span>
+                <span class="text-main clamp-title text-sm font-semibold leading-tight ${titleColor} transition-colors">${course.title}</span>
+                ${statusLine}
+            `;
+
+            card.addEventListener('click', () => openModal(course, 'graduate'));
+            return card;
+        }
+
+        // Renders the graduate course grid for the currently selected category (general/automotive/materials/environmental/industrial)
+        function renderGradCourses() {
+            const categoryLabels = {
+                general: "General / Mechanical",
+                automotive: "Automotive",
+                materials: "Materials",
+                environmental: "Environmental",
+                industrial: "Industrial & Systems",
+            };
+            const coursesInCategory = allGradCourses.filter(c => c.programs.includes(currentProgram));
+
+            document.getElementById('grad-course-heading').textContent = categoryLabels[currentProgram] || 'Graduate Courses';
+
+            const countLabel = document.getElementById('grad-course-count');
+            countLabel.dataset.total = coursesInCategory.length;
+            countLabel.textContent = `${coursesInCategory.length} courses`;
+
+            const container = document.getElementById('grad-course-container');
+            container.innerHTML = '';
+            coursesInCategory.forEach(course => container.appendChild(createGradCourseCard(course)));
+
+            // Scoped to the graduate view only so hidden undergrad cards never leak into the search logic.
+            allDOMCards = Array.from(document.querySelectorAll('#graduate-view .course-card'));
+            applySearchFilter();
+        }
+
+        // --- Search Filter ---
+        // Filters the already-rendered course cards in place (no re-render), matching against
+        // course code, title, and instructor name. Column/pool counts update to show "visible of total".
+        let currentSearchTerm = '';
+
+        function applySearchFilter(rawTerm) {
+            if (typeof rawTerm === 'string') {
+                currentSearchTerm = rawTerm.trim().toLowerCase();
+            }
+            const term = currentSearchTerm;
+
+            document.getElementById('course-search-clear').classList.toggle('hidden', !term);
+
+            const lookupPool = currentLevel === 'graduate' ? allGradCourses : activeCourses;
+            allDOMCards.forEach(card => {
+                const course = lookupPool.find(c => c.id === card.dataset.id);
+                if (!course) return;
+                const haystack = `${course.id} ${course.title} ${course.instructor || ''}`.toLowerCase();
+                const isMatch = !term || haystack.includes(term);
+                card.classList.toggle('hidden', !isMatch);
+            });
+
+            // Update per-term column counts, and show a "No matches" placeholder instead of
+            // letting an empty column collapse down to just its header.
+            document.querySelectorAll('[data-term-col]').forEach(colDiv => {
+                const termIndex = colDiv.dataset.termCol;
+                const countSpan = document.getElementById(`count-term-${termIndex}`);
+                if (!countSpan) return;
+                const total = Number(countSpan.dataset.total);
+                const visible = colDiv.querySelectorAll('.course-card:not(.hidden)').length;
+                countSpan.textContent = term ? `${visible} of ${total} Courses` : `${total} Courses`;
+
+                let placeholder = colDiv.querySelector('.no-match-placeholder');
+                if (term && visible === 0 && total > 0) {
+                    if (!placeholder) {
+                        placeholder = document.createElement('div');
+                        placeholder.className = 'no-match-placeholder text-[11px] text-slate-400 italic text-center py-4 border border-dashed border-slate-200 rounded-lg';
+                        placeholder.textContent = 'No matches';
+                        colDiv.appendChild(placeholder);
+                    }
+                    placeholder.classList.remove('hidden');
+                } else if (placeholder) {
+                    placeholder.classList.add('hidden');
+                }
+            });
+
+            // Update elective pool count. The section header stays visible regardless of search
+            // results -- only the card area shows an empty-state message when nothing matches,
+            // so the "Technical Electives" heading never disappears/collapses on a no-match search.
+            const poolContainer = document.getElementById('elective-pool-container');
+            const poolCountLabel = document.getElementById('elective-pool-count');
+            const poolSection = document.getElementById('elective-pool-section');
+            if (poolContainer && poolCountLabel) {
+                const total = Number(poolCountLabel.dataset.total || 0);
+                const visible = poolContainer.querySelectorAll('.course-card:not(.hidden)').length;
+                poolCountLabel.textContent = term
+                    ? `${visible} of ${total} named options match "${term}"`
+                    : `${total} named options — choose to fill Technical Elective slots (Terms 7–8)`;
+
+                if (total > 0) {
+                    poolSection.classList.remove('hidden');
+                    let poolPlaceholder = document.getElementById('elective-pool-empty');
+                    if (term && visible === 0) {
+                        if (!poolPlaceholder) {
+                            poolPlaceholder = document.createElement('div');
+                            poolPlaceholder.id = 'elective-pool-empty';
+                            poolPlaceholder.className = 'col-span-full text-sm text-slate-400 italic text-center py-6 border border-dashed border-slate-200 rounded-lg';
+                            poolPlaceholder.textContent = 'No technical electives match your search.';
+                            poolContainer.appendChild(poolPlaceholder);
+                        }
+                        poolPlaceholder.classList.remove('hidden');
+                    } else if (poolPlaceholder) {
+                        poolPlaceholder.classList.add('hidden');
+                    }
+                }
+            }
+
+            // Update graduate course grid count + empty-state (mirrors elective pool handling above --
+            // the "MEng Course Catalog" heading always stays visible, only the card area shows an empty message).
+            const gradContainer = document.getElementById('grad-course-container');
+            const gradCountLabel = document.getElementById('grad-course-count');
+            if (gradContainer && gradCountLabel) {
+                const total = Number(gradCountLabel.dataset.total || 0);
+                const visible = gradContainer.querySelectorAll('.course-card:not(.hidden)').length;
+                gradCountLabel.textContent = term ? `${visible} of ${total} courses match "${term}"` : `${total} courses`;
+
+                let gradPlaceholder = document.getElementById('grad-course-empty');
+                if (term && visible === 0 && total > 0) {
+                    if (!gradPlaceholder) {
+                        gradPlaceholder = document.createElement('div');
+                        gradPlaceholder.id = 'grad-course-empty';
+                        gradPlaceholder.className = 'col-span-full text-sm text-slate-400 italic text-center py-6 border border-dashed border-slate-200 rounded-lg';
+                        gradPlaceholder.textContent = 'No graduate courses match your search.';
+                        gradContainer.appendChild(gradPlaceholder);
+                    }
+                    gradPlaceholder.classList.remove('hidden');
+                } else if (gradPlaceholder) {
+                    gradPlaceholder.classList.add('hidden');
+                }
+            }
+        }
+
+        function clearSearchFilter() {
+            const input = document.getElementById('course-search');
+            input.value = '';
+            applySearchFilter('');
+            input.focus();
         }
 
         // --- Interaction Logic (Graph Traversal) ---
@@ -459,9 +1008,9 @@
                 
                 // Clear all dynamic classes
                 card.classList.remove(
-                    'card-core', 'card-option', 'card-elective', 'card-hovered', 
-                    'card-prereq-direct', 'card-prereq-indirect', 
-                    'card-dependent-direct', 'card-dependent-indirect', 
+                    'card-core', 'card-option', 'card-elective', 'card-elective-named', 'card-hovered',
+                    'card-prereq-direct', 'card-prereq-indirect',
+                    'card-dependent-direct', 'card-dependent-indirect',
                     'card-dimmed'
                 );
                 
@@ -483,6 +1032,7 @@
                     // Restore original base style so dimmed looks correct
                     if (type === 'option') card.classList.add('card-option');
                     else if (type === 'elective') card.classList.add('card-elective');
+                    else if (type === 'elective-named') card.classList.add('card-elective-named');
                     else card.classList.add('card-core');
                     if(hint) hint.style.opacity = '1';
                 }
@@ -504,44 +1054,82 @@
                 // Restore defaults based on node type
                 if (type === 'option') card.classList.add('card-option');
                 else if (type === 'elective') card.classList.add('card-elective');
+                else if (type === 'elective-named') card.classList.add('card-elective-named');
                 else card.classList.add('card-core');
-                
+
                 const hint = card.querySelector('.hint-dot');
                 if(hint) hint.style.opacity = '1';
             });
         }
 
         // --- Modal Logic ---
-        function openModal(course) {
+        function openModal(course, level) {
             document.getElementById('modal-title').textContent = course.title;
-            const termNames = ["Fall Y1", "Winter Y1", "Fall Y2", "Winter Y2", "Fall Y3", "Summer Y3", "Winter Y4", "Summer Y4"];
-            document.getElementById('modal-subtitle').textContent = `${course.id} • Term ${course.term} (${termNames[course.term - 1]})`;
             document.getElementById('modal-summary').textContent = course.summary;
-            
-            const badge = document.getElementById('modal-badge');
-            if (course.type === 'core') {
-                badge.textContent = "Core Requirement";
-                badge.className = "inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider mb-2 bg-slate-100 text-slate-600";
-            } else if (course.type === 'option') {
-                badge.textContent = "Option Track Requirement";
-                badge.className = "inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider mb-2 bg-purple-100 text-purple-700";
-            } else {
-                badge.textContent = "Free Elective";
-                badge.className = "inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider mb-2 bg-slate-100 text-slate-500 border border-dashed border-slate-300";
-            }
 
-            const prereqContainer = document.getElementById('modal-prereqs');
-            prereqContainer.innerHTML = '';
-            
-            if (course.prereqs && course.prereqs.length > 0) {
-                course.prereqs.forEach(p => {
-                    const span = document.createElement('span');
-                    span.className = 'px-3 py-1.5 bg-orange-50 border border-orange-200 text-orange-800 text-xs font-bold rounded-md';
-                    span.textContent = p;
-                    prereqContainer.appendChild(span);
-                });
+            const instructorEl = document.getElementById('modal-instructor');
+            instructorEl.textContent = course.instructor && course.instructor.trim() ? course.instructor : 'Not yet assigned';
+            instructorEl.className = course.instructor && course.instructor.trim() ? 'font-semibold text-slate-700' : 'font-medium text-slate-400 italic';
+
+            const badge = document.getElementById('modal-badge');
+            const gradFields = document.getElementById('modal-grad-fields');
+            const prereqBlock = document.getElementById('modal-prereqs-block');
+
+            if (level === 'graduate') {
+                document.getElementById('modal-subtitle').textContent = course.id;
+
+                gradFields.classList.remove('hidden');
+                prereqBlock.classList.add('hidden');
+
+                document.getElementById('modal-schedule').textContent = course.confirmed ? course.schedule : 'Not confirmed for the current term';
+                document.getElementById('modal-capacity').textContent = course.confirmed ? course.capacity : '—';
+
+                const crosslistRow = document.getElementById('modal-crosslist-row');
+                if (course.crossListed) {
+                    crosslistRow.classList.remove('hidden');
+                    document.getElementById('modal-crosslist').textContent = course.crossListed;
+                } else {
+                    crosslistRow.classList.add('hidden');
+                }
+
+                badge.textContent = course.confirmed ? "Confirmed • Fall 2026 Offering" : "MEng Catalog Course";
+                badge.className = course.confirmed
+                    ? "inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider mb-2 bg-cyan-100 text-cyan-700"
+                    : "inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider mb-2 bg-slate-100 text-slate-500 border border-dashed border-slate-300";
             } else {
-                prereqContainer.innerHTML = `<p class="text-sm font-medium text-slate-400 italic">No formal prerequisites</p>`;
+                const termNames = ["Fall Y1", "Winter Y1", "Fall Y2", "Winter Y2", "Fall Y3", "Summer Y3", "Winter Y4", "Summer Y4"];
+                document.getElementById('modal-subtitle').textContent = `${course.id} • Term ${course.term} (${termNames[course.term - 1]})`;
+
+                gradFields.classList.add('hidden');
+                prereqBlock.classList.remove('hidden');
+
+                if (course.type === 'core') {
+                    badge.textContent = "Core Requirement";
+                    badge.className = "inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider mb-2 bg-slate-100 text-slate-600";
+                } else if (course.type === 'option') {
+                    badge.textContent = "Option Track Requirement";
+                    badge.className = "inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider mb-2 bg-purple-100 text-purple-700";
+                } else if (course.type === 'elective-named') {
+                    badge.textContent = "Named Elective • Fills a Technical Elective Slot";
+                    badge.className = "inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider mb-2 bg-indigo-100 text-indigo-700 border border-dotted border-indigo-300";
+                } else {
+                    badge.textContent = "Free Elective";
+                    badge.className = "inline-block px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider mb-2 bg-slate-100 text-slate-500 border border-dashed border-slate-300";
+                }
+
+                const prereqContainer = document.getElementById('modal-prereqs');
+                prereqContainer.innerHTML = '';
+
+                if (course.prereqs && course.prereqs.length > 0) {
+                    course.prereqs.forEach(p => {
+                        const span = document.createElement('span');
+                        span.className = 'px-3 py-1.5 bg-orange-50 border border-orange-200 text-orange-800 text-xs font-bold rounded-md';
+                        span.textContent = p;
+                        prereqContainer.appendChild(span);
+                    });
+                } else {
+                    prereqContainer.innerHTML = `<p class="text-sm font-medium text-slate-400 italic">No formal prerequisites</p>`;
+                }
             }
 
             const overlay = document.getElementById('modal-overlay');
