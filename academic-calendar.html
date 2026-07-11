@@ -1,0 +1,3500 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UWindsor Academic Calendar | Faculty Tools</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%230d9488'/%3E%3Cpath d='M50,18 A22,22 0 0,0 30.5,54.5 C34.5,58.8 37,63.2 37,69 L63,69 C63,63.2 65.5,58.8 69.5,54.5 A22,22 0 0,0 50,18 Z M42,74 L58,74 A2,2 0 0,1 56,79 L44,79 A2,2 0 0,1 42,74 Z' fill='white'/%3E%3C/svg%3E">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for a polished look */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Calendar transitions */
+        .calendar-cell {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .calendar-cell:hover {
+            background-color: #f8fafc;
+        }
+
+        .calendar-day-event {
+            transition: transform 0.15s ease;
+        }
+
+        .calendar-day-event:hover {
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans antialiased flex flex-col min-h-screen">
+
+    <!-- Header / Navigation Bar -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/90">
+        <div class="max-w-none px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-gray-700 transition-colors" title="Back to Dashboard">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </a>
+                <div class="p-2 bg-brand-50 text-brand-600 rounded-lg">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-gray-900 leading-tight">UWindsor Academic Calendar</h1>
+                    <p class="text-xs text-gray-500">Interactive viewer &amp; exporter for registrar dates &amp; events</p>
+                </div>
+            </div>
+
+            <!-- Header Actions -->
+            <div class="flex items-center gap-2">
+                <button id="syncBtn" onclick="openSyncModal()" class="flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 hover:border-brand-500 text-gray-700 hover:text-brand-600 rounded-lg text-sm font-medium bg-white shadow-sm transition-all">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Sync Live</span>
+                </button>
+                <button id="exportIcsBtn" onclick="exportFilteredEventsToICS()" class="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-sm font-medium shadow-sm transition-all">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>Export ICS</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex-grow max-w-none w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col lg:flex-row gap-6">
+        
+        <!-- Left Sidebar: Controls & Filters -->
+        <aside class="w-full lg:w-80 flex flex-col gap-5 flex-shrink-0">
+            
+            <!-- Search Widget -->
+            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col gap-3">
+                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Search Events</h3>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="search" class="h-4 w-4 text-gray-400 group-focus-within:text-brand-500 transition-colors"></i>
+                    </div>
+                    <input type="text" id="eventSearch" oninput="handleFilterChange()"
+                        class="block w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-sm transition-all"
+                        placeholder="Type to filter titles...">
+                </div>
+            </div>
+
+            <!-- Categories Filters -->
+            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Categories</h3>
+                    <button onclick="toggleAllCategories(true)" class="text-[10px] text-brand-600 hover:underline">Select All</button>
+                </div>
+                
+                <div class="flex flex-col gap-3" id="categoryFiltersList">
+                    <!-- Dynamic categories checkboxes with color dots and counts will be injected here -->
+                </div>
+            </div>
+
+            <!-- Date Range Filter -->
+            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col gap-4">
+                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Date Filters</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[11px] text-gray-400 font-medium">Start Year</label>
+                        <select id="startYearFilter" onchange="handleFilterChange()" class="w-full mt-1 border border-gray-300 rounded-lg p-1.5 text-xs focus:ring-brand-500 focus:border-brand-500 bg-white">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-gray-400 font-medium">End Year</label>
+                        <select id="endYearFilter" onchange="handleFilterChange()" class="w-full mt-1 border border-gray-300 rounded-lg p-1.5 text-xs focus:ring-brand-500 focus:border-brand-500 bg-white">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="hidePastEvents" onchange="handleFilterChange()" class="rounded text-brand-600 focus:ring-brand-500 h-4 w-4">
+                    <label for="hidePastEvents" class="text-xs text-gray-600 font-medium select-none cursor-pointer">Hide past events</label>
+                </div>
+
+            </div>
+
+            <!-- Sync Stats Card -->
+            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col gap-2.5">
+                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Database Status</h3>
+                <div class="text-xs flex flex-col gap-1.5 text-gray-600">
+                    <div class="flex justify-between">
+                        <span>Total Events:</span>
+                        <span id="statTotal" class="font-bold text-gray-900">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Matching Filters:</span>
+                        <span id="statFiltered" class="font-bold text-brand-600">-</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Last Updated:</span>
+                        <span id="statUpdated" class="font-medium text-gray-900">-</span>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- Right Content Panel -->
+        <main class="flex-grow bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+            
+            <!-- Navigation Tabs / Calendar Bar -->
+            <div class="border-b border-gray-200 bg-gray-50 px-5 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                
+                <!-- View Selector -->
+                <div class="flex p-0.5 bg-gray-200/80 rounded-lg self-start sm:self-auto">
+                    <button id="viewTabCalendar" onclick="switchView('calendar')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-700 bg-white shadow-sm">
+                        <i data-lucide="calendar-days" class="w-3.5 h-3.5"></i>
+                        <span>Calendar Grid</span>
+                    </button>
+                    <button id="viewTabList" onclick="switchView('list')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-500 hover:text-gray-900">
+                        <i data-lucide="list" class="w-3.5 h-3.5"></i>
+                        <span>List Timeline</span>
+                    </button>
+                    <button id="viewTabBreaks" onclick="switchView('breaks')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-500 hover:text-gray-900">
+                        <i data-lucide="palmtree" class="w-3.5 h-3.5"></i>
+                        <span>Semester Breaks</span>
+                    </button>
+                </div>
+
+                <!-- Calendar Navigation (Only visible in Calendar mode) -->
+                <div id="calendarNav" class="flex items-center gap-3">
+                    <button onclick="navigateMonth(-1)" class="p-1.5 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors border border-gray-300 bg-white">
+                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    </button>
+                    <h2 id="calendarTitle" class="text-sm sm:text-base font-bold text-gray-800 w-36 text-center select-none">
+                        July 2026
+                    </h2>
+                    <button onclick="navigateMonth(1)" class="p-1.5 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors border border-gray-300 bg-white">
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="navigateToday()" class="px-2.5 py-1 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors border border-gray-300 bg-white text-xs font-medium">
+                        Today
+                    </button>
+                </div>
+
+                <!-- List Info (Only visible in List mode) -->
+                <div id="listInfo" class="hidden text-xs text-gray-500 font-medium">
+                    Showing events chronologically
+                </div>
+
+            </div>
+
+            <!-- View Content Areas -->
+            <div class="flex-grow overflow-y-auto p-5">
+                
+                <!-- View 1: Calendar Grid -->
+                <div id="calendarView">
+                    
+                    <!-- Week Days Headers -->
+                    <div class="grid grid-cols-7 border-b border-gray-200 pb-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        <div>Sun</div>
+                        <div>Mon</div>
+                        <div>Tue</div>
+                        <div>Wed</div>
+                        <div>Thu</div>
+                        <div>Fri</div>
+                        <div>Sat</div>
+                    </div>
+
+                    <!-- Month Days Grid -->
+                    <div id="calendarGrid" class="grid grid-cols-7 border-t border-l border-gray-100 mt-2 bg-gray-100 gap-[1px]">
+                        <!-- Dynamic cells injected here -->
+                    </div>
+
+                </div>
+
+                <!-- View 2: List View -->
+                <div id="listView" class="hidden flex flex-col gap-6">
+                    <!-- Events grouped by Month-Year will be injected here -->
+                    <div id="listContainer" class="flex flex-col gap-6"></div>
+                    <div id="listEmptyState" class="hidden text-center py-16">
+                        <i data-lucide="calendar-range" class="w-12 h-12 text-gray-300 mx-auto mb-3"></i>
+                        <h3 class="text-sm font-medium text-gray-900">No events match your criteria</h3>
+                        <p class="text-xs text-gray-500 mt-1">Try relaxing your search terms or enabling more categories.</p>
+                    </div>
+                </div>
+
+                <!-- View 3: Breaks View -->
+                <div id="breaksView" class="hidden flex flex-col gap-6">
+                    <div id="breaksContainer" class="flex flex-col gap-6"></div>
+                    <div id="breaksEmptyState" class="hidden text-center py-16">
+                        <i data-lucide="palmtree" class="w-12 h-12 text-gray-300 mx-auto mb-3"></i>
+                        <h3 class="text-sm font-medium text-gray-900">No upcoming breaks or holidays found</h3>
+                        <p class="text-xs text-gray-500 mt-1">Try adjusting your search query.</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Event Detail Modal -->
+    <div id="eventModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden border border-gray-200 animate-[fadeIn_0.2s_ease-out]">
+            <div id="modalHeader" class="px-6 py-4 flex items-start justify-between border-b border-gray-100">
+                <span id="modalCategoryBadge" class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border">
+                    Category
+                </span>
+                <button onclick="closeEventModal()" class="p-1 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-600 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 flex flex-col gap-4">
+                <h2 id="modalTitle" class="text-lg font-bold text-gray-900 leading-snug">
+                    Event Title
+                </h2>
+                
+                <div class="flex flex-col gap-2.5 text-sm text-gray-600 mt-2">
+                    <div class="flex items-center gap-2.5">
+                        <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
+                        <span id="modalDateRange" class="font-medium text-gray-800">Date Range</span>
+                    </div>
+                    <div class="flex items-center gap-2.5">
+                        <i data-lucide="clock" class="w-4 h-4 text-gray-400"></i>
+                        <span id="modalDuration" class="text-xs">Duration: 1 day</span>
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row items-center gap-2.5 justify-between">
+                <button id="modalSingleExportIcs" class="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3.5 py-2 border border-gray-300 hover:border-brand-500 text-gray-700 hover:text-brand-600 rounded-lg text-xs font-semibold bg-white shadow-sm transition-all">
+                    <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+                    <span>Add to Calendar</span>
+                </button>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <button id="modalCopyDetails" class="flex-grow sm:flex-grow-0 flex items-center justify-center gap-1 px-3 py-2 text-gray-500 hover:text-gray-700 text-xs font-medium transition-colors">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        <span>Copy</span>
+                    </button>
+                    <a id="modalLink" href="#" target="_blank" class="flex-grow sm:flex-grow-0 flex items-center justify-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all text-center">
+                        <span>Registrar Link</span>
+                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sync Modal / Live Scraper Panel -->
+    <div id="syncModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-xl max-w-xl w-full shadow-2xl overflow-hidden border border-gray-200">
+            <div class="px-6 py-4 flex items-center justify-between border-b border-gray-100">
+                <h2 class="font-bold text-gray-900 flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-5 h-5 text-brand-600"></i>
+                    <span>Sync Registrar Data</span>
+                </h2>
+                <button onclick="closeSyncModal()" id="syncCloseX" class="p-1 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-600 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 flex flex-col gap-4">
+                
+                <!-- Initial State Details -->
+                <div id="syncInfoArea">
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        This tool pre-loads a database of UWindsor academic dates. You can sync the calendar directly with the live website. This will iterate through all registrar pagination pages via a CORS proxy.
+                    </p>
+                    <div class="mt-4 p-3.5 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-800 flex items-start gap-2.5">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 mt-0.5 flex-shrink-0"></i>
+                        <span>Scraping pages in-browser depends on public CORS proxy servers. If the process hangs or fails, you can copy-paste the HTML markup manually.</span>
+                    </div>
+                </div>
+
+                <!-- Progress State -->
+                <div id="syncProgressArea" class="hidden flex flex-col gap-3 py-4">
+                    <div class="flex items-center justify-between text-xs font-semibold text-gray-500">
+                        <span id="syncProgressStatus">Initializing scrape...</span>
+                        <span id="syncProgressPercent">0%</span>
+                    </div>
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div id="syncProgressBar" class="bg-brand-600 h-full w-0 transition-all duration-300"></div>
+                    </div>
+                    <div class="text-[11px] text-gray-400 flex items-center gap-1.5">
+                        <i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i>
+                        <span id="syncProgressSubtext">Please do not close this window.</span>
+                    </div>
+                </div>
+
+                <!-- Manual Paste Fallback Area -->
+                <div id="syncManualArea" class="hidden flex flex-col gap-2.5">
+                    <label class="text-xs font-semibold text-gray-500">Paste registrar list page HTML source:</label>
+                    <textarea id="manualHtmlInput" class="w-full h-36 border border-gray-300 rounded-lg p-2.5 text-xs font-mono focus:ring-brand-500 focus:border-brand-500 bg-gray-50" placeholder="Paste HTML of events-listing page here (e.g. view-content element or whole page)..."></textarea>
+                    <p class="text-[10px] text-gray-400">You can paste the HTML of any events-listing page. The system will extract events instantly and merge them into the local database.</p>
+                </div>
+
+            </div>
+
+            <!-- Sync Footer -->
+            <div id="syncFooter" class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
+                <button id="syncManualModeToggle" onclick="toggleSyncManualMode()" class="text-xs text-gray-500 hover:text-brand-600 font-medium">
+                    Import HTML Manually
+                </button>
+                <div class="flex items-center gap-2">
+                    <button onclick="closeSyncModal()" id="syncCancelBtn" class="px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold bg-white shadow-sm transition-colors">
+                        Cancel
+                    </button>
+                    <button onclick="startScrapingLive()" id="syncActionBtn" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center gap-1.5">
+                        <i data-lucide="play" class="w-3.5 h-3.5"></i>
+                        <span>Start Scrape</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notice -->
+    <div id="toast" class="invisible fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-xs font-semibold px-4 py-3 rounded-lg flex items-center gap-2.5 shadow-xl transition-all duration-300 opacity-0 transform translate-y-2">
+        <i id="toastIcon" data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+        <span id="toastMsg">Action complete</span>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // -------------------------------------------------------------
+        // DATABASE & STATE MANAGEMENT
+        // -------------------------------------------------------------
+
+        // This variable is populated with pre-scraped events by the build script
+        window.SCRAPED_EVENTS = [
+  {
+    "title": "GRAD: Academic Add/Drop for Full Summer 2026 (12 week)",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2026-05-17",
+    "endDate": "2026-05-17",
+    "dateText": "May 17, 2026"
+  },
+  {
+    "title": "GRAD: Spring convocation 2026",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2026-06-02",
+    "endDate": "2026-06-05",
+    "dateText": "June 2-5, 2026"
+  },
+  {
+    "title": "GRAD: post-defence Deposit deadline for Phase II:",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2026-06-09",
+    "endDate": "2026-06-09",
+    "dateText": "June 9, 2026"
+  },
+  {
+    "title": "GRAD: Financial Drop Date for Full Summer 2026 (12 week)",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2026-06-09",
+    "endDate": "2026-06-09",
+    "dateText": "June 9, 2026"
+  },
+  {
+    "title": "GRAD: Apply to Graduate at Fall 2026 Convocation: Portal opens",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2026-07-03",
+    "endDate": "2026-07-03",
+    "dateText": "July 3, 2026"
+  },
+  {
+    "title": "Registration Opens in Uwinsite Student for RETURNING students - Fall 2026",
+    "url": "https://www.uwindsor.ca/registrar/4390/registration-opens-uwinsite-student-returning-students-fall-2026",
+    "startDate": "2026-07-07",
+    "endDate": "2026-07-07",
+    "dateText": "Jul 7th, 2026"
+  },
+  {
+    "title": "REVISED: Financial Drop Date - Summer 2026 (6-week)...",
+    "url": "https://www.uwindsor.ca/registrar/4241/financial-drop-date-summer-2026-6-week",
+    "startDate": "2026-07-09",
+    "endDate": "2026-07-09",
+    "dateText": "Jul 9th, 2026"
+  },
+  {
+    "title": "Last Day to Voluntary Withdrawal from for Full Summer 2026 (12 week)…...",
+    "url": "https://www.uwindsor.ca/registrar/4081/last-day-voluntary-withdrawal-full-summer-2026-12-week%E2%80%A6",
+    "startDate": "2026-07-14",
+    "endDate": "2026-07-14",
+    "dateText": "Jul 14th, 2026"
+  },
+  {
+    "title": "GRAD: Last Day to Voluntarily Withdraw from Full Summer (12 week) courses.",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2026-07-14",
+    "endDate": "2026-07-14",
+    "dateText": "July 14, 2026"
+  },
+  {
+    "title": "Last Day to Voluntarily Withdraw from Summer Session 2026 (6 week) courses",
+    "url": "https://www.uwindsor.ca/registrar/4082/last-day-voluntarily-withdraw-summer-session-2026-6-week-courses",
+    "startDate": "2026-07-20",
+    "endDate": "2026-07-20",
+    "dateText": "Jul 20th, 2026"
+  },
+  {
+    "title": "Civic Holiday: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4050/civic-holiday-university-closed",
+    "startDate": "2026-08-03",
+    "endDate": "2026-08-03",
+    "dateText": "Aug 3rd, 2026"
+  },
+  {
+    "title": "Last Day of Summer Session 2026 (6 week) Classes",
+    "url": "https://www.uwindsor.ca/registrar/4086/last-day-summer-session-2026-6-week-classes",
+    "startDate": "2026-08-04",
+    "endDate": "2026-08-04",
+    "dateText": "Aug 4th, 2026"
+  },
+  {
+    "title": "Make up date for Canada Day Holiday Classes...",
+    "url": "https://www.uwindsor.ca/registrar/4088/make-date-canada-day-holiday-classes",
+    "startDate": "2026-08-04",
+    "endDate": "2026-08-04",
+    "dateText": "Aug 4th, 2026"
+  },
+  {
+    "title": "Last Day of Full Summer 2026 (12 week) Classes",
+    "url": "https://www.uwindsor.ca/registrar/4085/last-day-full-summer-2026-12-week-classes",
+    "startDate": "2026-08-05",
+    "endDate": "2026-08-05",
+    "dateText": "Aug 5th, 2026"
+  },
+  {
+    "title": "Make up date for Victoria Day Holiday Classes…..",
+    "url": "https://www.uwindsor.ca/registrar/4089/make-date-victoria-day-holiday-classes%E2%80%A6",
+    "startDate": "2026-08-05",
+    "endDate": "2026-08-05",
+    "dateText": "Aug 5th, 2026"
+  },
+  {
+    "title": "GRAD: Last Day of Full Summer 2026 (12 week) Classes",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2026-08-05",
+    "endDate": "2026-08-05",
+    "dateText": "August 5, 2026"
+  },
+  {
+    "title": "Pre-examination study Day (Aug 6-7) - Full 12 wk & Summer 6 wk",
+    "url": "https://www.uwindsor.ca/registrar/4091/pre-examination-study-day-aug-6-7-full-12-wk-summer-6-wk",
+    "startDate": "2026-08-06",
+    "endDate": "2026-08-07",
+    "dateText": "Aug 6th, 2026 to Aug 7th, 2026"
+  },
+  {
+    "title": "Final Exams for Full Summer 2026 (12 week) and Summer (6 week) Session: Aug 8-19 (excl Sundays)",
+    "url": "https://www.uwindsor.ca/registrar/4093/final-exams-full-summer-2026-12-week-and-summer-6-week-session-aug-8-19-excl-sundays",
+    "startDate": "2026-08-08",
+    "endDate": "2026-08-19",
+    "dateText": "Aug 8th, 2026 to Aug 19th, 2026"
+  },
+  {
+    "title": "GRAD: Final Exams for Full Summer 2026 (12 week)",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2026-08-08",
+    "endDate": "2026-08-19",
+    "dateText": "August 8-19, 2026"
+  },
+  {
+    "title": "GRAD: Deadline for recommending a PhD external examiner  (Fall 2026 Phase I)",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2026-08-12",
+    "endDate": "2026-08-12",
+    "dateText": "August 12, 2026"
+  },
+  {
+    "title": "LAW: Dual JD Detroit Mercy Orientation (Aug 17 - 21)",
+    "url": "https://www.uwindsor.ca/registrar/4261/law-dual-jd-detroit-mercy-orientation-aug-17-21",
+    "startDate": "2026-08-17",
+    "endDate": "2026-08-21",
+    "dateText": "Aug 17th, 2026 to Aug 21st, 2026"
+  },
+  {
+    "title": "No fee Deadline to Apply to Graduate at Fall 2026 Convocation",
+    "url": "https://www.uwindsor.ca/registrar/4386/no-fee-deadline-apply-graduate-fall-2026-convocation",
+    "startDate": "2026-08-18",
+    "endDate": "2026-08-18",
+    "dateText": "Aug 18th, 2026"
+  },
+  {
+    "title": "GRAD: No-fee Deadline to Apply to Graduate at Fall 2026 Convocation",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2026-08-18",
+    "endDate": "2026-08-18",
+    "dateText": "August 18, 2026"
+  },
+  {
+    "title": "Late Fee Begins to Apply to Graduate at Fall 2026 Convocation",
+    "url": "https://www.uwindsor.ca/registrar/4387/late-fee-begins-apply-graduate-fall-2026-convocation",
+    "startDate": "2026-08-19",
+    "endDate": "2026-08-19",
+    "dateText": "Aug 19th, 2026"
+  },
+  {
+    "title": "GRAD: Late Fee Begins to Apply to Graduate at Fall 2026 Convocation",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2026-08-19",
+    "endDate": "2026-08-19",
+    "dateText": "August 19, 2026"
+  },
+  {
+    "title": "Alternate Final Exam Day",
+    "url": "https://www.uwindsor.ca/registrar/4094/alternate-final-exam-day",
+    "startDate": "2026-08-20",
+    "endDate": "2026-08-20",
+    "dateText": "Aug 20th, 2026"
+  },
+  {
+    "title": "GRAD: Deadline for submitting a copy of the PhD dissertation to a PhD external examiner (Fall 2026 Phase I)",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2026-08-24",
+    "endDate": "2026-08-24",
+    "dateText": "August 24, 2026"
+  },
+  {
+    "title": "LAW: 1st Year Law Orientation (Sep 1 - 4)",
+    "url": "https://www.uwindsor.ca/registrar/4256/law-1st-year-law-orientation-sep-1-4",
+    "startDate": "2026-09-01",
+    "endDate": "2026-09-04",
+    "dateText": "Sep 1st, 2026 to Sep 4th, 2026"
+  },
+  {
+    "title": "Nursing Year 3 Transitions - Virtual",
+    "url": "https://www.uwindsor.ca/registrar/4249/nursing-year-3-transitions-virtual",
+    "startDate": "2026-09-03",
+    "endDate": "2026-09-03",
+    "dateText": "Sep 3rd, 2026"
+  },
+  {
+    "title": "Labour Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4051/labour-day-university-closed",
+    "startDate": "2026-09-07",
+    "endDate": "2026-09-07",
+    "dateText": "Sep 7th, 2026"
+  },
+  {
+    "title": "Law: First Day of Fall 2026 Classes",
+    "url": "https://www.uwindsor.ca/registrar/4245/law-first-day-fall-2026-classes",
+    "startDate": "2026-09-08",
+    "endDate": "2026-09-08",
+    "dateText": "Sep 8th, 2026"
+  },
+  {
+    "title": "Nursing Year 3 Clinical Orientation (NURS 3542) - Virtual",
+    "url": "https://www.uwindsor.ca/registrar/4252/nursing-year-3-clinical-orientation-nurs-3542-virtual",
+    "startDate": "2026-09-08",
+    "endDate": "2026-09-08",
+    "dateText": "Sep 8th, 2026"
+  },
+  {
+    "title": "Nursing Year 4 Clinical Orientation (NURS 4562/4572) - Virtual",
+    "url": "https://www.uwindsor.ca/registrar/4253/nursing-year-4-clinical-orientation-nurs-45624572-virtual",
+    "startDate": "2026-09-08",
+    "endDate": "2026-09-08",
+    "dateText": "Sep 8th, 2026"
+  },
+  {
+    "title": "Education: Orientation and Advisory Meetings: Year 1",
+    "url": "https://www.uwindsor.ca/registrar/4266/education-orientation-and-advisory-meetings-year-1",
+    "startDate": "2026-09-08",
+    "endDate": "2026-09-08",
+    "dateText": "Sep 8th, 2026"
+  },
+  {
+    "title": "Nursing Year 1 Program Orientation - In person",
+    "url": "https://www.uwindsor.ca/registrar/4250/nursing-year-1-program-orientation-person",
+    "startDate": "2026-09-09",
+    "endDate": "2026-09-09",
+    "dateText": "Sep 9th, 2026"
+  },
+  {
+    "title": "Nursing Year 2 Clinical Orientation (NURS 2522) - In person",
+    "url": "https://www.uwindsor.ca/registrar/4251/nursing-year-2-clinical-orientation-nurs-2522-person",
+    "startDate": "2026-09-09",
+    "endDate": "2026-09-09",
+    "dateText": "Sep 9th, 2026"
+  },
+  {
+    "title": "Consecutive Ed: First Day of Fall 2026 Classes",
+    "url": "https://www.uwindsor.ca/registrar/4264/consecutive-ed-first-day-fall-2026-classes",
+    "startDate": "2026-09-09",
+    "endDate": "2026-09-09",
+    "dateText": "Sep 9th, 2026"
+  },
+  {
+    "title": "First Day of Fall 2026 Classes (excluding Law & Consecutive Ed)",
+    "url": "https://www.uwindsor.ca/registrar/4095/first-day-fall-2026-classes-excluding-law-consecutive-ed",
+    "startDate": "2026-09-10",
+    "endDate": "2026-09-10",
+    "dateText": "Sep 10th, 2026"
+  },
+  {
+    "title": "Deadline to Apply to Graduate at Fall 2026 Convocation. No Applications to Graduate will be accepted after this date",
+    "url": "https://www.uwindsor.ca/registrar/4388/deadline-apply-graduate-fall-2026-convocation-no-applications-graduate-will-be-accepted-after",
+    "startDate": "2026-09-18",
+    "endDate": "2026-09-18",
+    "dateText": "Sep 18th, 2026"
+  },
+  {
+    "title": "LAW: Last Day to Add/Drop Fall Classes in LAW",
+    "url": "https://www.uwindsor.ca/registrar/4257/law-last-day-adddrop-fall-classes-law",
+    "startDate": "2026-09-21",
+    "endDate": "2026-09-21",
+    "dateText": "Sep 21st, 2026"
+  },
+  {
+    "title": "Academic Add/Drop for Fall 2026.....",
+    "url": "https://www.uwindsor.ca/registrar/4096/academic-adddrop-fall-2026",
+    "startDate": "2026-09-23",
+    "endDate": "2026-09-23",
+    "dateText": "Sep 23rd, 2026"
+  },
+  {
+    "title": "GRAD: Academic Add/Drop for Fall 2026",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2026-09-23",
+    "endDate": "2026-09-23",
+    "dateText": "September 23, 2026"
+  },
+  {
+    "title": "Financial Drop Date: Fall 2026...",
+    "url": "https://www.uwindsor.ca/registrar/4242/financial-drop-date-fall-semester",
+    "startDate": "2026-10-07",
+    "endDate": "2026-10-07",
+    "dateText": "Oct 7th, 2026"
+  },
+  {
+    "title": "Reading Week (Oct 10 -18), excluding Law",
+    "url": "https://www.uwindsor.ca/registrar/4099/reading-week-oct-10-18-excluding-law",
+    "startDate": "2026-10-10",
+    "endDate": "2026-10-18",
+    "dateText": "Oct 10th, 2026 to Oct 18th, 2026"
+  },
+  {
+    "title": "Thanksgiving Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4052/thanksgiving-day-university-closed",
+    "startDate": "2026-10-12",
+    "endDate": "2026-10-12",
+    "dateText": "Oct 12th, 2026"
+  },
+  {
+    "title": "Fall 2026 Convocation (Oct 15)",
+    "url": "https://www.uwindsor.ca/registrar/4098/fall-2026-convocation-oct-15-16",
+    "startDate": "2026-10-15",
+    "endDate": "2026-10-15",
+    "dateText": "Oct 15th, 2026"
+  },
+  {
+    "title": "GRAD: Post-defence Deposit deadline for Phase II:",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2026-10-21",
+    "endDate": "2026-10-21",
+    "dateText": "October 21, 2026"
+  },
+  {
+    "title": "LAW: Study Week for Law Students (Nov 2 - 6)",
+    "url": "https://www.uwindsor.ca/registrar/4258/law-study-week-law-students-nov-2-6",
+    "startDate": "2026-11-02",
+    "endDate": "2026-11-06",
+    "dateText": "Nov 2nd, 2026 to Nov 6th, 2026"
+  },
+  {
+    "title": "LAW: Voluntary Withdrawal date for Fall 2026 courses",
+    "url": "https://www.uwindsor.ca/registrar/4289/law-voluntary-withdrawal-date-fall-2026-courses",
+    "startDate": "2026-11-16",
+    "endDate": "2026-11-16",
+    "dateText": "Nov 16th, 2026"
+  },
+  {
+    "title": "Education: Last Day of Fall 2026 Classes",
+    "url": "https://www.uwindsor.ca/registrar/4265/education-last-day-fall-2026-classes",
+    "startDate": "2026-11-17",
+    "endDate": "2026-11-17",
+    "dateText": "Nov 17th, 2026"
+  },
+  {
+    "title": "Voluntary Withdrawal date for Fall 2026 courses (GRAD/UGRD)…...",
+    "url": "https://www.uwindsor.ca/registrar/4097/voluntary-withdrawal-date-fall-2026-courses%E2%80%A6",
+    "startDate": "2026-11-18",
+    "endDate": "2026-11-18",
+    "dateText": "Nov 18th, 2026"
+  },
+  {
+    "title": "Education: PLS: Professional Learning Series (Nov 18 - 20) - Year 1 & 2 B.Ed.",
+    "url": "https://www.uwindsor.ca/registrar/4270/education-professional-learning-series-pls",
+    "startDate": "2026-11-18",
+    "endDate": "2026-11-20",
+    "dateText": "Nov 18th, 2026 to Nov 20th, 2026"
+  },
+  {
+    "title": "GRAD: Voluntary Withdrawal date for Fall 2026 courses",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2026-11-18",
+    "endDate": "2026-11-18",
+    "dateText": "November 18, 2026"
+  },
+  {
+    "title": "Education: Fall Exams",
+    "url": "https://www.uwindsor.ca/registrar/4267/education-fall-exams",
+    "startDate": "2026-11-21",
+    "endDate": "2026-11-21",
+    "dateText": "Nov 21st, 2026"
+  },
+  {
+    "title": "Education: Practicum Period (Nov 23 - Dec 16)",
+    "url": "https://www.uwindsor.ca/registrar/4268/education-practicum-period-nov-23-dec-16",
+    "startDate": "2026-11-23",
+    "endDate": "2026-12-16",
+    "dateText": "Nov 23rd, 2026 to Dec 16th, 2026"
+  },
+  {
+    "title": "LAW: Last Day of Fall 2026 Classes",
+    "url": "https://www.uwindsor.ca/registrar/4246/law-last-day-fall-2026-classes",
+    "startDate": "2026-12-07",
+    "endDate": "2026-12-07",
+    "dateText": "Dec 7th, 2026"
+  },
+  {
+    "title": "LAW: Make-up Day for Thanksgiving",
+    "url": "https://www.uwindsor.ca/registrar/4288/law-make-day-thanksgiving",
+    "startDate": "2026-12-08",
+    "endDate": "2026-12-08",
+    "dateText": "Dec 8th, 2026"
+  },
+  {
+    "title": "Last Day of Fall 2026 Classes (excluding Law and Education)",
+    "url": "https://www.uwindsor.ca/registrar/4100/last-day-fall-2026-classes-excluding-law-and-education",
+    "startDate": "2026-12-09",
+    "endDate": "2026-12-09",
+    "dateText": "Dec 9th, 2026"
+  },
+  {
+    "title": "Pre-examination study Day (Dec 10)",
+    "url": "https://www.uwindsor.ca/registrar/4101/pre-examination-study-day-dec-10",
+    "startDate": "2026-12-10",
+    "endDate": "2026-12-10",
+    "dateText": "Dec 10th, 2026"
+  },
+  {
+    "title": "LAW: Exams (Dec 10 - 22)",
+    "url": "https://www.uwindsor.ca/registrar/4259/law-exams-dec-10-22",
+    "startDate": "2026-12-10",
+    "endDate": "2026-12-22",
+    "dateText": "Dec 10th, 2026 to Dec 22nd, 2026"
+  },
+  {
+    "title": "Final Exams for Fall 2026 (Dec 11 - 22), excluding Law and Education",
+    "url": "https://www.uwindsor.ca/registrar/4102/final-exams-fall-2026-dec-11-22-excluding-law-and-education",
+    "startDate": "2026-12-11",
+    "endDate": "2026-12-22",
+    "dateText": "Dec 11th, 2026 to Dec 22nd, 2026"
+  },
+  {
+    "title": "Education: Practicum Make up days (Dec 17 - 18)",
+    "url": "https://www.uwindsor.ca/registrar/4269/education-make-days-dec-17-18",
+    "startDate": "2026-12-17",
+    "endDate": "2026-12-18",
+    "dateText": "Dec 17th, 2026 to Dec 18th, 2026"
+  },
+  {
+    "title": "Alternate Final Exam Day",
+    "url": "https://www.uwindsor.ca/registrar/4103/alternate-final-exam-day",
+    "startDate": "2026-12-23",
+    "endDate": "2026-12-23",
+    "dateText": "Dec 23rd, 2026"
+  },
+  {
+    "title": "LAW: Alternate Final Exam Day for Law (ASC permission required)",
+    "url": "https://www.uwindsor.ca/registrar/4260/law-alternate-final-exam-day-law-asc-permission-required",
+    "startDate": "2026-12-23",
+    "endDate": "2026-12-23",
+    "dateText": "Dec 23rd, 2026"
+  },
+  {
+    "title": "University Offices Closed for December Holiday Recess (Dec 24 - Jan 1)",
+    "url": "https://www.uwindsor.ca/registrar/4053/university-offices-closed-december-holiday-recess-dec-24-jan-1",
+    "startDate": "2026-12-24",
+    "endDate": "2027-01-01",
+    "dateText": "Dec 24th, 2026 to Jan 1st, 2027"
+  },
+  {
+    "title": "University Offices re-open after Holiday Break",
+    "url": "https://www.uwindsor.ca/registrar/4054/university-offices-re-open-after-holiday-break",
+    "startDate": "2027-01-04",
+    "endDate": "2027-01-04",
+    "dateText": "Jan 4th, 2027"
+  },
+  {
+    "title": "First Day of Winter 2027 Classes",
+    "url": "https://www.uwindsor.ca/registrar/4106/first-day-winter-2027-classes",
+    "startDate": "2027-01-04",
+    "endDate": "2027-01-04",
+    "dateText": "Jan 4th, 2027"
+  },
+  {
+    "title": "Nursing Year 4 Clinical Orientation (4562/4572) - Virtual",
+    "url": "https://www.uwindsor.ca/registrar/4255/nursing-year-4-clinical-orientation-45624572-virtual",
+    "startDate": "2027-01-04",
+    "endDate": "2027-01-04",
+    "dateText": "Jan 4th, 2027"
+  },
+  {
+    "title": "Consecutive Ed: First Day of Winter 2027 Classes",
+    "url": "https://www.uwindsor.ca/registrar/4271/consecutive-ed-first-day-winter-2027-classes",
+    "startDate": "2027-01-04",
+    "endDate": "2027-01-04",
+    "dateText": "Jan 4th, 2027"
+  },
+  {
+    "title": "LAW: WLPS Week for Law I Students",
+    "url": "https://www.uwindsor.ca/registrar/4281/law-wlps-week-law-i-students",
+    "startDate": "2027-01-04",
+    "endDate": "2027-01-07",
+    "dateText": "Jan 4th, 2027 to Jan 7th, 2027"
+  },
+  {
+    "title": "GRAD: University Offices re-open after Holiday Break",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2027-01-04",
+    "endDate": "2027-01-04",
+    "dateText": "January 4, 2027"
+  },
+  {
+    "title": "LAW: First Day of Winter 2027 Classes for Law",
+    "url": "https://www.uwindsor.ca/registrar/4282/law-first-day-winter-2027-classes-law",
+    "startDate": "2027-01-11",
+    "endDate": "2027-01-11",
+    "dateText": "Jan 11th, 2027"
+  },
+  {
+    "title": "Academic Add/Drop for Winter 2027…..",
+    "url": "https://www.uwindsor.ca/registrar/4107/academic-adddrop-winter-2027%E2%80%A6",
+    "startDate": "2027-01-17",
+    "endDate": "2027-01-17",
+    "dateText": "Jan 17th, 2027"
+  },
+  {
+    "title": "LAW: Last day to Add/Drop Winter Classes in Law",
+    "url": "https://www.uwindsor.ca/registrar/4283/law-last-day-adddrop-winter-classes-law",
+    "startDate": "2027-01-17",
+    "endDate": "2027-01-17",
+    "dateText": "Jan 17th, 2027"
+  },
+  {
+    "title": "GRAD: Academic Add/Drop for Winter 2027",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2027-01-17",
+    "endDate": "2027-01-17",
+    "dateText": "January 17, 2027"
+  },
+  {
+    "title": "Education: PLS: Professional Learning Series (Jan 18 - 20) - Year 1 & 2 B.Ed.",
+    "url": "https://www.uwindsor.ca/registrar/4277/education-pls-professional-learning-series-jan-18-20-year-1-2-bed",
+    "startDate": "2027-01-18",
+    "endDate": "2027-01-20",
+    "dateText": "Jan 18th, 2027 to Jan 20th, 2027"
+  },
+  {
+    "title": "Nursing Year 1 Clinical Orientation (1512) - Virtual",
+    "url": "https://www.uwindsor.ca/registrar/4254/nursing-year-1-clinical-orientation-1512-virtual",
+    "startDate": "2027-01-19",
+    "endDate": "2027-01-19",
+    "dateText": "Jan 19th, 2027"
+  },
+  {
+    "title": "GRAD: Post-defence Deposit deadline for Phase I",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2027-01-25",
+    "endDate": "2027-01-25",
+    "dateText": "January 25, 2027"
+  },
+  {
+    "title": "Financial Drop Date: Winter 2027...",
+    "url": "https://www.uwindsor.ca/registrar/4243/financial-drop-date-winter-2027",
+    "startDate": "2027-01-31",
+    "endDate": "2027-01-31",
+    "dateText": "Jan 31st, 2027"
+  },
+  {
+    "title": "Reading Week (Feb 13 - 21)",
+    "url": "https://www.uwindsor.ca/registrar/4110/reading-week-all-faculties-except-consecutive-ed-feb-13-21",
+    "startDate": "2027-02-13",
+    "endDate": "2027-02-21",
+    "dateText": "Feb 13th, 2027 to Feb 21st, 2027"
+  },
+  {
+    "title": "Family Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4104/family-day-university-closed",
+    "startDate": "2027-02-15",
+    "endDate": "2027-02-15",
+    "dateText": "Feb 15th, 2027"
+  },
+  {
+    "title": "GRAD: Post-defence Deposit deadline for Phase II",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2027-02-16",
+    "endDate": "2027-02-16",
+    "dateText": "February 16, 2027"
+  },
+  {
+    "title": "University Offices Closed",
+    "url": "https://www.uwindsor.ca/registrar/4278/university-offices-closed",
+    "startDate": "2027-02-19",
+    "endDate": "2027-02-19",
+    "dateText": "Feb 19th, 2027"
+  },
+  {
+    "title": "Education: Practicum Prep (Mar 4 - 5) - Year 1 & 2",
+    "url": "https://www.uwindsor.ca/registrar/4274/education-practicum-prep-mar-4-5-year-1-2",
+    "startDate": "2027-03-04",
+    "endDate": "2027-03-05",
+    "dateText": "Mar 4th, 2027 to Mar 5th, 2027"
+  },
+  {
+    "title": "Last Day to Voluntarily Withdraw from Winter 2027 courses",
+    "url": "https://www.uwindsor.ca/registrar/4108/last-day-voluntarily-withdraw-winter-2027-courses",
+    "startDate": "2027-03-14",
+    "endDate": "2027-03-14",
+    "dateText": "Mar 14th, 2027"
+  },
+  {
+    "title": "GRAD: Last Day to Voluntarily Withdraw from Winter 2027 courses.",
+    "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
+    "startDate": "2027-03-14",
+    "endDate": "2027-03-14",
+    "dateText": "March 14, 2027"
+  },
+  {
+    "title": "Education: Last Day of Winter 2027 Classes",
+    "url": "https://www.uwindsor.ca/registrar/4272/education-last-day-winter-2027-classes",
+    "startDate": "2027-03-19",
+    "endDate": "2027-03-19",
+    "dateText": "Mar 19th, 2027"
+  },
+  {
+    "title": "Education: Winter Exams",
+    "url": "https://www.uwindsor.ca/registrar/4273/education-winter-exams",
+    "startDate": "2027-03-20",
+    "endDate": "2027-03-20",
+    "dateText": "Mar 20th, 2027"
+  },
+  {
+    "title": "Education: Practicum Period (Mar 22 - Apr 23)",
+    "url": "https://www.uwindsor.ca/registrar/4275/education-practicum-period-mar-22-apr-23",
+    "startDate": "2027-03-22",
+    "endDate": "2027-04-23",
+    "dateText": "Mar 22nd, 2027 to Apr 23rd, 2027"
+  },
+  {
+    "title": "Good Friday: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4105/good-friday-university-closed",
+    "startDate": "2027-03-26",
+    "endDate": "2027-03-26",
+    "dateText": "Mar 26th, 2027"
+  },
+  {
+    "title": "Last Day of Winter 2027 Classes (excluding Education)",
+    "url": "https://www.uwindsor.ca/registrar/4111/last-day-winter-2027-classes-excluding-law-and-education",
+    "startDate": "2027-04-05",
+    "endDate": "2027-04-05",
+    "dateText": "Apr 5th, 2027"
+  },
+  {
+    "title": "Make up date for Good Friday Holiday",
+    "url": "https://www.uwindsor.ca/registrar/4112/make-date-good-friday-holiday",
+    "startDate": "2027-04-05",
+    "endDate": "2027-04-05",
+    "dateText": "Apr 5th, 2027"
+  },
+  {
+    "title": "LAW: Last Day of Winter 2027 Classes for Law",
+    "url": "https://www.uwindsor.ca/registrar/4284/law-last-day-winter-2027-classes-law",
+    "startDate": "2027-04-05",
+    "endDate": "2027-04-05",
+    "dateText": "Apr 5th, 2027"
+  },
+  {
+    "title": "Pre-Exam Study Day (Apr6 - 7)",
+    "url": "https://www.uwindsor.ca/registrar/4113/pre-exam-study-day-apr6-7",
+    "startDate": "2027-04-06",
+    "endDate": "2027-04-07",
+    "dateText": "Apr 6th, 2027 to Apr 7th, 2027"
+  },
+  {
+    "title": "LAW: Class Make-up Day (if required)",
+    "url": "https://www.uwindsor.ca/registrar/4285/law-class-make-day-if-required",
+    "startDate": "2027-04-06",
+    "endDate": "2027-04-06",
+    "dateText": "Apr 6th, 2027"
+  },
+  {
+    "title": "Final Exams for Winter 2027 (Apr 8 - 19), excl. Law & EDUC (excl Sundays)",
+    "url": "https://www.uwindsor.ca/registrar/4114/final-exams-winter-2027-apr-8-19-excl-law-educ-excl-sundays",
+    "startDate": "2027-04-08",
+    "endDate": "2027-04-19",
+    "dateText": "Apr 8th, 2027 to Apr 19th, 2027"
+  },
+  {
+    "title": "LAW: Final Exams for Law (Apr 8 - 20)",
+    "url": "https://www.uwindsor.ca/registrar/4286/law-final-exams-law-apr-8-20",
+    "startDate": "2027-04-08",
+    "endDate": "2027-04-20",
+    "dateText": "Apr 8th, 2027 to Apr 20th, 2027"
+  },
+  {
+    "title": "Alternate Final Exam Day",
+    "url": "https://www.uwindsor.ca/registrar/4115/alternate-final-exam-day",
+    "startDate": "2027-04-20",
+    "endDate": "2027-04-20",
+    "dateText": "Apr 20th, 2027"
+  },
+  {
+    "title": "LAW: Alternate Final Exam Day for Law (ASC permission required)",
+    "url": "https://www.uwindsor.ca/registrar/4287/law-alternate-final-exam-day-law-asc-permission-required",
+    "startDate": "2027-04-21",
+    "endDate": "2027-04-21",
+    "dateText": "Apr 21st, 2027"
+  },
+  {
+    "title": "Nursing Year 3 Consolidation-NURS 3632 (Apr 22 to May 5)",
+    "url": "https://www.uwindsor.ca/registrar/4235/nursing-year-3-consolidation-nurs-3632-apr-22-may-5",
+    "startDate": "2027-04-22",
+    "endDate": "2027-05-05",
+    "dateText": "Apr 22nd, 2027 to May 5th, 2027"
+  },
+  {
+    "title": "Education: Practicum Make-up Days (Apr 26 - 30)",
+    "url": "https://www.uwindsor.ca/registrar/4276/education-make-days-apr-26-30",
+    "startDate": "2027-04-26",
+    "endDate": "2027-04-30",
+    "dateText": "Apr 26th, 2027 to Apr 30th, 2027"
+  },
+  {
+    "title": "First Day of Classes: Full Summer (12 week) and Inter-Session (6 week) 2027",
+    "url": "https://www.uwindsor.ca/registrar/4119/first-day-classes-full-summer-12-week-and-inter-session-6-week-2027",
+    "startDate": "2027-05-03",
+    "endDate": "2027-05-03",
+    "dateText": "May 3rd, 2027"
+  },
+  {
+    "title": "Nursing Year 2 Consolidation (Block 1) NURS 2622 (May 7 to May 19)",
+    "url": "https://www.uwindsor.ca/registrar/4236/nursing-year-2-consolidation-nurs-2622-may-7-may-19",
+    "startDate": "2027-05-07",
+    "endDate": "2027-05-19",
+    "dateText": "May 7th, 2027 to May 19th, 2027"
+  },
+  {
+    "title": "Academic Add/Drop for Inter-Session 2027 (6 week)…",
+    "url": "https://www.uwindsor.ca/registrar/4121/academic-adddrop-inter-session-2027-6-week%E2%80%A6",
+    "startDate": "2027-05-09",
+    "endDate": "2027-05-09",
+    "dateText": "May 9th, 2027"
+  },
+  {
+    "title": "Academic Add/Drop for Full Summer 2027 (12 week)….",
+    "url": "https://www.uwindsor.ca/registrar/4122/academic-adddrop-full-summer-2027-12-week%E2%80%A6",
+    "startDate": "2027-05-16",
+    "endDate": "2027-05-16",
+    "dateText": "May 16th, 2027"
+  },
+  {
+    "title": "Nursing Year 2 Consolidation (Block 2) NURS 2622 (May 21 to June 4)",
+    "url": "https://www.uwindsor.ca/registrar/4237/nursing-year-1-consolidation-nurs-1612-may-21-june-4",
+    "startDate": "2027-05-21",
+    "endDate": "2027-06-04",
+    "dateText": "May 21st, 2027 to Jun 4th, 2027"
+  },
+  {
+    "title": "Nursing Year 1 Consolidation (Block 1) NURS 1612 (May 21 to June 4)",
+    "url": "https://www.uwindsor.ca/registrar/4262/nursing-year-1-consolidation-block-1-nurs-1612-may-21-june-4",
+    "startDate": "2027-05-21",
+    "endDate": "2027-06-04",
+    "dateText": "May 21st, 2027 to Jun 4th, 2027"
+  },
+  {
+    "title": "Victoria Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4116/victoria-day-university-closed",
+    "startDate": "2027-05-24",
+    "endDate": "2027-05-24",
+    "dateText": "May 24th, 2027"
+  },
+  {
+    "title": "Last Day to Voluntarily Withdraw from Inter-Session 2027 (6 week) courses",
+    "url": "https://www.uwindsor.ca/registrar/4124/last-day-voluntarily-withdraw-inter-session-2027-6-week-courses",
+    "startDate": "2027-05-31",
+    "endDate": "2027-05-31",
+    "dateText": "May 31st, 2027"
+  },
+  {
+    "title": "Nursing Year 1 Consolidation (Block 3) NURS 2622 (Jun 7 - Jun 20)",
+    "url": "https://www.uwindsor.ca/registrar/4238/nursing-year-1-consolidation-nurs-16122622-jun-7-jun-20-tentative",
+    "startDate": "2027-06-07",
+    "endDate": "2027-06-20",
+    "dateText": "Jun 7th, 2027 to Jun 20th, 2027"
+  },
+  {
+    "title": "Nursing Year 1 Consolidation (Block 2) NURS 1612 (Jun 7 - Jun 20)",
+    "url": "https://www.uwindsor.ca/registrar/4263/nursing-year-1-consolidation-block-2-nurs-1612-jun-7-jun-20",
+    "startDate": "2027-06-07",
+    "endDate": "2027-06-20",
+    "dateText": "Jun 7th, 2027 to Jun 20th, 2027"
+  },
+  {
+    "title": "Spring 2027 Convocation (June 8 - 11)",
+    "url": "https://www.uwindsor.ca/registrar/4109/spring-2027-convocation-june-8-11",
+    "startDate": "2027-06-08",
+    "endDate": "2027-06-11",
+    "dateText": "Jun 8th, 2027 to Jun 11th, 2027"
+  },
+  {
+    "title": "Reading Week for Full Summer 2027 (12 week) courses: Jun 12 - 20",
+    "url": "https://www.uwindsor.ca/registrar/4127/reading-week-full-summer-2027-12-week-courses-jun-12-20",
+    "startDate": "2027-06-12",
+    "endDate": "2027-06-20",
+    "dateText": "Jun 12th, 2027 to Jun 20th, 2027"
+  },
+  {
+    "title": "Last Day of Inter-Session 2027 (6 week) Classes",
+    "url": "https://www.uwindsor.ca/registrar/4128/last-day-inter-session-2027-6-week-classes",
+    "startDate": "2027-06-14",
+    "endDate": "2027-06-14",
+    "dateText": "Jun 14th, 2027"
+  },
+  {
+    "title": "Make up date for Victoria Day Holiday Classes (for 6wk)…",
+    "url": "https://www.uwindsor.ca/registrar/4131/make-date-victoria-day-holiday-classes%E2%80%A6",
+    "startDate": "2027-06-14",
+    "endDate": "2027-06-14",
+    "dateText": "Jun 14th, 2027"
+  },
+  {
+    "title": "Pre-examination study Day (Jun 15 - 16) - Intersession 6-wk",
+    "url": "https://www.uwindsor.ca/registrar/4135/pre-examination-study-day-jun-15-16-intersession-6-wk",
+    "startDate": "2027-06-15",
+    "endDate": "2027-06-16",
+    "dateText": "Jun 15th, 2027 to Jun 16th, 2027"
+  },
+  {
+    "title": "Final Exams for Inter-Session 2027 (6 week): June 17-19",
+    "url": "https://www.uwindsor.ca/registrar/4137/final-exams-inter-session-2027-6-week-june-17-19",
+    "startDate": "2027-06-17",
+    "endDate": "2027-06-19",
+    "dateText": "Jun 17th, 2027 to Jun 19th, 2027"
+  },
+  {
+    "title": "First Day of Classes: Summer 2027 Session (6 week)",
+    "url": "https://www.uwindsor.ca/registrar/4120/first-day-classes-summer-2027-session-6-week",
+    "startDate": "2027-06-21",
+    "endDate": "2027-06-21",
+    "dateText": "Jun 21st, 2027"
+  },
+  {
+    "title": "Academic Add/Drop for Summer 2027 (6 week)...",
+    "url": "https://www.uwindsor.ca/registrar/4123/academic-adddrop-summer-2027-6-week",
+    "startDate": "2027-06-27",
+    "endDate": "2027-06-27",
+    "dateText": "Jun 27th, 2027"
+  },
+  {
+    "title": "Canada Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4117/canada-day-university-closed",
+    "startDate": "2027-07-01",
+    "endDate": "2027-07-01",
+    "dateText": "Jul 1st, 2027"
+  },
+  {
+    "title": "Last Day to Voluntary Withdrawal from for Full Summer 2027 (12 week)…...",
+    "url": "https://www.uwindsor.ca/registrar/4125/last-day-voluntary-withdrawal-full-summer-2027-12-week%E2%80%A6",
+    "startDate": "2027-07-13",
+    "endDate": "2027-07-13",
+    "dateText": "Jul 13th, 2027"
+  },
+  {
+    "title": "Last Day to Voluntarily Withdraw from Summer Session 2027 (6 week) courses",
+    "url": "https://www.uwindsor.ca/registrar/4126/last-day-voluntarily-withdraw-summer-session-2027-6-week-courses",
+    "startDate": "2027-07-19",
+    "endDate": "2027-07-19",
+    "dateText": "Jul 19th, 2027"
+  },
+  {
+    "title": "Civic Holiday: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4118/civic-holiday-university-closed",
+    "startDate": "2027-08-02",
+    "endDate": "2027-08-02",
+    "dateText": "Aug 2nd, 2027"
+  },
+  {
+    "title": "Make up date for Canada Day Holiday Classes",
+    "url": "https://www.uwindsor.ca/registrar/4133/make-date-canada-day-july-1-classes",
+    "startDate": "2027-08-03",
+    "endDate": "2027-08-03",
+    "dateText": "Aug 3rd, 2027"
+  },
+  {
+    "title": "Last Day of Summer Session 2027 (6 week) Classes",
+    "url": "https://www.uwindsor.ca/registrar/4130/last-day-summer-session-2027-6-week-classes",
+    "startDate": "2027-08-04",
+    "endDate": "2027-08-04",
+    "dateText": "Aug 4th, 2027"
+  },
+  {
+    "title": "Make up date for Civic Holiday Classes",
+    "url": "https://www.uwindsor.ca/registrar/4134/make-date-civic-holiday-classes",
+    "startDate": "2027-08-04",
+    "endDate": "2027-08-04",
+    "dateText": "Aug 4th, 2027"
+  },
+  {
+    "title": "Last Day of Full Summer 2027 (12 week) Classes",
+    "url": "https://www.uwindsor.ca/registrar/4129/last-day-full-summer-2027-12-week-classes",
+    "startDate": "2027-08-05",
+    "endDate": "2027-08-05",
+    "dateText": "Aug 5th, 2027"
+  },
+  {
+    "title": "Make up date for Victoria Day Holiday Classes (for 12wk)…",
+    "url": "https://www.uwindsor.ca/registrar/4132/make-date-victoria-day-holiday-classes%E2%80%A6",
+    "startDate": "2027-08-05",
+    "endDate": "2027-08-05",
+    "dateText": "Aug 5th, 2027"
+  },
+  {
+    "title": "Pre-examination study Day (Aug 6 - 7) - Full 12 wk & Summer 6 wk",
+    "url": "https://www.uwindsor.ca/registrar/4136/pre-examination-study-day-aug-6-7-full-12-wk-summer-6-wk",
+    "startDate": "2027-08-06",
+    "endDate": "2027-08-07",
+    "dateText": "Aug 6th, 2027 to Aug 7th, 2027"
+  },
+  {
+    "title": "Final Exams for Full Summer 2027 (12 week) and Summer (6 week) Session: Aug 9 - 19 (excl Sunday)",
+    "url": "https://www.uwindsor.ca/registrar/4138/final-exams-full-summer-2027-12-week-and-summer-6-week-session-aug-9-19",
+    "startDate": "2027-08-09",
+    "endDate": "2027-08-19",
+    "dateText": "Aug 9th, 2027 to Aug 19th, 2027"
+  },
+  {
+    "title": "Alternate Final Exam Day",
+    "url": "https://www.uwindsor.ca/registrar/4139/alternate-final-exam-day",
+    "startDate": "2027-08-20",
+    "endDate": "2027-08-20",
+    "dateText": "Aug 20th, 2027"
+  },
+  {
+    "title": "Labour Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4140/labour-day-university-closed",
+    "startDate": "2027-09-06",
+    "endDate": "2027-09-06",
+    "dateText": "Sep 6th, 2027"
+  },
+  {
+    "title": "First Day of Fall 2027 Classes (excluding Law & Consecutive Ed)",
+    "url": "https://www.uwindsor.ca/registrar/4142/first-day-fall-2027-classes-excluding-law-consecutive-ed",
+    "startDate": "2027-09-09",
+    "endDate": "2027-09-09",
+    "dateText": "Sep 9th, 2027"
+  },
+  {
+    "title": "Academic Add/Drop for Fall 2027.....",
+    "url": "https://www.uwindsor.ca/registrar/4143/academic-adddrop-fall-2027",
+    "startDate": "2027-09-22",
+    "endDate": "2027-09-22",
+    "dateText": "Sep 22nd, 2027"
+  },
+  {
+    "title": "Reading Week (Oct 09 -17), excluding Law",
+    "url": "https://www.uwindsor.ca/registrar/4146/reading-week-oct-09-17-excluding-law",
+    "startDate": "2027-10-09",
+    "endDate": "2027-10-17",
+    "dateText": "Oct 9th, 2027 to Oct 17th, 2027"
+  },
+  {
+    "title": "Thanksgiving Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4141/thanksgiving-day-university-closed",
+    "startDate": "2027-10-11",
+    "endDate": "2027-10-11",
+    "dateText": "Oct 11th, 2027"
+  },
+  {
+    "title": "Fall 2027 Convocation (Oct 14 - 15)",
+    "url": "https://www.uwindsor.ca/registrar/4145/fall-2027-convocation-oct-14-15",
+    "startDate": "2027-10-14",
+    "endDate": "2027-10-15",
+    "dateText": "Oct 14th, 2027 to Oct 15th, 2027"
+  },
+  {
+    "title": "Voluntary Withdrawal date for Fall 2027 courses…...",
+    "url": "https://www.uwindsor.ca/registrar/4144/voluntary-withdrawal-date-fall-2027-courses%E2%80%A6",
+    "startDate": "2027-11-17",
+    "endDate": "2027-11-17",
+    "dateText": "Nov 17th, 2027"
+  },
+  {
+    "title": "Last Day of Fall 2027 Classes (excluding Law and Education)",
+    "url": "https://www.uwindsor.ca/registrar/4147/last-day-fall-2027-classes-excluding-law-and-education",
+    "startDate": "2027-12-08",
+    "endDate": "2027-12-08",
+    "dateText": "Dec 8th, 2027"
+  },
+  {
+    "title": "Pre-examination study Day (Dec 9 - 10)",
+    "url": "https://www.uwindsor.ca/registrar/4148/pre-examination-study-day-dec-9-10",
+    "startDate": "2027-12-09",
+    "endDate": "2027-12-10",
+    "dateText": "Dec 9th, 2027 to Dec 10th, 2027"
+  },
+  {
+    "title": "Final Exams for Fall 2027 (Dec 11 - 22), excl. Law and Education (excl Sundays)",
+    "url": "https://www.uwindsor.ca/registrar/4149/final-exams-fall-2027-dec-11-22-excl-law-and-education-excl-sundays",
+    "startDate": "2027-12-11",
+    "endDate": "2027-12-22",
+    "dateText": "Dec 11th, 2027 to Dec 22nd, 2027"
+  },
+  {
+    "title": "Alternate Final Exam Day",
+    "url": "https://www.uwindsor.ca/registrar/4150/alternate-final-exam-day",
+    "startDate": "2027-12-23",
+    "endDate": "2027-12-23",
+    "dateText": "Dec 23rd, 2027"
+  },
+  {
+    "title": "University Offices Closed for December Holiday Recess (Dec 23 - Dec 31)",
+    "url": "https://www.uwindsor.ca/registrar/4279/university-offices-closed-december-holiday-recess-dec-23-dec-31",
+    "startDate": "2027-12-23",
+    "endDate": "2027-12-31",
+    "dateText": "Dec 23rd, 2027 to Dec 31st, 2027"
+  },
+  {
+    "title": "University Offices re-open after Holiday Break",
+    "url": "https://www.uwindsor.ca/registrar/4280/university-offices-re-open-after-holiday-break",
+    "startDate": "2028-01-03",
+    "endDate": "2028-01-03",
+    "dateText": "Jan 3rd, 2028"
+  },
+  {
+    "title": "First Day of Winter 2028 Classes",
+    "url": "https://www.uwindsor.ca/registrar/4293/first-day-winter-2028-classes",
+    "startDate": "2028-01-06",
+    "endDate": "2028-01-06",
+    "dateText": "Jan 6th, 2028"
+  },
+  {
+    "title": "Academic Add/Drop for Winter 2028…..",
+    "url": "https://www.uwindsor.ca/registrar/4294/academic-adddrop-winter-2028%E2%80%A6",
+    "startDate": "2028-01-19",
+    "endDate": "2028-01-19",
+    "dateText": "Jan 19th, 2028"
+  },
+  {
+    "title": "Reading Week (Feb 19 - 27)",
+    "url": "https://www.uwindsor.ca/registrar/4297/reading-week-feb-19-27",
+    "startDate": "2028-02-19",
+    "endDate": "2028-02-27",
+    "dateText": "Feb 19th, 2028 to Feb 27th, 2028"
+  },
+  {
+    "title": "Family Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4290/family-day-university-closed",
+    "startDate": "2028-02-21",
+    "endDate": "2028-02-21",
+    "dateText": "Feb 21st, 2028"
+  },
+  {
+    "title": "University Offices Closed",
+    "url": "https://www.uwindsor.ca/registrar/4291/university-offices-closed",
+    "startDate": "2028-02-25",
+    "endDate": "2028-02-25",
+    "dateText": "Feb 25th, 2028"
+  },
+  {
+    "title": "Last Day to Voluntarily Withdraw from Winter 2028 courses",
+    "url": "https://www.uwindsor.ca/registrar/4295/last-day-voluntarily-withdraw-winter-2028-courses",
+    "startDate": "2028-03-15",
+    "endDate": "2028-03-15",
+    "dateText": "Mar 15th, 2028"
+  },
+  {
+    "title": "Last Day of Winter 2028 Classes (excl. Law and Education)",
+    "url": "https://www.uwindsor.ca/registrar/4298/last-day-winter-2028-classes-excl-law-and-education",
+    "startDate": "2028-04-05",
+    "endDate": "2028-04-05",
+    "dateText": "Apr 5th, 2028"
+  },
+  {
+    "title": "Pre-Exam Study Day (Apr 6 - 7)",
+    "url": "https://www.uwindsor.ca/registrar/4299/pre-exam-study-day-apr-6-7",
+    "startDate": "2028-04-06",
+    "endDate": "2028-04-07",
+    "dateText": "Apr 6th, 2028 to Apr 7th, 2028"
+  },
+  {
+    "title": "Final Exams for Winter 2028 (Apr 8 - 21), excluding.......",
+    "url": "https://www.uwindsor.ca/registrar/4300/final-exams-winter-2028-apr-8-21-excluding",
+    "startDate": "2028-04-08",
+    "endDate": "2028-04-21",
+    "dateText": "Apr 8th, 2028 to Apr 21st, 2028"
+  },
+  {
+    "title": "Good Friday: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4292/good-friday-university-closed",
+    "startDate": "2028-04-14",
+    "endDate": "2028-04-14",
+    "dateText": "Apr 14th, 2028"
+  },
+  {
+    "title": "Alternate Final Exam Day",
+    "url": "https://www.uwindsor.ca/registrar/4301/alternate-final-exam-day",
+    "startDate": "2028-04-22",
+    "endDate": "2028-04-22",
+    "dateText": "Apr 22nd, 2028"
+  },
+  {
+    "title": "First Day of Classes: Full Summer (12 week) and Inter-Session (6 week) 2028",
+    "url": "https://www.uwindsor.ca/registrar/4305/first-day-classes-full-summer-12-week-and-inter-session-6-week-2028",
+    "startDate": "2028-05-08",
+    "endDate": "2028-05-08",
+    "dateText": "May 8th, 2028"
+  },
+  {
+    "title": "Academic Add/Drop for Inter-Session 2028 (6 week)…",
+    "url": "https://www.uwindsor.ca/registrar/4307/academic-adddrop-inter-session-2028-6-week%E2%80%A6",
+    "startDate": "2028-05-14",
+    "endDate": "2028-05-14",
+    "dateText": "May 14th, 2028"
+  },
+  {
+    "title": "Academic Add/Drop for Full Summer 2028 (12 week)….",
+    "url": "https://www.uwindsor.ca/registrar/4308/academic-adddrop-full-summer-2028-12-week%E2%80%A6",
+    "startDate": "2028-05-21",
+    "endDate": "2028-05-21",
+    "dateText": "May 21st, 2028"
+  },
+  {
+    "title": "Victoria Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4302/victoria-day-university-closed",
+    "startDate": "2028-05-22",
+    "endDate": "2028-05-22",
+    "dateText": "May 22nd, 2028"
+  },
+  {
+    "title": "Last Day to Voluntarily Withdraw from Inter-Session 2028 (6 week) courses",
+    "url": "https://www.uwindsor.ca/registrar/4310/last-day-voluntarily-withdraw-inter-session-2028-6-week-courses",
+    "startDate": "2028-06-05",
+    "endDate": "2028-06-05",
+    "dateText": "Jun 5th, 2028"
+  },
+  {
+    "title": "Spring 2028 Convocation (June 6 - 9)",
+    "url": "https://www.uwindsor.ca/registrar/4296/spring-2028-convocation-june-6-9",
+    "startDate": "2028-06-06",
+    "endDate": "2028-06-09",
+    "dateText": "Jun 6th, 2028 to Jun 9th, 2028"
+  },
+  {
+    "title": "Reading Week for Full Summer 2028 (12 week) courses: Jun 17 - 25",
+    "url": "https://www.uwindsor.ca/registrar/4313/reading-week-full-summer-2028-12-week-courses-jun-17-25",
+    "startDate": "2028-06-17",
+    "endDate": "2028-06-25",
+    "dateText": "Jun 17th, 2028 to Jun 25th, 2028"
+  },
+  {
+    "title": "Last Day of Inter-Session 2028 (6 week) Classes",
+    "url": "https://www.uwindsor.ca/registrar/4314/last-day-inter-session-2028-6-week-classes",
+    "startDate": "2028-06-19",
+    "endDate": "2028-06-19",
+    "dateText": "Jun 19th, 2028"
+  },
+  {
+    "title": "Pre-examination study Day (Jun 20-21) - Intersession 6-wk",
+    "url": "https://www.uwindsor.ca/registrar/4319/pre-examination-study-day-jun-20-21-intersession-6-wk",
+    "startDate": "2028-06-20",
+    "endDate": "2028-06-21",
+    "dateText": "Jun 20th, 2028 to Jun 21st, 2028"
+  },
+  {
+    "title": "Final Exams for Inter-Session 2028 (6 week): June 22 - 24 (excl Sunday)",
+    "url": "https://www.uwindsor.ca/registrar/4321/final-exams-inter-session-2028-6-week-june-22-24-excl-sunday",
+    "startDate": "2028-06-22",
+    "endDate": "2028-06-24",
+    "dateText": "Jun 22nd, 2028 to Jun 24th, 2028"
+  },
+  {
+    "title": "First Day of Classes: Summer 2028 Session (6 week)",
+    "url": "https://www.uwindsor.ca/registrar/4306/first-day-classes-summer-2028-session-6-week",
+    "startDate": "2028-06-26",
+    "endDate": "2028-06-26",
+    "dateText": "Jun 26th, 2028"
+  },
+  {
+    "title": "Canada Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4303/canada-day-university-closed",
+    "startDate": "2028-06-30",
+    "endDate": "2028-06-30",
+    "dateText": "Jun 30th, 2028"
+  },
+  {
+    "title": "Academic Add/Drop for Summer 2028 (6 week)...",
+    "url": "https://www.uwindsor.ca/registrar/4309/academic-adddrop-summer-2028-6-week",
+    "startDate": "2028-07-03",
+    "endDate": "2028-07-03",
+    "dateText": "Jul 3rd, 2028"
+  },
+  {
+    "title": "Last Day to Voluntary Withdrawal from for Full Summer 2028 (12 week)…...",
+    "url": "https://www.uwindsor.ca/registrar/4311/last-day-voluntary-withdrawal-full-summer-2028-12-week%E2%80%A6",
+    "startDate": "2028-07-18",
+    "endDate": "2028-07-18",
+    "dateText": "Jul 18th, 2028"
+  },
+  {
+    "title": "Last Day to Voluntarily Withdraw from Summer Session 2028 (6 week) courses",
+    "url": "https://www.uwindsor.ca/registrar/4312/last-day-voluntarily-withdraw-summer-session-2028-6-week-courses",
+    "startDate": "2028-07-24",
+    "endDate": "2028-07-24",
+    "dateText": "Jul 24th, 2028"
+  },
+  {
+    "title": "Civic Holiday: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4304/civic-holiday-university-closed",
+    "startDate": "2028-08-07",
+    "endDate": "2028-08-07",
+    "dateText": "Aug 7th, 2028"
+  },
+  {
+    "title": "Last Day of Summer Session 2028 (6 week) Classes",
+    "url": "https://www.uwindsor.ca/registrar/4316/last-day-summer-session-2028-6-week-classes",
+    "startDate": "2028-08-08",
+    "endDate": "2028-08-08",
+    "dateText": "Aug 8th, 2028"
+  },
+  {
+    "title": "Make up date for Canada Day Classes",
+    "url": "https://www.uwindsor.ca/registrar/4318/make-date-canada-day-classes",
+    "startDate": "2028-08-08",
+    "endDate": "2028-08-08",
+    "dateText": "Aug 8th, 2028"
+  },
+  {
+    "title": "Last Day of Full Summer 2028 (12 week) Classes",
+    "url": "https://www.uwindsor.ca/registrar/4315/last-day-full-summer-2028-12-week-classes",
+    "startDate": "2028-08-09",
+    "endDate": "2028-08-09",
+    "dateText": "Aug 9th, 2028"
+  },
+  {
+    "title": "Make up date for Victoria Day Holiday Classes (for 12 wk)…",
+    "url": "https://www.uwindsor.ca/registrar/4317/make-date-victoria-day-holiday-classes-12-wk%E2%80%A6",
+    "startDate": "2028-08-09",
+    "endDate": "2028-08-09",
+    "dateText": "Aug 9th, 2028"
+  },
+  {
+    "title": "Pre-examination study Day (Aug 10 - 11) - Full 12 wk & Summer 6 wk",
+    "url": "https://www.uwindsor.ca/registrar/4320/pre-examination-study-day-aug-10-11-full-12-wk-summer-6-wk",
+    "startDate": "2028-08-10",
+    "endDate": "2028-08-11",
+    "dateText": "Aug 10th, 2028 to Aug 11th, 2028"
+  },
+  {
+    "title": "Final Exams for Full Summer 2028 (12 week) and Summer (6 week) Session: Aug 12 - 23",
+    "url": "https://www.uwindsor.ca/registrar/4322/final-exams-full-summer-2028-12-week-and-summer-6-week-session-aug-12-23",
+    "startDate": "2028-08-12",
+    "endDate": "2028-08-23",
+    "dateText": "Aug 12th, 2028 to Aug 23rd, 2028"
+  },
+  {
+    "title": "Alternate Final Exam Day",
+    "url": "https://www.uwindsor.ca/registrar/4323/alternate-final-exam-day",
+    "startDate": "2028-08-24",
+    "endDate": "2028-08-24",
+    "dateText": "Aug 24th, 2028"
+  },
+  {
+    "title": "Labour Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4325/labour-day-university-closed",
+    "startDate": "2028-09-04",
+    "endDate": "2028-09-04",
+    "dateText": "Sep 4th, 2028"
+  },
+  {
+    "title": "First Day of Fall 2028 Classes (excl. Law & Consecutive Ed)",
+    "url": "https://www.uwindsor.ca/registrar/4328/first-day-fall-2028-classes-excl-law-consecutive-ed",
+    "startDate": "2028-09-07",
+    "endDate": "2028-09-07",
+    "dateText": "Sep 7th, 2028"
+  },
+  {
+    "title": "Academic Add/Drop for Fall 2028.....",
+    "url": "https://www.uwindsor.ca/registrar/4329/academic-adddrop-fall-2028",
+    "startDate": "2028-09-20",
+    "endDate": "2028-09-20",
+    "dateText": "Sep 20th, 2028"
+  },
+  {
+    "title": "Reading Week (Oct 7 - 15), excl. Law",
+    "url": "https://www.uwindsor.ca/registrar/4332/reading-week-oct-7-15-excl-law",
+    "startDate": "2028-10-07",
+    "endDate": "2028-10-15",
+    "dateText": "Oct 7th, 2028 to Oct 15th, 2028"
+  },
+  {
+    "title": "Thanksgiving Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4326/thanksgiving-day-university-closed",
+    "startDate": "2028-10-09",
+    "endDate": "2028-10-09",
+    "dateText": "Oct 9th, 2028"
+  },
+  {
+    "title": "Fall 2028 Convocation (Oct 12 - 13)",
+    "url": "https://www.uwindsor.ca/registrar/4331/fall-2028-convocation-oct-12-13",
+    "startDate": "2028-10-12",
+    "endDate": "2028-10-13",
+    "dateText": "Oct 12th, 2028 to Oct 13th, 2028"
+  },
+  {
+    "title": "Voluntary Withdrawal date for Fall 2028 courses…...",
+    "url": "https://www.uwindsor.ca/registrar/4330/voluntary-withdrawal-date-fall-2028-courses%E2%80%A6",
+    "startDate": "2028-11-15",
+    "endDate": "2028-11-15",
+    "dateText": "Nov 15th, 2028"
+  },
+  {
+    "title": "Last Day of Fall 2028 Classes (excl. Law and Education)",
+    "url": "https://www.uwindsor.ca/registrar/4333/last-day-fall-2028-classes-excl-law-and-education",
+    "startDate": "2028-12-06",
+    "endDate": "2028-12-06",
+    "dateText": "Dec 6th, 2028"
+  },
+  {
+    "title": "Pre-examination study Day (Dec 7-8)",
+    "url": "https://www.uwindsor.ca/registrar/4334/pre-examination-study-day-dec-7-8",
+    "startDate": "2028-12-07",
+    "endDate": "2028-12-08",
+    "dateText": "Dec 7th, 2028 to Dec 8th, 2028"
+  },
+  {
+    "title": "Final Exams for Fall 2028 (Dec 9-20), excl. Law and Education (excl Sundays)",
+    "url": "https://www.uwindsor.ca/registrar/4335/final-exams-fall-2028-dec-9-20-excl-law-and-education-excl-sundays",
+    "startDate": "2028-12-09",
+    "endDate": "2028-12-20",
+    "dateText": "Dec 9th, 2028 to Dec 20th, 2028"
+  },
+  {
+    "title": "Alternate Final Exam Day",
+    "url": "https://www.uwindsor.ca/registrar/4336/alternate-final-exam-day",
+    "startDate": "2028-12-21",
+    "endDate": "2028-12-21",
+    "dateText": "Dec 21st, 2028"
+  },
+  {
+    "title": "University Offices re-open after Holiday Break",
+    "url": "https://www.uwindsor.ca/registrar/4337/university-offices-re-open-after-holiday-break",
+    "startDate": "2029-01-02",
+    "endDate": "2029-01-02",
+    "dateText": "Jan 2nd, 2029"
+  },
+  {
+    "title": "First Day of Winter 2029 Classes",
+    "url": "https://www.uwindsor.ca/registrar/4341/first-day-winter-2029-classes",
+    "startDate": "2029-01-04",
+    "endDate": "2029-01-04",
+    "dateText": "Jan 4th, 2029"
+  },
+  {
+    "title": "Academic Add/Drop for Winter 2029…..",
+    "url": "https://www.uwindsor.ca/registrar/4342/academic-adddrop-winter-2029%E2%80%A6",
+    "startDate": "2029-01-17",
+    "endDate": "2029-01-17",
+    "dateText": "Jan 17th, 2029"
+  },
+  {
+    "title": "Reading Week (Feb 17 - 25)",
+    "url": "https://www.uwindsor.ca/registrar/4345/reading-week-feb-17-25",
+    "startDate": "2029-02-17",
+    "endDate": "2029-02-25",
+    "dateText": "Feb 17th, 2029 to Feb 25th, 2029"
+  },
+  {
+    "title": "Family Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4338/family-day-university-closed",
+    "startDate": "2029-02-19",
+    "endDate": "2029-02-19",
+    "dateText": "Feb 19th, 2029"
+  },
+  {
+    "title": "University Offices Closed",
+    "url": "https://www.uwindsor.ca/registrar/4339/university-offices-closed",
+    "startDate": "2029-02-23",
+    "endDate": "2029-02-23",
+    "dateText": "Feb 23rd, 2029"
+  },
+  {
+    "title": "Last Day to Voluntarily Withdraw from Winter 2029 courses...",
+    "url": "https://www.uwindsor.ca/registrar/4343/last-day-voluntarily-withdraw-winter-2029-courses",
+    "startDate": "2029-03-14",
+    "endDate": "2029-03-14",
+    "dateText": "Mar 14th, 2029"
+  },
+  {
+    "title": "Good Friday: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4340/good-friday-university-closed",
+    "startDate": "2029-03-30",
+    "endDate": "2029-03-30",
+    "dateText": "Mar 30th, 2029"
+  },
+  {
+    "title": "Last Day of Winter 2029 Classes (excl. Law and Education)",
+    "url": "https://www.uwindsor.ca/registrar/4346/last-day-winter-2029-classes-excl-law-and-education",
+    "startDate": "2029-04-05",
+    "endDate": "2029-04-05",
+    "dateText": "Apr 5th, 2029"
+  },
+  {
+    "title": "Make up date for classes missed due to Good Friday Holiday...",
+    "url": "https://www.uwindsor.ca/registrar/4347/make-date-only-classes-missed-due-good-friday-holiday",
+    "startDate": "2029-04-05",
+    "endDate": "2029-04-05",
+    "dateText": "Apr 5th, 2029"
+  },
+  {
+    "title": "Pre-Exam Study Day (Apr 6 - 7)",
+    "url": "https://www.uwindsor.ca/registrar/4348/pre-exam-study-day-apr-6-7",
+    "startDate": "2029-04-06",
+    "endDate": "2029-04-07",
+    "dateText": "Apr 6th, 2029 to Apr 7th, 2029"
+  },
+  {
+    "title": "Final Exams for Winter 2029 (Apr 9 - 19), excl. Law & EDUC (excl Sundays)",
+    "url": "https://www.uwindsor.ca/registrar/4349/final-exams-winter-2029-apr-9-19-excl-law-educ-excl-sundays",
+    "startDate": "2029-04-09",
+    "endDate": "2029-04-19",
+    "dateText": "Apr 9th, 2029 to Apr 19th, 2029"
+  },
+  {
+    "title": "Alternate Final Exam Day",
+    "url": "https://www.uwindsor.ca/registrar/4350/alternate-final-exam-day",
+    "startDate": "2029-04-20",
+    "endDate": "2029-04-20",
+    "dateText": "Apr 20th, 2029"
+  },
+  {
+    "title": "First Day of Classes: Full Summer (12wk) and Inter-Session (6wk) 2029",
+    "url": "https://www.uwindsor.ca/registrar/4354/first-day-classes-full-summer-12-week-and-inter-session-6-week-2029",
+    "startDate": "2029-05-07",
+    "endDate": "2029-05-07",
+    "dateText": "May 7th, 2029"
+  },
+  {
+    "title": "Academic Add/Drop for Inter-Session 2029 (6wk)…",
+    "url": "https://www.uwindsor.ca/registrar/4356/academic-adddrop-inter-session-2029-6-week%E2%80%A6",
+    "startDate": "2029-05-13",
+    "endDate": "2029-05-13",
+    "dateText": "May 13th, 2029"
+  },
+  {
+    "title": "Academic Add/Drop for Full Summer 2029 (12wk)….",
+    "url": "https://www.uwindsor.ca/registrar/4357/academic-adddrop-full-summer-2029-12-week%E2%80%A6",
+    "startDate": "2029-05-20",
+    "endDate": "2029-05-20",
+    "dateText": "May 20th, 2029"
+  },
+  {
+    "title": "Victoria Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4351/victoria-day-university-closed",
+    "startDate": "2029-05-21",
+    "endDate": "2029-05-21",
+    "dateText": "May 21st, 2029"
+  },
+  {
+    "title": "Last Day to Voluntarily Withdraw from Inter-Session 2029 (6wk) courses",
+    "url": "https://www.uwindsor.ca/registrar/4359/last-day-voluntarily-withdraw-inter-session-2029-6-week-courses",
+    "startDate": "2029-06-04",
+    "endDate": "2029-06-04",
+    "dateText": "Jun 4th, 2029"
+  },
+  {
+    "title": "Spring 2029 Convocation (June 5 - 8)...",
+    "url": "https://www.uwindsor.ca/registrar/4344/spring-2029-convocation-june-5-8",
+    "startDate": "2029-06-05",
+    "endDate": "2029-06-08",
+    "dateText": "Jun 5th, 2029 to Jun 8th, 2029"
+  },
+  {
+    "title": "Reading Week for Full Summer (12wk) 2029 courses: Jun 16 - 24",
+    "url": "https://www.uwindsor.ca/registrar/4362/reading-week-full-summer-2029-12-week-courses-jun-16-24",
+    "startDate": "2029-06-16",
+    "endDate": "2029-06-24",
+    "dateText": "Jun 16th, 2029 to Jun 24th, 2029"
+  },
+  {
+    "title": "Last Day of Inter-Session 2029 (6wk) Classes",
+    "url": "https://www.uwindsor.ca/registrar/4363/last-day-inter-session-2029-6-week-classes",
+    "startDate": "2029-06-18",
+    "endDate": "2029-06-18",
+    "dateText": "Jun 18th, 2029"
+  },
+  {
+    "title": "Pre-examination study Day (Jun 19-20) - Intersession 6-wk",
+    "url": "https://www.uwindsor.ca/registrar/4368/pre-examination-study-day-jun-19-20-intersession-6-wk",
+    "startDate": "2029-06-19",
+    "endDate": "2029-06-20",
+    "dateText": "Jun 19th, 2029 to Jun 20th, 2029"
+  },
+  {
+    "title": "Final Exams for Inter-Session 2029 (6wk): June 21-23 (excl Sunday)",
+    "url": "https://www.uwindsor.ca/registrar/4370/final-exams-inter-session-2029-6-week-june-21-23-excl-sunday",
+    "startDate": "2029-06-21",
+    "endDate": "2029-06-23",
+    "dateText": "Jun 21st, 2029 to Jun 23rd, 2029"
+  },
+  {
+    "title": "First Day of Classes: Summer 2029 Session (6wk)",
+    "url": "https://www.uwindsor.ca/registrar/4355/first-day-classes-summer-2029-session-6-week",
+    "startDate": "2029-06-25",
+    "endDate": "2029-06-25",
+    "dateText": "Jun 25th, 2029"
+  },
+  {
+    "title": "Academic Add/Drop for Summer 2029 (6 week)...",
+    "url": "https://www.uwindsor.ca/registrar/4358/academic-adddrop-summer-2029-6-week",
+    "startDate": "2029-07-01",
+    "endDate": "2029-07-01",
+    "dateText": "Jul 1st, 2029"
+  },
+  {
+    "title": "Canada Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4352/canada-day-university-closed",
+    "startDate": "2029-07-02",
+    "endDate": "2029-07-02",
+    "dateText": "Jul 2nd, 2029"
+  },
+  {
+    "title": "Last Day to Voluntary Withdrawal from for Full Summer 2029 (12wk)…...",
+    "url": "https://www.uwindsor.ca/registrar/4360/last-day-voluntary-withdrawal-full-summer-2029-12-week%E2%80%A6",
+    "startDate": "2029-07-17",
+    "endDate": "2029-07-17",
+    "dateText": "Jul 17th, 2029"
+  },
+  {
+    "title": "Last Day to Voluntarily Withdraw from Summer 2029 (6wk) courses",
+    "url": "https://www.uwindsor.ca/registrar/4361/last-day-voluntarily-withdraw-summer-session-2029-6-week-courses",
+    "startDate": "2029-07-23",
+    "endDate": "2029-07-23",
+    "dateText": "Jul 23rd, 2029"
+  },
+  {
+    "title": "Civic Holiday: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4353/civic-holiday-university-closed",
+    "startDate": "2029-08-06",
+    "endDate": "2029-08-06",
+    "dateText": "Aug 6th, 2029"
+  },
+  {
+    "title": "Last Day of Summer 2029 (6wk) Classes",
+    "url": "https://www.uwindsor.ca/registrar/4365/last-day-summer-session-2029-6-week-classes",
+    "startDate": "2029-08-07",
+    "endDate": "2029-08-07",
+    "dateText": "Aug 7th, 2029"
+  },
+  {
+    "title": "Make up date for Canada Day Classes",
+    "url": "https://www.uwindsor.ca/registrar/4367/make-date-canada-day-classes",
+    "startDate": "2029-08-07",
+    "endDate": "2029-08-07",
+    "dateText": "Aug 7th, 2029"
+  },
+  {
+    "title": "Last Day of Full Summer 2029 (12wk) Classes",
+    "url": "https://www.uwindsor.ca/registrar/4364/last-day-full-summer-2029-12-week-classes",
+    "startDate": "2029-08-08",
+    "endDate": "2029-08-08",
+    "dateText": "Aug 8th, 2029"
+  },
+  {
+    "title": "Make up date for Victoria Day Holiday Classes (for 12 wk)…",
+    "url": "https://www.uwindsor.ca/registrar/4366/make-date-victoria-day-holiday-classes-12-wk%E2%80%A6",
+    "startDate": "2029-08-08",
+    "endDate": "2029-08-08",
+    "dateText": "Aug 8th, 2029"
+  },
+  {
+    "title": "Pre-examination study Day (Aug 9 - 10) - Full 12 wk & Summer 6 wk",
+    "url": "https://www.uwindsor.ca/registrar/4369/pre-examination-study-day-aug-9-10-full-12-wk-summer-6-wk",
+    "startDate": "2029-08-09",
+    "endDate": "2029-08-10",
+    "dateText": "Aug 9th, 2029 to Aug 10th, 2029"
+  },
+  {
+    "title": "Final Exams for Full Summer (12wk) and Summer (6wk) 2029: Aug 11 - 22",
+    "url": "https://www.uwindsor.ca/registrar/4371/final-exams-full-summer-12wk-and-summer-6wk-2029-aug-11-22",
+    "startDate": "2029-08-11",
+    "endDate": "2029-08-22",
+    "dateText": "Aug 11th, 2029 to Aug 22nd, 2029"
+  },
+  {
+    "title": "Alternate Final Exam Day",
+    "url": "https://www.uwindsor.ca/registrar/4372/alternate-final-exam-day",
+    "startDate": "2029-08-23",
+    "endDate": "2029-08-23",
+    "dateText": "Aug 23rd, 2029"
+  },
+  {
+    "title": "Labour Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4374/labour-day-university-closed",
+    "startDate": "2029-09-03",
+    "endDate": "2029-09-03",
+    "dateText": "Sep 3rd, 2029"
+  },
+  {
+    "title": "First Day of Fall 2029 Classes (excl. Law & Consecutive Ed)",
+    "url": "https://www.uwindsor.ca/registrar/4376/first-day-fall-2029-classes-excl-law-consecutive-ed",
+    "startDate": "2029-09-06",
+    "endDate": "2029-09-06",
+    "dateText": "Sep 6th, 2029"
+  },
+  {
+    "title": "Academic Add/Drop for Fall 2029.....",
+    "url": "https://www.uwindsor.ca/registrar/4377/academic-adddrop-fall-2029",
+    "startDate": "2029-09-19",
+    "endDate": "2029-09-19",
+    "dateText": "Sep 19th, 2029"
+  },
+  {
+    "title": "Reading Week (Oct 6 - 14), excl. Law",
+    "url": "https://www.uwindsor.ca/registrar/4380/reading-week-oct-6-14-excl-law",
+    "startDate": "2029-10-06",
+    "endDate": "2029-10-14",
+    "dateText": "Oct 6th, 2029 to Oct 14th, 2029"
+  },
+  {
+    "title": "Thanksgiving Day: University Closed",
+    "url": "https://www.uwindsor.ca/registrar/4375/thanksgiving-day-university-closed",
+    "startDate": "2029-10-08",
+    "endDate": "2029-10-08",
+    "dateText": "Oct 8th, 2029"
+  },
+  {
+    "title": "Fall 2029 Convocation (Oct 11 - 12)",
+    "url": "https://www.uwindsor.ca/registrar/4379/fall-2029-convocation-oct-11-12",
+    "startDate": "2029-10-11",
+    "endDate": "2029-10-12",
+    "dateText": "Oct 11th, 2029 to Oct 12th, 2029"
+  },
+  {
+    "title": "Voluntary Withdrawal date for Fall 2029 courses…...",
+    "url": "https://www.uwindsor.ca/registrar/4378/voluntary-withdrawal-date-fall-2029-courses%E2%80%A6",
+    "startDate": "2029-11-14",
+    "endDate": "2029-11-14",
+    "dateText": "Nov 14th, 2029"
+  },
+  {
+    "title": "Last Day of Fall 2029 Classes (excl. Law and Education)",
+    "url": "https://www.uwindsor.ca/registrar/4381/last-day-fall-2029-classes-excl-law-and-education",
+    "startDate": "2029-12-05",
+    "endDate": "2029-12-05",
+    "dateText": "Dec 5th, 2029"
+  },
+  {
+    "title": "Pre-examination study Day (Dec 6 - 7)",
+    "url": "https://www.uwindsor.ca/registrar/4382/pre-examination-study-day-dec-6-7",
+    "startDate": "2029-12-06",
+    "endDate": "2029-12-07",
+    "dateText": "Dec 6th, 2029 to Dec 7th, 2029"
+  },
+  {
+    "title": "Final Exams for Fall 2029 (Dec 8 - 19), excl. Law and Education (excl Sundays)",
+    "url": "https://www.uwindsor.ca/registrar/4383/final-exams-fall-2029-dec-8-19-excl-law-and-education-excl-sundays",
+    "startDate": "2029-12-08",
+    "endDate": "2029-12-19",
+    "dateText": "Dec 8th, 2029 to Dec 19th, 2029"
+  },
+  {
+    "title": "Alternate Final Exam Day",
+    "url": "https://www.uwindsor.ca/registrar/4384/alternate-final-exam-day",
+    "startDate": "2029-12-20",
+    "endDate": "2029-12-20",
+    "dateText": "Dec 20th, 2029"
+  }
+]
+
+        // Application State
+        const state = {
+            events: [],
+            filteredEvents: [],
+            currentView: 'calendar', // 'calendar' or 'list'
+            currentDate: new Date(), // Selected month/year for calendar view
+            selectedCategories: new Set(),
+            searchQuery: '',
+            startYear: 2026,
+            endYear: 2026,
+            hidePast: false,
+            lastUpdated: null,
+            categories: [
+                { id: 'deadlines', name: 'Deadlines & Fees', keywords: ['drop', 'refund', 'withdrawal', 'vw', 'deadline', 'apply', 'fee', 'coop', 'co-op'], color: 'rose', borderClass: 'border-rose-200 bg-rose-50 text-rose-700', badgeClass: 'bg-rose-500 text-white', dotClass: 'bg-rose-500' },
+                { id: 'classes', name: 'Classes & Recesses', keywords: ['class', 'classes', 'make-up', 'makeup', 'study day', 'reading week', 'recess', 'holiday', 'closed', 'labour day', 'thanksgiving', 'christmas', 'new year', 'easter', 're-examination', 'pre-examination'], color: 'emerald', borderClass: 'border-emerald-200 bg-emerald-50 text-emerald-700', badgeClass: 'bg-emerald-500 text-white', dotClass: 'bg-emerald-500' },
+                { id: 'special', name: 'Orientations & Special Programs', keywords: ['orientation', 'law', 'nursing', 'jd', 'transitions'], color: 'blue', borderClass: 'border-blue-200 bg-blue-50 text-blue-700', badgeClass: 'bg-blue-500 text-white', dotClass: 'bg-blue-500' },
+                { id: 'graduate', name: 'Graduate Studies', keywords: ['grad:', 'phd', 'thesis', 'defense', 'dissertation', 'external examiner'], color: 'purple', borderClass: 'border-purple-300 bg-purple-100/95 text-purple-800 font-semibold', badgeClass: 'bg-purple-600 text-white', dotClass: 'bg-purple-600' },
+                { id: 'general', name: 'General Academic', keywords: [], color: 'slate', borderClass: 'border-slate-200 bg-slate-50 text-slate-700', badgeClass: 'bg-slate-500 text-white', dotClass: 'bg-slate-500' }
+            ]
+        };
+
+        // Determine event category based on title keywords
+        function getEventCategory(event) {
+            const titleLower = event.title.toLowerCase();
+            for (const cat of state.categories) {
+                if (cat.id === 'general') continue; // reserve general as fallback
+                if (cat.keywords.some(kw => titleLower.includes(kw))) {
+                    return cat;
+                }
+            }
+            return state.categories.find(c => c.id === 'general');
+        }
+
+        const breakKeywords = [
+            'break', 'recess', 'holiday', 'closed', 'study day', 'reading week', 
+            'study week', 'vacation', 'christmas', 'new year', 'thanksgiving', 
+            'easter', 'good friday', 'labour day', 'canada day', 'civic holiday', 
+            'victoria day', 'family day'
+        ];
+
+        function isBreakEvent(event) {
+            const titleLower = event.title.toLowerCase();
+            // Exclude make-up dates as classes are held on those days
+            if (titleLower.includes('make-up') || titleLower.includes('makeup') || titleLower.includes('make up')) {
+                return false;
+            }
+            return breakKeywords.some(kw => titleLower.includes(kw));
+        }
+
+        // Helper to format Date string to text (e.g. "Aug 21st, 2026")
+        function formatDisplayDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr + 'T12:00:00');
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const m = months[d.getMonth()];
+            const day = d.getDate();
+            const year = d.getFullYear();
+            
+            let suffix = 'th';
+            if (day === 1 || day === 21 || day === 31) suffix = 'st';
+            else if (day === 2 || day === 22) suffix = 'nd';
+            else if (day === 3 || day === 23) suffix = 'rd';
+            
+            return `${m} ${day}${suffix}, ${year}`;
+        }
+
+        // Generate gaps between semesters dynamically
+        function generateSemesterBreaks(events) {
+            const breaks = [];
+            const years = new Set();
+            events.forEach(evt => {
+                if (evt.startDate) {
+                    const y = parseInt(evt.startDate.split('-')[0]);
+                    if (y) years.add(y);
+                }
+            });
+
+            const sortedYears = Array.from(years).sort((a, b) => a - b);
+
+            sortedYears.forEach(year => {
+                // 1. Summer to Fall
+                const summerExams = events.find(e => 
+                    e.startDate.startsWith(`${year}-08`) && 
+                    e.title.toLowerCase().includes('final exam') && 
+                    (e.title.toLowerCase().includes('summer') || e.title.toLowerCase().includes('12 week'))
+                );
+                const fallClasses = events.find(e => 
+                    e.startDate.startsWith(`${year}-09`) && 
+                    e.title.toLowerCase().includes('first day') && 
+                    e.title.toLowerCase().includes('fall') &&
+                    e.title.toLowerCase().includes('classes')
+                );
+
+                if (summerExams && fallClasses) {
+                    const altExam = events.find(e => 
+                        e.startDate.startsWith(`${year}-08`) && 
+                        e.title.toLowerCase().includes('alternate final exam')
+                    );
+                    const examEndStr = altExam ? altExam.endDate : summerExams.endDate;
+                    
+                    const dStart = new Date(examEndStr + 'T12:00:00');
+                    dStart.setDate(dStart.getDate() + 1);
+                    const gapStartStr = dStart.toISOString().split('T')[0];
+
+                    const dEnd = new Date(fallClasses.startDate + 'T12:00:00');
+                    dEnd.setDate(dEnd.getDate() - 1);
+                    const gapEndStr = dEnd.toISOString().split('T')[0];
+
+                    if (gapStartStr <= gapEndStr) {
+                        breaks.push({
+                            title: `Summer-to-Fall Academic Break (Between Semesters)`,
+                            url: 'https://www.uwindsor.ca/registrar/events-listing',
+                            startDate: gapStartStr,
+                            endDate: gapEndStr,
+                            dateText: `${formatDisplayDate(gapStartStr)} to ${formatDisplayDate(gapEndStr)}`
+                        });
+                    }
+                }
+
+                // 2. Fall to Winter
+                const fallExams = events.find(e => 
+                    e.startDate.startsWith(`${year}-12`) && 
+                    e.title.toLowerCase().includes('final exam') && 
+                    e.title.toLowerCase().includes('fall')
+                );
+                const winterClasses = events.find(e => 
+                    e.startDate.startsWith(`${year + 1}-01`) && 
+                    e.title.toLowerCase().includes('first day') && 
+                    e.title.toLowerCase().includes('winter') &&
+                    e.title.toLowerCase().includes('classes')
+                );
+
+                if (fallExams && winterClasses) {
+                    const altExam = events.find(e => 
+                        e.startDate.startsWith(`${year}-12`) && 
+                        e.title.toLowerCase().includes('alternate final exam')
+                    );
+                    const examEndStr = altExam ? altExam.endDate : fallExams.endDate;
+                    
+                    const dStart = new Date(examEndStr + 'T12:00:00');
+                    dStart.setDate(dStart.getDate() + 1);
+                    const gapStartStr = dStart.toISOString().split('T')[0];
+
+                    const dEnd = new Date(winterClasses.startDate + 'T12:00:00');
+                    dEnd.setDate(dEnd.getDate() - 1);
+                    const gapEndStr = dEnd.toISOString().split('T')[0];
+
+                    if (gapStartStr <= gapEndStr) {
+                        breaks.push({
+                            title: `Fall-to-Winter Academic Break (Winter Recess & Between Semesters)`,
+                            url: 'https://www.uwindsor.ca/registrar/events-listing',
+                            startDate: gapStartStr,
+                            endDate: gapEndStr,
+                            dateText: `${formatDisplayDate(gapStartStr)} to ${formatDisplayDate(gapEndStr)}`
+                        });
+                    }
+                }
+
+                // 3. Winter to Summer
+                const winterExams = events.find(e => 
+                    e.startDate.startsWith(`${year}-04`) && 
+                    e.title.toLowerCase().includes('final exam') && 
+                    e.title.toLowerCase().includes('winter')
+                );
+                const summerClasses = events.find(e => 
+                    e.startDate.startsWith(`${year}-05`) && 
+                    (e.title.toLowerCase().includes('first day of classes') || e.title.toLowerCase().includes('classes start')) && 
+                    e.title.toLowerCase().includes('summer')
+                );
+
+                if (winterExams && summerClasses) {
+                    const altExam = events.find(e => 
+                        e.startDate.startsWith(`${year}-04`) && 
+                        e.title.toLowerCase().includes('alternate final exam')
+                    );
+                    const examEndStr = altExam ? altExam.endDate : winterExams.endDate;
+                    
+                    const dStart = new Date(examEndStr + 'T12:00:00');
+                    dStart.setDate(dStart.getDate() + 1);
+                    const gapStartStr = dStart.toISOString().split('T')[0];
+
+                    const dEnd = new Date(summerClasses.startDate + 'T12:00:00');
+                    dEnd.setDate(dEnd.getDate() - 1);
+                    const gapEndStr = dEnd.toISOString().split('T')[0];
+
+                    if (gapStartStr <= gapEndStr) {
+                        breaks.push({
+                            title: `Winter-to-Summer Academic Break (Between Semesters)`,
+                            url: 'https://www.uwindsor.ca/registrar/events-listing',
+                            startDate: gapStartStr,
+                            endDate: gapEndStr,
+                            dateText: `${formatDisplayDate(gapStartStr)} to ${formatDisplayDate(gapEndStr)}`
+                        });
+                    }
+                }
+            });
+
+            return breaks;
+        }
+
+        // Initialize state
+        function initApp() {
+            // 1. Try loading events from localStorage
+            const savedEvents = localStorage.getItem('uwindsor_academic_events');
+            const savedTime = localStorage.getItem('uwindsor_academic_events_updated');
+            
+            if (savedEvents) {
+                try {
+                    const loaded = JSON.parse(savedEvents);
+                    // Smart merge: Add any pre-loaded events that don't exist in localStorage
+                    const loadedKeys = new Set(loaded.map(e => `${e.title}-${e.startDate}`));
+                    let mergedCount = 0;
+                    window.SCRAPED_EVENTS.forEach(pe => {
+                        const key = `${pe.title}-${pe.startDate}`;
+                        if (!loadedKeys.has(key)) {
+                            loaded.push(pe);
+                            mergedCount++;
+                        }
+                    });
+                    state.events = loaded;
+                    state.lastUpdated = savedTime;
+                    if (mergedCount > 0) {
+                        state.events.sort((a, b) => a.startDate.localeCompare(b.startDate));
+                        localStorage.setItem('uwindsor_academic_events', JSON.stringify(state.events));
+                    }
+                } catch(e) {
+                    console.error('Error parsing stored events:', e);
+                    state.events = [...window.SCRAPED_EVENTS];
+                    state.lastUpdated = "Pre-loaded";
+                }
+            } else {
+                state.events = [...window.SCRAPED_EVENTS];
+                state.lastUpdated = "Pre-loaded";
+            }
+
+            // Generate and merge gaps between semesters as break events
+            const generatedBreaks = generateSemesterBreaks(state.events);
+            state.events = state.events.concat(generatedBreaks);
+            state.events.sort((a, b) => a.startDate.localeCompare(b.startDate));
+
+            // 2. Set categories Set (all selected by default)
+            state.categories.forEach(cat => state.selectedCategories.add(cat.id));
+
+            // 3. Extract years from events to populate range filters
+            const years = new Set();
+            // Default fallbacks in case list is empty
+            years.add(2026);
+            years.add(2027);
+            state.events.forEach(evt => {
+                if (evt.startDate) {
+                    const yStart = parseInt(evt.startDate.split('-')[0]);
+                    if (yStart) years.add(yStart);
+                }
+            });
+            const sortedYears = Array.from(years).sort((a, b) => a - b);
+            
+            const startSel = document.getElementById('startYearFilter');
+            const endSel = document.getElementById('endYearFilter');
+            startSel.innerHTML = '';
+            endSel.innerHTML = '';
+            
+            sortedYears.forEach(y => {
+                const opt1 = document.createElement('option');
+                opt1.value = y;
+                opt1.textContent = y;
+                const opt2 = document.createElement('option');
+                opt2.value = y;
+                opt2.textContent = y;
+                startSel.appendChild(opt1);
+                endSel.appendChild(opt2);
+            });
+
+            // Set default year selections based on database range
+            const todayYear = new Date().getFullYear();
+            state.startYear = sortedYears.includes(todayYear) ? todayYear : sortedYears[0];
+            state.endYear = sortedYears[sortedYears.length - 1];
+            
+            startSel.value = state.startYear;
+            endSel.value = state.endYear;
+
+            // Set current calendar date
+            state.currentDate = new Date();
+
+            // 4. Render category checkboxes
+            renderCategoryFilters();
+
+            // 5. Run filter and render views
+            applyFilters();
+            renderViews();
+            
+            // Re-render Lucide icons
+            lucide.createIcons();
+        }
+
+        // Render Sidebar Category Checkboxes with dynamic counts
+        function renderCategoryFilters() {
+            const listDiv = document.getElementById('categoryFiltersList');
+            listDiv.innerHTML = '';
+
+            // Calculate counts for each category in current filter context
+            const counts = {};
+            state.categories.forEach(c => counts[c.id] = 0);
+            
+            // Count matching items
+            const showOnlyBreaks = state.currentView === 'breaks';
+            state.events.forEach(evt => {
+                if (showOnlyBreaks && !isBreakEvent(evt)) return;
+                const cat = getEventCategory(evt);
+                counts[cat.id]++;
+            });
+
+            state.categories.forEach(cat => {
+                const isChecked = state.selectedCategories.has(cat.id);
+                const count = counts[cat.id] || 0;
+                
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between text-xs py-0.5 hover:bg-gray-50 rounded px-1 transition-colors';
+                item.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="cat-chk-${cat.id}" ${isChecked ? 'checked' : ''} 
+                            onchange="toggleCategory('${cat.id}')"
+                            class="rounded text-brand-600 focus:ring-brand-500 h-4 w-4 cursor-pointer">
+                        <span class="w-2.5 h-2.5 rounded-full ${cat.dotClass} flex-shrink-0"></span>
+                        <label for="cat-chk-${cat.id}" class="text-gray-700 font-medium select-none cursor-pointer">${cat.name}</label>
+                    </div>
+                    <span class="text-[10px] font-semibold px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-md">${count}</span>
+                `;
+                listDiv.appendChild(item);
+            });
+        }
+
+        // Toggle category filter
+        function toggleCategory(catId) {
+            if (state.selectedCategories.has(catId)) {
+                state.selectedCategories.delete(catId);
+            } else {
+                state.selectedCategories.add(catId);
+            }
+            applyFilters();
+            renderViews();
+        }
+
+        // Select/Deselect All Categories
+        function toggleAllCategories(selectAll) {
+            state.selectedCategories.clear();
+            if (selectAll) {
+                state.categories.forEach(cat => state.selectedCategories.add(cat.id));
+            }
+            // Update checkbox UI
+            state.categories.forEach(cat => {
+                const chk = document.getElementById(`cat-chk-${cat.id}`);
+                if (chk) chk.checked = selectAll;
+            });
+            applyFilters();
+            renderViews();
+        }
+
+        // Apply filters (search, categories, date ranges)
+        function applyFilters() {
+            state.searchQuery = document.getElementById('eventSearch').value.toLowerCase().trim();
+            state.startYear = parseInt(document.getElementById('startYearFilter').value);
+            state.endYear = parseInt(document.getElementById('endYearFilter').value);
+            state.hidePast = document.getElementById('hidePastEvents').checked;
+
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            state.filteredEvents = state.events.filter(evt => {
+                // Category Filter
+                const cat = getEventCategory(evt);
+                if (!state.selectedCategories.has(cat.id)) return false;
+
+                // Search query filter
+                if (state.searchQuery && !evt.title.toLowerCase().includes(state.searchQuery)) return false;
+
+                // Year Range Filter
+                if (evt.startDate) {
+                    const evtYear = parseInt(evt.startDate.split('-')[0]);
+                    if (evtYear < state.startYear || evtYear > state.endYear) return false;
+                }
+
+                // Hide Past Events Filter
+                if (state.hidePast && evt.endDate && evt.endDate < todayStr) return false;
+
+                return true;
+            });
+
+            // Update stats cards
+            document.getElementById('statTotal').textContent = state.events.length;
+            document.getElementById('statFiltered').textContent = state.filteredEvents.length;
+            document.getElementById('statUpdated').textContent = state.lastUpdated || 'Pre-loaded';
+        }
+
+        // General filter trigger
+        function handleFilterChange() {
+            applyFilters();
+            renderCategoryFilters();
+            renderViews();
+        }
+
+        // Switch View Tabs
+        function switchView(viewName) {
+            state.currentView = viewName;
+            
+            const btnCal = document.getElementById('viewTabCalendar');
+            const btnList = document.getElementById('viewTabList');
+            const btnBreaks = document.getElementById('viewTabBreaks');
+            
+            const areaCal = document.getElementById('calendarView');
+            const areaList = document.getElementById('listView');
+            const areaBreaks = document.getElementById('breaksView');
+            
+            const navCal = document.getElementById('calendarNav');
+            const infoList = document.getElementById('listInfo');
+
+            const inactiveClass = 'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-500 hover:text-gray-900';
+            const activeClass = 'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-700 bg-white shadow-sm';
+            
+            btnCal.className = inactiveClass;
+            btnList.className = inactiveClass;
+            btnBreaks.className = inactiveClass;
+            
+            areaCal.classList.add('hidden');
+            areaList.classList.add('hidden');
+            areaBreaks.classList.add('hidden');
+            
+            navCal.classList.add('hidden');
+            infoList.classList.add('hidden');
+
+            if (viewName === 'calendar') {
+                btnCal.className = activeClass;
+                areaCal.classList.remove('hidden');
+                navCal.classList.remove('hidden');
+            } else if (viewName === 'list') {
+                btnList.className = activeClass;
+                areaList.classList.remove('hidden');
+                infoList.classList.remove('hidden');
+                infoList.textContent = 'Showing events chronologically';
+            } else if (viewName === 'breaks') {
+                btnBreaks.className = activeClass;
+                areaBreaks.classList.remove('hidden');
+                infoList.classList.remove('hidden');
+                infoList.textContent = 'Showing all upcoming semester breaks & holidays';
+            }
+
+            renderViews();
+            lucide.createIcons();
+        }
+
+        // Render current selected view
+        function renderViews() {
+            if (state.currentView === 'calendar') {
+                renderCalendar();
+            } else if (state.currentView === 'list') {
+                renderList();
+            } else if (state.currentView === 'breaks') {
+                renderBreaks();
+            }
+        }
+
+        // Helper to get relative time countdown for future breaks
+        function getRelativeTimeString(dateStr) {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const target = new Date(dateStr + 'T00:00:00');
+            
+            const diffTime = target - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) return 'Passed';
+            if (diffDays === 0) return 'Starts Today';
+            if (diffDays === 1) return 'Starts Tomorrow';
+            if (diffDays < 7) return `Starts in ${diffDays} days`;
+            if (diffDays < 30) {
+                const weeks = Math.floor(diffDays / 7);
+                return `Starts in ${weeks} week${weeks === 1 ? '' : 's'}`;
+            }
+            const months = Math.floor(diffDays / 30);
+            return `Starts in ${months} month${months === 1 ? '' : 's'}`;
+        }
+
+        // Helper to calculate academic semester (e.g. "Fall 2026", "Winter 2027")
+        function getSemesterName(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            const year = parts[0];
+            const month = parseInt(parts[1]);
+            if (month >= 1 && month <= 4) return `Winter ${year}`;
+            if (month >= 5 && month <= 8) return `Summer ${year}`;
+            return `Fall ${year}`;
+        }
+
+        // Render breaks view
+        function renderBreaks() {
+            const container = document.getElementById('breaksContainer');
+            const empty = document.getElementById('breaksEmptyState');
+            container.innerHTML = '';
+
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            // Filter break events: future breaks only, search-filtered, ignore category selections and year dropdowns
+            const breakEvents = state.events.filter(evt => {
+                if (!isBreakEvent(evt)) return false;
+                if (evt.endDate < todayStr) return false;
+                if (state.searchQuery && !evt.title.toLowerCase().includes(state.searchQuery)) return false;
+                return true;
+            });
+
+            if (breakEvents.length === 0) {
+                container.classList.add('hidden');
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            empty.classList.add('hidden');
+
+            // Group by Semester (e.g. "Fall 2026", "Winter 2027")
+            const grouped = {};
+            breakEvents.forEach(evt => {
+                const term = getSemesterName(evt.startDate);
+                if (!grouped[term]) {
+                    const parts = evt.startDate.split('-');
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]);
+                    let termPriority = 3; // Fall
+                    if (month >= 1 && month <= 4) termPriority = 1; // Winter
+                    if (month >= 5 && month <= 8) termPriority = 2; // Summer
+                    
+                    grouped[term] = {
+                        title: term,
+                        sortKey: `${year}-${termPriority}`,
+                        events: []
+                    };
+                }
+                grouped[term].events.push(evt);
+            });
+
+            // Sort semester groups chronologically
+            const sortedGroups = Object.values(grouped).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+
+            // Render groups
+            sortedGroups.forEach(group => {
+                const groupSection = document.createElement('div');
+                groupSection.className = 'flex flex-col gap-3.5';
+                
+                const header = document.createElement('h3');
+                header.className = 'text-[11px] font-bold text-gray-400 uppercase tracking-wider sticky top-0 bg-white py-2.5 -mx-5 px-5 z-10 border-b border-gray-100 flex items-center justify-between';
+                header.innerHTML = `
+                    <span class="flex items-center gap-1.5">
+                        <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-brand-500"></i>
+                        <span>${group.title}</span>
+                    </span>
+                    <span class="text-[10px] font-semibold bg-brand-50 text-brand-600 px-2 py-0.5 rounded-full">${group.events.length} break${group.events.length === 1 ? '' : 's'}</span>
+                `;
+                groupSection.appendChild(header);
+
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'grid grid-cols-1 md:grid-cols-2 gap-3';
+
+                group.events.forEach(evt => {
+                    const cat = getEventCategory(evt);
+                    const isClosed = evt.title.toLowerCase().includes('closed');
+                    
+                    let statusBadge = '';
+                    if (evt.startDate <= todayStr && evt.endDate >= todayStr) {
+                        statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 animate-pulse"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Happening Now 🌴</span>`;
+                    } else {
+                        const relativeTime = getRelativeTimeString(evt.startDate);
+                        statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-50 text-teal-700 border border-teal-100">${relativeTime}</span>`;
+                    }
+
+                    const diffTime = Math.abs(new Date(evt.endDate) - new Date(evt.startDate));
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    const daysOffBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">${diffDays} day${diffDays === 1 ? '' : 's'} off 🌴</span>`;
+
+                    const item = document.createElement('div');
+                    item.className = 'p-4 border border-gray-200 hover:border-brand-400 rounded-xl flex flex-col justify-between gap-3 cursor-pointer hover:shadow-md transition-all group/item bg-white relative overflow-hidden';
+                    item.onclick = () => openEventModal(evt);
+                    
+                    const accentColor = isClosed ? 'bg-rose-500' : 'bg-emerald-500';
+
+                    item.innerHTML = `
+                        <div class="absolute left-0 top-0 bottom-0 w-1 ${accentColor}"></div>
+                        <div class="flex items-start justify-between gap-2.5">
+                            <div class="flex items-start gap-2.5">
+                                <div class="p-2 rounded-lg ${isClosed ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}">
+                                    <i data-lucide="${isClosed ? 'home-off' : 'palmtree'}" class="w-4 h-4"></i>
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <h4 class="text-sm font-bold text-gray-900 leading-snug group-hover/item:text-brand-600 transition-colors">${evt.title}</h4>
+                                    <span class="text-xs text-gray-500 font-medium">${evt.dateText}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between mt-1 pt-2.5 border-t border-gray-50 text-xs text-gray-400">
+                            <div class="flex items-center gap-1.5">
+                                ${statusBadge}
+                                ${daysOffBadge}
+                            </div>
+                            <span class="text-gray-300 group-hover/item:text-brand-500 transition-all flex items-center gap-0.5">
+                                <span>Details</span>
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                            </span>
+                        </div>
+                    `;
+                    itemsDiv.appendChild(item);
+                });
+
+                groupSection.appendChild(itemsDiv);
+                container.appendChild(groupSection);
+            });
+            
+            lucide.createIcons();
+        }
+
+        // -------------------------------------------------------------
+        // CALENDAR VIEW RENDERING
+        // -------------------------------------------------------------
+        
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            const year = state.currentDate.getFullYear();
+            const month = state.currentDate.getMonth(); // 0-indexed
+
+            // Set Header Title
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('calendarTitle').textContent = `${monthNames[month]} ${year}`;
+
+            // Calculate dates
+            const firstDayIndex = new Date(year, month, 1).getDay(); // day of week for 1st
+            const totalDays = new Date(year, month + 1, 0).getDate(); // days in current month
+            const prevMonthTotalDays = new Date(year, month, 0).getDate(); // days in prev month
+            
+            // Collect events active in this month
+            // An event is active if its range overlaps with the month's start and end date
+            const startOfMonth = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+            const endOfMonth = `${year}-${String(month + 1).padStart(2, '0')}-${String(totalDays).padStart(2, '0')}`;
+            
+            const monthEvents = state.filteredEvents.filter(evt => {
+                return evt.startDate <= endOfMonth && evt.endDate >= startOfMonth;
+            });
+
+            // Total grid cells needed: 35 or 42 based on layout
+            const totalCells = (firstDayIndex + totalDays) > 35 ? 42 : 35;
+
+            // Generate cells
+            for (let i = 0; i < totalCells; i++) {
+                const cellIndex = i - firstDayIndex + 1;
+                const cell = document.createElement('div');
+                cell.className = 'calendar-cell min-h-[110px] bg-white flex flex-col p-1.5 overflow-hidden relative group/cell border-b border-r border-gray-100';
+
+                let dayNumber, targetDateStr, isCurrentMonth = true;
+
+                if (i < firstDayIndex) {
+                    // Prev Month overflow
+                    isCurrentMonth = false;
+                    dayNumber = prevMonthTotalDays - firstDayIndex + i + 1;
+                    const prevMonth = month === 0 ? 11 : month - 1;
+                    const prevYear = month === 0 ? year - 1 : year;
+                    targetDateStr = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+                    cell.classList.add('bg-gray-50/50', 'text-gray-400');
+                } else if (cellIndex > totalDays) {
+                    // Next Month overflow
+                    isCurrentMonth = false;
+                    dayNumber = cellIndex - totalDays;
+                    const nextMonth = month === 11 ? 0 : month + 1;
+                    const nextYear = month === 11 ? year + 1 : year;
+                    targetDateStr = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+                    cell.classList.add('bg-gray-50/50', 'text-gray-400');
+                } else {
+                    // Current Month
+                    dayNumber = cellIndex;
+                    targetDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
+                    cell.classList.add('text-gray-800');
+                    
+                    // Highlight today
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    if (targetDateStr === todayStr) {
+                        cell.classList.add('bg-teal-50/30');
+                        // Add today circle indicator
+                        const daySpan = document.createElement('span');
+                        daySpan.className = 'w-6 h-6 flex items-center justify-center bg-brand-600 text-white rounded-full text-xs font-bold font-sans';
+                        daySpan.textContent = dayNumber;
+                        
+                        const dayContainer = document.createElement('div');
+                        dayContainer.className = 'flex justify-between items-center mb-1';
+                        dayContainer.appendChild(daySpan);
+                        cell.appendChild(dayContainer);
+                    }
+                }
+
+                // If not already rendered today's header layout
+                if (cell.children.length === 0) {
+                    const dayContainer = document.createElement('div');
+                    dayContainer.className = `flex justify-between items-center mb-1 text-xs font-semibold ${isCurrentMonth ? 'text-gray-700' : 'text-gray-400'}`;
+                    dayContainer.innerHTML = `<span>${dayNumber}</span>`;
+                    cell.appendChild(dayContainer);
+                }
+
+                // Filter events matching this specific day
+                const dayEvents = monthEvents.filter(evt => {
+                    return evt.startDate <= targetDateStr && evt.endDate >= targetDateStr;
+                });
+
+                // Render day events
+                const eventsContainer = document.createElement('div');
+                eventsContainer.className = 'flex flex-col gap-1 overflow-y-auto flex-grow max-h-[82px] pr-0.5';
+
+                const maxBadges = 3;
+                const shownEvents = dayEvents.slice(0, maxBadges);
+                const hiddenCount = dayEvents.length - maxBadges;
+
+                shownEvents.forEach(evt => {
+                    const cat = getEventCategory(evt);
+                    const isMulti = evt.startDate !== evt.endDate;
+                    
+                    const badge = document.createElement('div');
+                    badge.className = `calendar-day-event text-[10px] py-0.5 px-1.5 rounded border leading-tight truncate cursor-pointer font-medium ${cat.borderClass}`;
+                    badge.title = `${evt.title} (${evt.dateText})`;
+                    badge.innerHTML = `
+                        <div class="flex items-center gap-1 truncate">
+                            ${isMulti ? '<span class="w-1.5 h-1.5 rounded-full bg-current flex-shrink-0 animate-pulse"></span>' : ''}
+                            <span class="truncate">${evt.title}</span>
+                        </div>
+                    `;
+                    badge.onclick = (e) => {
+                        e.stopPropagation();
+                        openEventModal(evt);
+                    };
+                    eventsContainer.appendChild(badge);
+                });
+
+                if (hiddenCount > 0) {
+                    const moreIndicator = document.createElement('div');
+                    moreIndicator.className = 'text-[9px] font-bold text-gray-500 hover:text-brand-600 cursor-pointer pl-1 py-0.5 hover:underline select-none';
+                    moreIndicator.textContent = `+${hiddenCount} more`;
+                    moreIndicator.onclick = (e) => {
+                        e.stopPropagation();
+                        showDayPopover(targetDateStr, dayEvents, e);
+                    };
+                    eventsContainer.appendChild(moreIndicator);
+                }
+
+                cell.appendChild(eventsContainer);
+                
+                // Allow clicking cell to show list of that day
+                cell.onclick = () => {
+                    if (dayEvents.length > 0) {
+                        showDayPopover(targetDateStr, dayEvents);
+                    }
+                };
+
+                grid.appendChild(cell);
+            }
+        }
+
+        // Calendar Nav Month Trigger
+        function navigateMonth(direction) {
+            state.currentDate.setMonth(state.currentDate.getMonth() + direction);
+            renderCalendar();
+        }
+
+        // Go to today's month
+        function navigateToday() {
+            state.currentDate = new Date();
+            renderCalendar();
+        }
+
+        // Day Popover View (shows all events of a day in list format)
+        function showDayPopover(dateStr, dayEvents, eventClick) {
+            const formattedDate = new Date(dateStr + 'T12:00:00').toLocaleDateString(undefined, { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+
+            // We can create a simple popover overlay or redirect list view. 
+            // A simple temporary overlay works perfectly and feels premium.
+            const overlay = document.createElement('div');
+            overlay.id = 'dayPopoverOverlay';
+            overlay.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[1px]';
+            overlay.onclick = () => overlay.remove();
+
+            const box = document.createElement('div');
+            box.className = 'bg-white rounded-xl border border-gray-200 shadow-2xl max-w-sm w-full overflow-hidden animate-[fadeIn_0.15s_ease-out]';
+            box.onclick = (e) => e.stopPropagation();
+
+            const header = document.createElement('div');
+            header.className = 'px-4 py-3 bg-gray-50 border-b border-gray-150 flex justify-between items-center';
+            header.innerHTML = `
+                <div>
+                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Events on</h4>
+                    <p class="text-xs font-semibold text-gray-800">${formattedDate}</p>
+                </div>
+                <button id="popoverClose" class="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-150 rounded-lg">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            `;
+            box.appendChild(header);
+
+            const content = document.createElement('div');
+            content.className = 'p-4 flex flex-col gap-2 max-h-72 overflow-y-auto';
+            
+            dayEvents.forEach(evt => {
+                const cat = getEventCategory(evt);
+                const item = document.createElement('div');
+                item.className = `p-2.5 rounded-lg border hover:border-brand-400 cursor-pointer flex flex-col gap-1 transition-all ${cat.borderClass}`;
+                item.onclick = () => {
+                    overlay.remove();
+                    openEventModal(evt);
+                };
+                item.innerHTML = `
+                    <div class="font-bold text-xs leading-normal">${evt.title}</div>
+                    <div class="text-[10px] opacity-75">${evt.dateText}</div>
+                `;
+                content.appendChild(item);
+            });
+            box.appendChild(content);
+
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+            
+            document.getElementById('popoverClose').onclick = () => overlay.remove();
+            lucide.createIcons();
+        }
+
+        // -------------------------------------------------------------
+        // LIST VIEW RENDERING
+        // -------------------------------------------------------------
+        
+        function renderList() {
+            const container = document.getElementById('listContainer');
+            const empty = document.getElementById('listEmptyState');
+            container.innerHTML = '';
+
+            if (state.filteredEvents.length === 0) {
+                container.classList.add('hidden');
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            empty.classList.add('hidden');
+
+            // Group events by Month & Year
+            const grouped = {};
+            state.filteredEvents.forEach(evt => {
+                if (!evt.startDate) return;
+                
+                // Parse date
+                const dateParts = evt.startDate.split('-');
+                const y = parseInt(dateParts[0]);
+                const m = parseInt(dateParts[1]) - 1; // 0-indexed
+                
+                const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                const groupKey = `${monthNames[m]} ${y}`;
+                const sortKey = `${y}-${String(m + 1).padStart(2, '0')}`;
+
+                if (!grouped[groupKey]) {
+                    grouped[groupKey] = {
+                        title: groupKey,
+                        sortKey: sortKey,
+                        events: []
+                    };
+                }
+                grouped[groupKey].events.push(evt);
+            });
+
+            // Sort months chronologically
+            const sortedGroups = Object.values(grouped).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+
+            // Render groups
+            sortedGroups.forEach(group => {
+                const groupSection = document.createElement('div');
+                groupSection.className = 'flex flex-col gap-2.5';
+                
+                const header = document.createElement('h3');
+                header.className = 'text-[11px] font-bold text-gray-400 uppercase tracking-wider sticky top-0 bg-white py-2.5 -mx-5 px-5 z-10 border-b border-gray-100 flex items-center justify-between';
+                header.innerHTML = `
+                    <span>${group.title}</span>
+                    <span class="text-[10px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">${group.events.length} event${group.events.length === 1 ? '' : 's'}</span>
+                `;
+                groupSection.appendChild(header);
+
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'flex flex-col gap-2';
+
+                group.events.forEach(evt => {
+                    const cat = getEventCategory(evt);
+                    const item = document.createElement('div');
+                    item.className = 'p-3.5 border border-gray-200 hover:border-brand-400 rounded-xl flex items-center justify-between gap-4 cursor-pointer hover:shadow-md transition-all group/item bg-white';
+                    item.onclick = () => openEventModal(evt);
+                    
+                    item.innerHTML = `
+                        <div class="flex items-start gap-3">
+                            <span class="w-2.5 h-2.5 rounded-full ${cat.dotClass} mt-1.5 flex-shrink-0"></span>
+                            <div class="flex flex-col gap-0.5">
+                                <h4 class="text-sm font-bold text-gray-900 leading-snug group-hover/item:text-brand-600 transition-colors">${evt.title}</h4>
+                                <span class="text-xs text-gray-500 font-medium">${evt.dateText}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-gray-300 group-hover/item:text-brand-500 transition-colors">
+                            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                        </div>
+                    `;
+                    itemsDiv.appendChild(item);
+                });
+
+                groupSection.appendChild(itemsDiv);
+                container.appendChild(groupSection);
+            });
+        }
+
+        // -------------------------------------------------------------
+        // DETAIL MODAL FUNCTIONS
+        // -------------------------------------------------------------
+        
+        function openEventModal(evt) {
+            const modal = document.getElementById('eventModal');
+            const cat = getEventCategory(evt);
+
+            // Set Title & Details
+            document.getElementById('modalTitle').textContent = evt.title;
+            document.getElementById('modalDateRange').textContent = evt.dateText;
+            
+            // Set Link
+            const linkBtn = document.getElementById('modalLink');
+            if (evt.url) {
+                linkBtn.href = evt.url;
+                linkBtn.classList.remove('hidden');
+            } else {
+                linkBtn.classList.add('hidden');
+            }
+
+            // Set Category Badge
+            const badge = document.getElementById('modalCategoryBadge');
+            badge.textContent = cat.name;
+            badge.className = `inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border ${cat.borderClass}`;
+
+            // Calculate duration
+            const durationSpan = document.getElementById('modalDuration');
+            if (evt.startDate && evt.endDate) {
+                const diffTime = Math.abs(new Date(evt.endDate) - new Date(evt.startDate));
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                durationSpan.textContent = `Duration: ${diffDays} day${diffDays === 1 ? '' : 's'}`;
+            } else {
+                durationSpan.textContent = 'Duration: 1 day';
+            }
+
+            // Dynamic Single ICS Export click handler
+            document.getElementById('modalSingleExportIcs').onclick = () => {
+                exportSingleEventToICS(evt);
+            };
+
+            // Copy to clipboard click handler
+            document.getElementById('modalCopyDetails').onclick = () => {
+                const copyText = `${evt.title}\nDate: ${evt.dateText}\nOfficial Link: ${evt.url || 'N/A'}`;
+                navigator.clipboard.writeText(copyText).then(() => {
+                    showToast('Details copied to clipboard!');
+                }).catch(() => {
+                    showToast('Failed to copy to clipboard.', true);
+                });
+            };
+
+            // Show modal
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            
+            lucide.createIcons();
+        }
+
+        function closeEventModal() {
+            document.getElementById('eventModal').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        // Close modal when clicking background
+        window.onclick = function(e) {
+            const evModal = document.getElementById('eventModal');
+            if (e.target === evModal) {
+                closeEventModal();
+            }
+            const sModal = document.getElementById('syncModal');
+            if (e.target === sModal) {
+                closeSyncModal();
+            }
+        }
+
+        // -------------------------------------------------------------
+        // ICS EXPORTER FUNCTIONS
+        // -------------------------------------------------------------
+
+        // Format dates into iCal format (YYYYMMDD) for all-day events
+        function formatICSDate(dateStr, nextDay = false) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr + 'T12:00:00'); // set to noon to avoid timezone shifts
+            if (nextDay) {
+                d.setDate(d.getDate() + 1); // add 1 day for inclusive end date
+            }
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}${m}${day}`;
+        }
+
+        // Generate ICS string for a list of events
+        function generateICSContent(eventList) {
+            let ics = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//Faculty Tools//UWindsor Academic Dates//EN',
+                'CALSCALE:GREGORIAN',
+                'METHOD:PUBLISH',
+                'X-WR-CALNAME:UWindsor Academic Dates',
+                'X-WR-TIMEZONE:America/Toronto'
+            ];
+
+            const nowStr = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+            eventList.forEach((evt, idx) => {
+                if (!evt.startDate) return;
+
+                const dtStart = formatICSDate(evt.startDate);
+                const dtEnd = formatICSDate(evt.endDate || evt.startDate, true); // add 1 day as exclusive end
+                const uid = `uw-evt-${idx}-${dtStart}@faculty-tools`;
+                
+                ics.push('BEGIN:VEVENT');
+                ics.push(`UID:${uid}`);
+                ics.push(`DTSTAMP:${nowStr}`);
+                ics.push(`DTSTART;VALUE=DATE:${dtStart}`);
+                ics.push(`DTEND;VALUE=DATE:${dtEnd}`);
+                
+                // Escape special characters in iCal
+                const summary = evt.title.replace(/[,;]/g, '\\$&').replace(/\n/g, '\\n');
+                ics.push(`SUMMARY:${summary}`);
+                
+                let desc = `Official listing: ${evt.url || 'https://www.uwindsor.ca/registrar/events-listing'}`;
+                desc = desc.replace(/[,;]/g, '\\$&').replace(/\n/g, '\\n');
+                ics.push(`DESCRIPTION:${desc}`);
+                
+                if (evt.url) {
+                    ics.push(`URL:${evt.url}`);
+                }
+                
+                ics.push('END:VEVENT');
+            });
+
+            ics.push('END:VCALENDAR');
+            return ics.join('\r\n');
+        }
+
+        // Trigger file download in browser
+        function downloadFile(filename, content) {
+            const blob = new Blob([content], { type: 'text/calendar;charset=utf-8;' });
+            const link = document.createElement('a');
+            
+            if (navigator.msSaveBlob) { // IE 10+
+                navigator.msSaveBlob(blob, filename);
+            } else {
+                link.href = URL.createObjectURL(blob);
+                link.setAttribute('download', filename);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        // Export a single event
+        function exportSingleEventToICS(evt) {
+            const content = generateICSContent([evt]);
+            // Clean up name for file
+            const name = evt.title.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
+            downloadFile(`uwindsor-event-${name}.ics`, content);
+            showToast('Single event downloaded!');
+        }
+
+        // Export all filtered events
+        function exportFilteredEventsToICS() {
+            if (state.filteredEvents.length === 0) {
+                showToast('No events matching filters to export.', true);
+                return;
+            }
+            const content = generateICSContent(state.filteredEvents);
+            downloadFile('uwindsor-academic-calendar.ics', content);
+            showToast(`Exported ${state.filteredEvents.length} events successfully!`);
+        }
+
+        // -------------------------------------------------------------
+        // LIVE SCRAPER (CORS PROXY & MANUAL IMPORT)
+        // -------------------------------------------------------------
+        
+        let isManualMode = false;
+
+        function openSyncModal() {
+            document.getElementById('syncModal').classList.remove('hidden');
+            
+            // Reset to scraper view
+            isManualMode = false;
+            document.getElementById('syncInfoArea').classList.remove('hidden');
+            document.getElementById('syncProgressArea').classList.add('hidden');
+            document.getElementById('syncManualArea').classList.add('hidden');
+            document.getElementById('syncManualModeToggle').textContent = 'Import HTML Manually';
+            document.getElementById('syncActionBtn').classList.remove('hidden');
+            document.getElementById('syncActionBtn').innerHTML = '<i data-lucide="play" class="w-3.5 h-3.5"></i><span>Start Scrape</span>';
+            document.getElementById('syncCancelBtn').classList.remove('hidden');
+            document.getElementById('syncCloseX').classList.remove('hidden');
+            
+            lucide.createIcons();
+        }
+
+        function closeSyncModal() {
+            document.getElementById('syncModal').classList.add('hidden');
+        }
+
+        function toggleSyncManualMode() {
+            isManualMode = !isManualMode;
+            
+            const info = document.getElementById('syncInfoArea');
+            const manual = document.getElementById('syncManualArea');
+            const toggleBtn = document.getElementById('syncManualModeToggle');
+            const actBtn = document.getElementById('syncActionBtn');
+
+            if (isManualMode) {
+                info.classList.add('hidden');
+                manual.classList.remove('hidden');
+                toggleBtn.textContent = 'Use Scraper Mode';
+                actBtn.innerHTML = '<i data-lucide="upload" class="w-3.5 h-3.5"></i><span>Import HTML</span>';
+            } else {
+                info.classList.remove('hidden');
+                manual.classList.add('hidden');
+                toggleBtn.textContent = 'Import HTML Manually';
+                actBtn.innerHTML = '<i data-lucide="play" class="w-3.5 h-3.5"></i><span>Start Scrape</span>';
+            }
+            
+            lucide.createIcons();
+        }
+
+        // Fetch helper through proxy
+        async function fetchThroughProxy(targetUrl) {
+            // Using allorigins.win as CORS proxy. It has a raw endpoint.
+            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+            const response = await fetch(proxyUrl);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch from proxy. Status: ${response.status}`);
+            }
+            return await response.text();
+        }
+
+        // Live scraping coordinator
+        async function startScrapingLive() {
+            if (isManualMode) {
+                handleManualHtmlImport();
+                return;
+            }
+
+            // Scraper Mode
+            const info = document.getElementById('syncInfoArea');
+            const progress = document.getElementById('syncProgressArea');
+            const cancelBtn = document.getElementById('syncCancelBtn');
+            const actBtn = document.getElementById('syncActionBtn');
+            const toggleBtn = document.getElementById('syncManualModeToggle');
+            const closeX = document.getElementById('syncCloseX');
+
+            info.classList.add('hidden');
+            progress.classList.remove('hidden');
+            toggleBtn.classList.add('hidden');
+            actBtn.classList.add('hidden');
+            cancelBtn.classList.add('hidden');
+            closeX.classList.add('hidden');
+
+            const statusText = document.getElementById('syncProgressStatus');
+            const subtext = document.getElementById('syncProgressSubtext');
+            const bar = document.getElementById('syncProgressBar');
+            const percentText = document.getElementById('syncProgressPercent');
+
+            let scrapedList = [];
+            let page = 0;
+            let consecEmpty = 0;
+            const maxPages = 20;
+
+            try {
+                while (page < maxPages) {
+                    statusText.textContent = `Scraping Registrar: page ${page + 1}...`;
+                    const pct = Math.round((page / 12) * 100); // assume ~12 pages
+                    bar.style.width = `${Math.min(pct, 95)}%`;
+                    percentText.textContent = `${Math.min(pct, 95)}%`;
+
+                    const targetUrl = page === 0 
+                        ? 'https://www.uwindsor.ca/registrar/events-listing'
+                        : `https://www.uwindsor.ca/registrar/events-listing?page=${page}`;
+
+                    subtext.textContent = `Requesting ${targetUrl} via proxy...`;
+
+                    let html;
+                    try {
+                        html = await fetchThroughProxy(targetUrl);
+                    } catch(fetchErr) {
+                        console.error('Fetch error:', fetchErr);
+                        throw new Error(`Connection failed on page ${page + 1}. The proxy might be down.`);
+                    }
+
+                    // Parse HTML rows
+                    const items = parseHtmlForEvents(html);
+                    subtext.textContent = `Page ${page + 1} complete. Found ${items.length} items.`;
+                    
+                    if (items.length === 0) {
+                        consecEmpty++;
+                        if (consecEmpty >= 2) break; // stop at 2 empty pages
+                    } else {
+                        consecEmpty = 0;
+                        scrapedList = scrapedList.concat(items);
+                    }
+
+                    page++;
+                    // short pause
+                    await new Promise(r => setTimeout(r, 500));
+                }
+
+                if (scrapedList.length === 0) {
+                    throw new Error('Scraped 0 events. Proxy might be returning empty response.');
+                }
+
+                // Sorting and merging scraped data
+                scrapedList.sort((a, b) => a.startDate.localeCompare(b.startDate));
+                
+                // Save to localStorage
+                state.events = scrapedList;
+                state.lastUpdated = new Date().toLocaleString();
+                localStorage.setItem('uwindsor_academic_events', JSON.stringify(scrapedList));
+                localStorage.setItem('uwindsor_academic_events_updated', state.lastUpdated);
+
+                // Regenerate breaks for current session
+                const generatedBreaks = generateSemesterBreaks(state.events);
+                state.events = state.events.concat(generatedBreaks);
+                state.events.sort((a, b) => a.startDate.localeCompare(b.startDate));
+
+                bar.style.width = '100%';
+                percentText.textContent = '100%';
+                statusText.textContent = `Sync Complete!`;
+                subtext.textContent = `Saved ${scrapedList.length} events.`;
+
+                // Update UI
+                applyFilters();
+                renderCategoryFilters();
+                renderViews();
+                
+                showToast(`Scraped & Synced ${scrapedList.length} events successfully!`);
+                setTimeout(closeSyncModal, 1500);
+
+            } catch (err) {
+                console.error(err);
+                statusText.textContent = 'Sync Failed';
+                statusText.className = 'text-xs font-semibold text-rose-600';
+                subtext.textContent = err.message;
+                bar.className = 'bg-rose-500 h-full w-full';
+                
+                // Restore buttons
+                cancelBtn.classList.remove('hidden');
+                closeX.classList.remove('hidden');
+                toggleBtn.classList.remove('hidden');
+                toggleBtn.textContent = 'Try Manual Import instead';
+            }
+        }
+
+        // Parsing HTML string (regex equivalent of node scraper)
+        function parseHtmlForEvents(html) {
+            const parsed = [];
+            const rowSplits = html.split(/<tr\b[^>]*>/i);
+            
+            for (let i = 1; i < rowSplits.length; i++) {
+                const row = rowSplits[i].split(/<\/tr>/i)[0];
+                if (!row.includes('views-field-title')) continue;
+                
+                const titleMatch = row.match(/<td\s+class="[^"]*views-field-title[^"]*">\s*<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i);
+                if (!titleMatch) continue;
+                
+                let url = titleMatch[1].trim();
+                if (url.startsWith('/')) {
+                    url = 'https://www.uwindsor.ca' + url;
+                }
+                
+                let title = titleMatch[2].trim()
+                    .replace(/&amp;/g, '&')
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#039;/g, "'")
+                    .replace(/&rsquo;/g, "'")
+                    .replace(/&ndash;/g, '-')
+                    .replace(/&mdash;/g, '-')
+                    .replace(/\s+/g, ' ');
+                    
+                let startDate = null;
+                let endDate = null;
+                let dateText = '';
+                
+                const startMatch = row.match(/class="date-display-start"[^>]*content="([^"]+)"/i);
+                const endMatch = row.match(/class="date-display-end"[^>]*content="([^"]+)"/i);
+                
+                if (startMatch && endMatch) {
+                    startDate = startMatch[1].split('T')[0];
+                    endDate = endMatch[1].split('T')[0];
+                } else {
+                    const singleMatch = row.match(/class="date-display-single"[^>]*content="([^"]+)"/i);
+                    if (singleMatch) {
+                        startDate = singleMatch[1].split('T')[0];
+                        endDate = startDate;
+                    }
+                }
+                
+                const dateCellMatch = row.match(/<td\s+class="[^"]*event-listing-date[^"]*">([\s\S]*?)<\/td>/i);
+                if (dateCellMatch) {
+                    dateText = dateCellMatch[1].trim()
+                        .replace(/<[^>]+>/g, '')
+                        .replace(/\s+/g, ' ');
+                }
+                
+                if (startDate) {
+                    parsed.push({ title, url, startDate, endDate, dateText });
+                }
+            }
+            return parsed;
+        }
+
+        // Manual HTML import process
+        function handleManualHtmlImport() {
+            const html = document.getElementById('manualHtmlInput').value.trim();
+            if (!html) {
+                showToast('Please paste some HTML contents first!', true);
+                return;
+            }
+
+            try {
+                const parsed = parseHtmlForEvents(html);
+                if (parsed.length === 0) {
+                    showToast('Could not extract any events. Please verify the HTML source structure.', true);
+                    return;
+                }
+
+                // Merge manually imported events. We first extract the raw official events.
+                const rawEvents = state.events.filter(e => 
+                    !e.title.includes('Academic Break') && 
+                    !e.title.includes('Between Semesters')
+                );
+                
+                const eventMap = new Map();
+                rawEvents.forEach(e => eventMap.set(`${e.title}-${e.startDate}`, e));
+                
+                let addedCount = 0;
+                parsed.forEach(e => {
+                    const key = `${e.title}-${e.startDate}`;
+                    if (!eventMap.has(key)) {
+                        rawEvents.push(e);
+                        addedCount++;
+                    }
+                });
+
+                if (addedCount === 0) {
+                    showToast('All imported events already exist in the database.');
+                } else {
+                    rawEvents.sort((a, b) => a.startDate.localeCompare(b.startDate));
+                    state.lastUpdated = new Date().toLocaleString();
+                    
+                    // Save ONLY raw events to local storage
+                    localStorage.setItem('uwindsor_academic_events', JSON.stringify(rawEvents));
+                    localStorage.setItem('uwindsor_academic_events_updated', state.lastUpdated);
+                    
+                    // Regenerate breaks for UI state
+                    state.events = [...rawEvents];
+                    const generatedBreaks = generateSemesterBreaks(state.events);
+                    state.events = state.events.concat(generatedBreaks);
+                    state.events.sort((a, b) => a.startDate.localeCompare(b.startDate));
+                    
+                    applyFilters();
+                    renderCategoryFilters();
+                    renderViews();
+                    
+                    showToast(`Imported ${addedCount} new events! Total size is now ${state.events.length}.`);
+                }
+                
+                closeSyncModal();
+                document.getElementById('manualHtmlInput').value = '';
+            } catch(e) {
+                console.error(e);
+                showToast('Error processing HTML source.', true);
+            }
+        }
+
+        // -------------------------------------------------------------
+        // TOAST NOTIFICATIONS
+        // -------------------------------------------------------------
+        
+        let toastTimeout;
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMsg');
+
+            clearTimeout(toastTimeout);
+
+            msg.textContent = message;
+            if (isError) {
+                toast.classList.remove('bg-gray-900');
+                toast.classList.add('bg-rose-600');
+                icon.className = 'w-4 h-4 text-white';
+                icon.setAttribute('data-lucide', 'alert-circle');
+            } else {
+                toast.classList.remove('bg-rose-600');
+                toast.classList.add('bg-gray-900');
+                icon.className = 'w-4 h-4 text-emerald-400';
+                icon.setAttribute('data-lucide', 'check-circle');
+            }
+
+            lucide.createIcons();
+
+            toast.classList.remove('invisible', 'opacity-0', 'translate-y-2');
+            toast.classList.add('opacity-100');
+
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.classList.add('invisible'), 300);
+            }, 3000);
+        }
+
+        // Run App Initializer
+        window.addEventListener('DOMContentLoaded', initApp);
+
+    </script>
+</body>
+
+</html>
