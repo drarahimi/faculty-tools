@@ -102,6 +102,29 @@
                     <option value="">All Years</option>
                 </select>
             </div>
+            
+            <!-- Source Filter and Status -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-t border-gray-100 pt-3.5 mt-3.5 gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Source:</span>
+                    <label class="inline-flex items-center text-xs font-medium text-gray-700 cursor-pointer">
+                        <input type="radio" name="sourceToggle" value="all" checked class="mr-1.5 accent-brand-600">
+                        All
+                    </label>
+                    <label class="inline-flex items-center text-xs font-medium text-gray-700 cursor-pointer">
+                        <input type="radio" name="sourceToggle" value="curated" class="mr-1.5 accent-brand-600">
+                        Curated Only
+                    </label>
+                    <label class="inline-flex items-center text-xs font-medium text-gray-700 cursor-pointer">
+                        <input type="radio" name="sourceToggle" value="scraped" class="mr-1.5 accent-brand-600">
+                        Scraped Only
+                    </label>
+                </div>
+                
+                <div id="localScrapedStatus" class="text-[11px] text-gray-400 flex items-center gap-1.5 font-medium">
+                    <span class="inline-block w-2 h-2 rounded-full bg-gray-300"></span> Checking local scraped files...
+                </div>
+            </div>
         </div>
 
         <!-- Results count -->
@@ -122,6 +145,41 @@
             </div>
             <h3 class="text-base font-medium text-gray-900">No conferences found in the curated list</h3>
             <p class="text-xs text-gray-500 mt-1 max-w-md mx-auto">Try the live IEEE search sources below &mdash; the full IEEE conference calendar has thousands of entries beyond this curated set.</p>
+        </div>
+
+        <!-- Scraper Integration & Control Panel -->
+        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex flex-col gap-3">
+            <button onclick="toggleScraperInstructions()" class="flex items-center justify-between w-full text-left focus:outline-none">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="terminal" class="w-4 h-4 text-brand-600"></i>
+                    <h2 class="text-sm font-semibold text-gray-900">Local IEEE Scrapers Console</h2>
+                </div>
+                <i data-lucide="chevron-down" id="scraperChevron" class="w-4 h-4 text-gray-400 transition-transform"></i>
+            </button>
+            
+            <div id="scraperInstructions" class="hidden flex flex-col gap-3 text-xs text-gray-500 pt-3 border-t border-gray-100 leading-relaxed">
+                <p>Because the official IEEE website blocks direct browser requests, a local python helper script <code class="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-700 text-[11px]">scrape-ieee.py</code> is used. Run this script in your local workspace terminal to refresh the database from official sources:</p>
+                
+                <div class="bg-gray-950 text-gray-200 p-3 rounded-xl font-mono text-[11px] relative group overflow-x-auto">
+                    <div class="flex items-center justify-between mb-1.5 border-b border-gray-800 pb-1.5">
+                        <span class="text-gray-500 text-[10px]">PowerShell / Command Prompt</span>
+                        <button onclick="copyScraperCmd()" class="text-gray-400 hover:text-white transition-colors" title="Copy to clipboard">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <span class="text-emerald-400"># 1. Scrape all 39 IEEE Societies and generate ieee-societies.json</span><br>
+                    <span class="text-blue-300">python scrape-ieee.py societies</span><br><br>
+                    <span class="text-emerald-400"># 2. Scrape IEEE conferences for a specific query and generate ieee-conferences.json</span><br>
+                    <span class="text-blue-300">python scrape-ieee.py conferences --query="robotics"</span>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                    <span>The scraped data will save to <code class="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-700 text-[11px]">ieee-conferences.json</code> and <code class="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-700 text-[11px]">ieee-societies.json</code>.</span>
+                    <button onclick="loadScrapedData(true)" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand-50 text-brand-600 hover:bg-brand-100 transition-colors border border-brand-200 self-end sm:self-auto">
+                        <i data-lucide="refresh-cw" class="w-3 h-3"></i> Reload Local Data
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Live search fallback -->
@@ -282,6 +340,11 @@
         }
 
         function populateFilters() {
+            // Reset filter dropdowns to prevent duplicates on reload
+            societyFilter.innerHTML = '<option value="">All Societies</option>';
+            regionFilter.innerHTML = '<option value="">All Regions</option>';
+            yearFilter.innerHTML = '<option value="">All Years</option>';
+
             const societies = [...new Set(conferences.map(c => c.society))].sort();
             societies.forEach(s => {
                 const opt = document.createElement('option');
@@ -315,6 +378,7 @@
 
         function cardHTML(c) {
             const tagsHTML = c.tags.map(t => `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-gray-100 text-gray-600">${t}</span>`).join('');
+            const scrapedBadge = c.is_scraped ? `<span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-200">Scraped</span>` : '';
             return `
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-brand-300 transition-all duration-200 p-4 flex flex-col gap-3">
                     <div class="flex items-start justify-between gap-2">
@@ -323,7 +387,7 @@
                                 <i data-lucide="${iconFor(c.tags)}" class="w-4 h-4"></i>
                             </div>
                             <div>
-                                <p class="text-[10px] font-bold text-brand-600 uppercase tracking-wide">${c.confAcronym}</p>
+                                <p class="text-[10px] font-bold text-brand-600 uppercase tracking-wide flex items-center">${c.confAcronym}${scrapedBadge}</p>
                                 <h3 class="text-sm font-bold text-gray-900 leading-snug">${c.name}</h3>
                             </div>
                         </div>
@@ -337,7 +401,7 @@
                     <div class="flex flex-wrap gap-1.5">${tagsHTML}</div>
                     <div class="flex items-center gap-2 mt-auto pt-2 border-t border-gray-100">
                         <a href="${c.url}" target="_blank" rel="noopener" class="flex-grow inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-700 transition-colors">
-                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Official Site
+                             <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Official Site
                         </a>
                         <button onclick="copyInfo('${c.confAcronym.replace(/'/g, "\\'")}', '${c.url}')" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
                             <i data-lucide="copy" class="w-3.5 h-3.5"></i>
@@ -358,7 +422,10 @@
                 const matchesSociety = !society || c.society === society;
                 const matchesRegion = !region || c.region === region;
                 const matchesYear = !year || String(c.year) === year;
-                return matchesQuery && matchesSociety && matchesRegion && matchesYear;
+                const matchesSource = showSource === 'all' || 
+                                     (showSource === 'curated' && !c.is_scraped) || 
+                                     (showSource === 'scraped' && c.is_scraped);
+                return matchesQuery && matchesSociety && matchesRegion && matchesYear && matchesSource;
             });
 
             filtered.sort((a, b) => a.year - b.year || a.name.localeCompare(b.name));
@@ -372,9 +439,18 @@
                 grid.innerHTML = filtered.map(cardHTML).join('');
             }
 
-            resultCount.textContent = query || society || region || year
-                ? `${filtered.length} of ${conferences.length} conferences match`
-                : `Showing all ${conferences.length} curated conferences`;
+            const totalScraped = conferences.filter(c => c.is_scraped).length;
+            const totalCurated = conferences.length - totalScraped;
+            
+            let countText = `Showing all ${conferences.length} curated conferences`;
+            if (totalScraped > 0) {
+                countText = `Showing all ${conferences.length} conferences (${totalCurated} curated, ${totalScraped} scraped)`;
+            }
+            if (query || society || region || year || showSource !== 'all') {
+                countText = `${filtered.length} of ${conferences.length} conferences match`;
+            }
+
+            resultCount.textContent = countText;
 
             lucide.createIcons();
         }
@@ -400,10 +476,120 @@
         regionFilter.addEventListener('change', renderConferences);
         yearFilter.addEventListener('change', renderConferences);
 
+        // Source filter radio listeners
+        document.querySelectorAll('input[name="sourceToggle"]').forEach(el => {
+            el.addEventListener('change', (e) => {
+                showSource = e.target.value;
+                renderConferences();
+            });
+        });
+
+        // Dynamic local data loader
+        let scrapedConferences = [];
+        let scrapedSocieties = [];
+        let showSource = 'all';
+
+        async function loadScrapedData(showToastAlert = false) {
+            const statusEl = document.getElementById('localScrapedStatus');
+            statusEl.innerHTML = `<span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span> Loading local files...`;
+            
+            let loadedConfs = false;
+            let loadedSocieties = false;
+
+            try {
+                const confResp = await fetch('ieee-conferences.json');
+                if (confResp.ok) {
+                    scrapedConferences = await confResp.json();
+                    loadedConfs = true;
+                }
+            } catch (err) {
+                console.log("No ieee-conferences.json found yet.");
+            }
+
+            try {
+                const socResp = await fetch('ieee-societies.json');
+                if (socResp.ok) {
+                    scrapedSocieties = await socResp.json();
+                    loadedSocieties = true;
+                }
+            } catch (err) {
+                console.log("No ieee-societies.json found yet.");
+            }
+
+            if (loadedConfs || loadedSocieties) {
+                const confCount = loadedConfs ? scrapedConferences.length : 0;
+                const socCount = loadedSocieties ? scrapedSocieties.length : 0;
+                
+                statusEl.innerHTML = `
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500"></span> 
+                    Local data: ${confCount} confs, ${socCount} societies loaded
+                `;
+                
+                if (showToastAlert) {
+                    showToast(`Loaded local data! (${confCount} conferences, ${socCount} societies)`);
+                }
+                
+                mergeScrapedData();
+            } else {
+                statusEl.innerHTML = `
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-gray-400"></span> 
+                    No local scraped data found. Run scraper to populate.
+                `;
+                if (showToastAlert) {
+                    showToast("No local scraped files found. Run the scraper first.");
+                }
+            }
+        }
+
+        function mergeScrapedData() {
+            if (!window.initialCuratedConferences) {
+                window.initialCuratedConferences = [...conferences];
+            }
+            
+            conferences.length = 0;
+            window.initialCuratedConferences.forEach(c => conferences.push(c));
+            
+            scrapedConferences.forEach(scraped => {
+                const isDuplicate = conferences.some(c => 
+                    c.year === scraped.year && 
+                    (c.name.toLowerCase() === scraped.name.toLowerCase() || 
+                     c.confAcronym.toLowerCase() === scraped.confAcronym.toLowerCase())
+                );
+                if (!isDuplicate) {
+                    scraped.is_scraped = true;
+                    conferences.push(scraped);
+                }
+            });
+
+            populateFilters();
+            renderConferences();
+        }
+
+        function toggleScraperInstructions() {
+            const panel = document.getElementById('scraperInstructions');
+            const chevron = document.getElementById('scraperChevron');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                chevron.style.transform = 'rotate(180deg)';
+            } else {
+                panel.classList.add('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function copyScraperCmd() {
+            const cmd = 'python scrape-ieee.py societies\npython scrape-ieee.py conferences --query="robotics"';
+            navigator.clipboard.writeText(cmd);
+            showToast("Copied commands to clipboard!");
+        }
+
         populateFilters();
         renderLiveSources();
         renderConferences();
         lucide.createIcons();
+
+        // Load local scraped files on page load (gracefully fallback if missing)
+        loadScrapedData(false);
 
         // ---------------------------------------------------------------
         // Live community conference feeds (CCF Deadlines + AI Deadlines)
