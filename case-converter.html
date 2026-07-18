@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Converter - Faculty Tools</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%230d9488'/%3E%3Cpath d='M50,18 A22,22 0 0,0 30.5,54.5 C34.5,58.8 37,63.2 37,69 L63,69 C63,63.2 65.5,58.8 69.5,54.5 A22,22 0 0,0 50,18 Z M42,74 L58,74 A2,2 0 0,1 56,79 L44,79 A2,2 0 0,1 42,74 Z' fill='white'/%3E%3C/svg%3E">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            200: '#e9d5ff',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7e22ce',
+                            900: '#581c87',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .custom-shadow {
+            box-shadow: 0 4px 20px -2px rgba(147, 51, 234, 0.08), 0 2px 8px -1px rgba(147, 51, 234, 0.04);
+        }
+
+        /* Toast styles */
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #1e1b4b;
+            color: #fff;
+            text-align: center;
+            border-radius: 12px;
+            padding: 14px 20px;
+            position: fixed;
+            z-index: 50;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s, visibility 0.3s;
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans antialiased flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/90">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-brand-50 text-brand-600 p-2.5 rounded-xl border border-brand-100 shadow-sm">
+                    <i data-lucide="case-sensitive" class="h-6 w-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900 leading-tight">Case Converter</h1>
+                    <p class="text-xs text-slate-500">Transform, clean, and format text for any scenario</p>
+                </div>
+            </div>
+            <div>
+                <a href="index.html"
+                    class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors bg-slate-100 hover:bg-brand-50 px-4 py-2 rounded-xl border border-slate-200">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Workspace (Textarea and Action buttons) -->
+            <div class="lg:col-span-2 flex flex-col gap-5">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm custom-shadow overflow-hidden flex flex-col">
+                    
+                    <!-- Toolbar -->
+                    <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center gap-1.5">
+                            <button id="undo-btn" onclick="undo()" title="Undo (Ctrl+Z)" disabled
+                                class="p-2 text-slate-500 hover:text-brand-600 hover:bg-white rounded-lg transition-all opacity-40 cursor-not-allowed border border-transparent hover:border-slate-200">
+                                <i data-lucide="undo-2" class="w-4.5 h-4.5"></i>
+                            </button>
+                            <button id="redo-btn" onclick="redo()" title="Redo (Ctrl+Y)" disabled
+                                class="p-2 text-slate-500 hover:text-brand-600 hover:bg-white rounded-lg transition-all opacity-40 cursor-not-allowed border border-transparent hover:border-slate-200">
+                                <i data-lucide="redo-2" class="w-4.5 h-4.5"></i>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="pasteFromClipboard()"
+                                class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-brand-600 bg-white hover:bg-brand-50/50 px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm transition-all">
+                                <i data-lucide="clipboard-paste" class="w-3.5 h-3.5"></i>
+                                Paste
+                            </button>
+                            <button onclick="clearText()"
+                                class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-red-600 bg-white hover:bg-red-50/50 px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm transition-all">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                Clear
+                            </button>
+                            <div class="w-px h-6 bg-slate-200 mx-1"></div>
+                            <button onclick="copyToClipboard()"
+                                class="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 px-3 py-1.5 rounded-lg shadow-sm shadow-brand-500/10 hover:shadow-brand-500/20 transition-all">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                Copy
+                            </button>
+                            <button onclick="downloadText()"
+                                class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200 shadow-sm transition-all">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                Download
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Text Area -->
+                    <div class="relative">
+                        <textarea id="text-input" rows="12" placeholder="Type, paste, or drag and drop your text here to begin converting case..."
+                            class="w-full p-5 text-slate-700 bg-white placeholder-slate-400 focus:outline-none focus:ring-0 text-[15px] leading-relaxed resize-y border-none font-sans min-h-[300px]"></textarea>
+                    </div>
+
+                    <!-- Bottom Quick Stats Bar -->
+                    <div class="bg-slate-50 border-t border-slate-200 px-5 py-2.5 flex items-center justify-between text-xs text-slate-500 font-medium">
+                        <div class="flex items-center gap-4">
+                            <span>Characters: <strong id="quick-char" class="text-slate-700">0</strong></span>
+                            <span>Words: <strong id="quick-word" class="text-slate-700">0</strong></span>
+                        </div>
+                        <div id="drag-overlay" class="hidden text-brand-600 animate-pulse flex items-center gap-1.5">
+                            <i data-lucide="file-up" class="w-4 h-4"></i>
+                            <span>Drop text/txt file here to import</span>
+                        </div>
+                        <span id="saved-state" class="text-slate-400 font-normal">All processing runs locally in-browser</span>
+                    </div>
+                </div>
+
+                <!-- Case conversion controls -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm custom-shadow flex flex-col gap-6">
+                    <!-- Standard Text Cases -->
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3.5 flex items-center gap-2">
+                            <i data-lucide="type" class="w-4 h-4 text-slate-400"></i>
+                            Standard Cases
+                        </h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                            <button onclick="convert('sentence')"
+                                class="px-4 py-2.5 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-semibold rounded-xl text-sm border border-slate-200 hover:border-brand-200 transition-all text-center">
+                                Sentence case
+                            </button>
+                            <button onclick="convert('lower')"
+                                class="px-4 py-2.5 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-semibold rounded-xl text-sm border border-slate-200 hover:border-brand-200 transition-all text-center">
+                                lowercase
+                            </button>
+                            <button onclick="convert('upper')"
+                                class="px-4 py-2.5 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-semibold rounded-xl text-sm border border-slate-200 hover:border-brand-200 transition-all text-center">
+                                UPPERCASE
+                            </button>
+                            <button onclick="convert('capitalized')"
+                                class="px-4 py-2.5 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-semibold rounded-xl text-sm border border-slate-200 hover:border-brand-200 transition-all text-center">
+                                Capitalized Case
+                            </button>
+                            <button onclick="convert('title')"
+                                class="px-4 py-2.5 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-semibold rounded-xl text-sm border border-slate-200 hover:border-brand-200 transition-all text-center col-span-2 sm:col-span-1">
+                                Title Case
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Developer Cases -->
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3.5 flex items-center gap-2">
+                            <i data-lucide="code-2" class="w-4 h-4 text-slate-400"></i>
+                            Developer Cases
+                        </h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                            <button onclick="convert('camel')"
+                                class="px-3 py-2.5 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-mono font-medium rounded-xl text-[13px] border border-slate-200 hover:border-brand-200 transition-all text-center">
+                                camelCase
+                            </button>
+                            <button onclick="convert('pascal')"
+                                class="px-3 py-2.5 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-mono font-medium rounded-xl text-[13px] border border-slate-200 hover:border-brand-200 transition-all text-center">
+                                PascalCase
+                            </button>
+                            <button onclick="convert('snake')"
+                                class="px-3 py-2.5 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-mono font-medium rounded-xl text-[13px] border border-slate-200 hover:border-brand-200 transition-all text-center">
+                                snake_case
+                            </button>
+                            <button onclick="convert('kebab')"
+                                class="px-3 py-2.5 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-mono font-medium rounded-xl text-[13px] border border-slate-200 hover:border-brand-200 transition-all text-center">
+                                kebab-case
+                            </button>
+                            <button onclick="convert('dot')"
+                                class="px-3 py-2.5 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-mono font-medium rounded-xl text-[13px] border border-slate-200 hover:border-brand-200 transition-all text-center">
+                                dot.case
+                            </button>
+                            <button onclick="convert('screaming')"
+                                class="px-3 py-2.5 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-mono font-medium rounded-xl text-[12px] border border-slate-200 hover:border-brand-200 transition-all text-center">
+                                CONSTANT_CASE
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Alternate & Special Cases -->
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3.5 flex items-center gap-2">
+                            <i data-lucide="sparkles" class="w-4 h-4 text-slate-400"></i>
+                            Alternate & Special Cases
+                        </h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="convert('alternating')"
+                                class="px-4 py-2.5 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-semibold rounded-xl text-sm border border-slate-200 hover:border-brand-200 transition-all text-center">
+                                aLtErNaTiNg cAsE
+                            </button>
+                            <button onclick="convert('inverse')"
+                                class="px-4 py-2.5 bg-slate-50 hover:bg-brand-50 hover:text-brand-700 text-slate-700 font-semibold rounded-xl text-sm border border-slate-200 hover:border-brand-200 transition-all text-center">
+                                InVeRsE CaSe
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar (Detailed statistics & metadata) -->
+            <div class="flex flex-col gap-6">
+                <!-- Stats Card -->
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm custom-shadow flex flex-col gap-5">
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
+                        <i data-lucide="bar-chart-3" class="w-5 h-5 text-brand-600"></i>
+                        Text Statistics
+                    </h3>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-3.5 flex flex-col">
+                            <span class="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Characters</span>
+                            <span id="stat-chars" class="text-2xl font-extrabold text-slate-800 mt-1">0</span>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-3.5 flex flex-col">
+                            <span class="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Words</span>
+                            <span id="stat-words" class="text-2xl font-extrabold text-slate-800 mt-1">0</span>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-3.5 flex flex-col">
+                            <span class="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Sentences</span>
+                            <span id="stat-sentences" class="text-2xl font-extrabold text-slate-800 mt-1">0</span>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-100 rounded-xl p-3.5 flex flex-col">
+                            <span class="text-slate-400 text-[11px] font-bold uppercase tracking-wider">Lines</span>
+                            <span id="stat-lines" class="text-2xl font-extrabold text-slate-800 mt-1">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Micro-analytical Stats -->
+                    <div class="flex flex-col gap-3 pt-2">
+                        <div class="flex items-center justify-between text-sm py-1.5 border-b border-slate-100">
+                            <div class="flex items-center gap-2 text-slate-500">
+                                <i data-lucide="minus" class="w-4 h-4 text-slate-400"></i>
+                                <span>No Spaces count</span>
+                            </div>
+                            <span id="stat-chars-no-spaces" class="font-semibold text-slate-800">0</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm py-1.5 border-b border-slate-100">
+                            <div class="flex items-center gap-2 text-slate-500">
+                                <i data-lucide="type" class="w-4 h-4 text-slate-400"></i>
+                                <span>Avg Word Length</span>
+                            </div>
+                            <span id="stat-avg-word-len" class="font-semibold text-slate-800">0.0</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm py-1.5">
+                            <div class="flex items-center gap-2 text-slate-500">
+                                <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i>
+                                <span>Read Time (approx.)</span>
+                            </div>
+                            <span id="stat-read-time" class="font-semibold text-slate-800">&lt; 1 sec</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clean Utility Information -->
+                <div class="bg-slate-100 rounded-2xl border border-slate-200/60 p-5 flex flex-col gap-3">
+                    <h4 class="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+                        <i data-lucide="shield-check" class="w-4.5 h-4.5 text-emerald-600"></i>
+                        Safe & Private
+                    </h4>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        This tool operates <strong>strictly locally</strong> within your web browser. No text data is ever transmitted to a server. You can safely use it offline or with sensitive documents.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-400">
+            &copy; 2026 Faculty Tools Collection. All rights reserved. Runs entirely in your browser.
+        </div>
+    </footer>
+
+    <!-- Toast message container -->
+    <div id="toast" class="toast flex items-center gap-3 shadow-xl border border-slate-800">
+        <i data-lucide="check-circle-2" class="h-5 w-5 text-emerald-400"></i>
+        <span id="toast-message">Success!</span>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // DOM Elements
+        const textInput = document.getElementById('text-input');
+        const quickChar = document.getElementById('quick-char');
+        const quickWord = document.getElementById('quick-word');
+        const statChars = document.getElementById('stat-chars');
+        const statCharsNoSpaces = document.getElementById('stat-chars-no-spaces');
+        const statWords = document.getElementById('stat-words');
+        const statSentences = document.getElementById('stat-sentences');
+        const statLines = document.getElementById('stat-lines');
+        const statAvgWordLen = document.getElementById('stat-avg-word-len');
+        const statReadTime = document.getElementById('stat-read-time');
+
+        // History state management (Undo / Redo)
+        let history = [];
+        let historyIndex = -1;
+        const maxHistory = 100;
+
+        function pushState(text) {
+            if (historyIndex >= 0 && history[historyIndex] === text) return;
+            // Clear future history if we are overwriting it
+            history = history.slice(0, historyIndex + 1);
+            history.push(text);
+            if (history.length > maxHistory) {
+                history.shift();
+            }
+            historyIndex = history.length - 1;
+            updateUndoRedoButtons();
+        }
+
+        function undo() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                const text = history[historyIndex];
+                textInput.value = text;
+                updateStats(text);
+                updateUndoRedoButtons();
+            }
+        }
+
+        function redo() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                const text = history[historyIndex];
+                textInput.value = text;
+                updateStats(text);
+                updateUndoRedoButtons();
+            }
+        }
+
+        function updateUndoRedoButtons() {
+            const undoBtn = document.getElementById('undo-btn');
+            const redoBtn = document.getElementById('redo-btn');
+
+            if (historyIndex > 0) {
+                undoBtn.disabled = false;
+                undoBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+            } else {
+                undoBtn.disabled = true;
+                undoBtn.classList.add('opacity-40', 'cursor-not-allowed');
+            }
+
+            if (historyIndex < history.length - 1) {
+                redoBtn.disabled = false;
+                redoBtn.classList.remove('opacity-40', 'cursor-not-allowed');
+            } else {
+                redoBtn.disabled = true;
+                redoBtn.classList.add('opacity-40', 'cursor-not-allowed');
+            }
+        }
+
+        // Stats Computation
+        function updateStats(text) {
+            const totalChars = text.length;
+            const noSpacesCount = text.replace(/\s/g, '').length;
+            
+            // Words extraction: filter out empty array elements
+            const wordsArray = text.trim() ? text.trim().split(/\s+/) : [];
+            const totalWords = wordsArray.length;
+
+            // Sentence extraction: count standard punctuation endings
+            let sentences = (text.match(/[.!?]+(?=\s|$)/g) || []).length;
+            if (sentences === 0 && text.trim().length > 0) {
+                sentences = 1;
+            }
+
+            // Line count
+            const totalLines = text ? text.split('\n').length : 0;
+
+            // Average word length
+            let avgWordLen = 0;
+            if (totalWords > 0) {
+                const totalLetters = wordsArray.reduce((acc, word) => acc + word.length, 0);
+                avgWordLen = totalLetters / totalWords;
+            }
+
+            // Estimate reading time (average 200 words per minute)
+            let readTimeStr = '< 1 sec';
+            if (totalWords > 0) {
+                const seconds = Math.ceil((totalWords / 200) * 60);
+                if (seconds < 60) {
+                    readTimeStr = `${seconds} sec`;
+                } else {
+                    const minutes = Math.floor(seconds / 60);
+                    const remainingSec = seconds % 60;
+                    readTimeStr = `${minutes} min ${remainingSec > 0 ? remainingSec + ' sec' : ''}`;
+                }
+            }
+
+            // Update DOM elements
+            quickChar.textContent = totalChars.toLocaleString();
+            quickWord.textContent = totalWords.toLocaleString();
+            statChars.textContent = totalChars.toLocaleString();
+            statCharsNoSpaces.textContent = noSpacesCount.toLocaleString();
+            statWords.textContent = totalWords.toLocaleString();
+            statSentences.textContent = sentences.toLocaleString();
+            statLines.textContent = totalLines.toLocaleString();
+            statAvgWordLen.textContent = avgWordLen.toFixed(1);
+            statReadTime.textContent = readTimeStr;
+        }
+
+        // Keyboard Shortcut Integrations for Undo/Redo
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                undo();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+                e.preventDefault();
+                redo();
+            }
+        });
+
+        // Event listener for inputs (Debounced state-pushing for continuous typing)
+        let typingTimeout;
+        textInput.addEventListener('input', (e) => {
+            const currentText = e.target.value;
+            updateStats(currentText);
+
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                pushState(currentText);
+            }, 800);
+        });
+
+        // Initial setup
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            const text = textInput.value;
+            updateStats(text);
+            pushState(text);
+        });
+
+        // Toast feedback notifier
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.textContent = message;
+
+            // Switch icon colors depending on type
+            const icon = toast.querySelector('i');
+            if (type === 'error') {
+                icon.setAttribute('data-lucide', 'alert-circle');
+                icon.className = 'h-5 w-5 text-red-400';
+            } else {
+                icon.setAttribute('data-lucide', 'check-circle-2');
+                icon.className = 'h-5 w-5 text-emerald-400';
+            }
+            lucide.createIcons();
+
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Clipboard Actions
+        function copyToClipboard() {
+            const text = textInput.value;
+            if (!text) {
+                showToast('Nothing to copy!', 'error');
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Text copied to clipboard!');
+            }).catch(err => {
+                console.error(err);
+                showToast('Could not copy to clipboard', 'error');
+            });
+        }
+
+        function pasteFromClipboard() {
+            navigator.clipboard.readText().then(text => {
+                textInput.value = text;
+                updateStats(text);
+                pushState(text);
+                showToast('Text pasted from clipboard!');
+            }).catch(err => {
+                console.error(err);
+                showToast('Could not access clipboard. Paste manually.', 'error');
+            });
+        }
+
+        // Clear workspace
+        function clearText() {
+            const oldText = textInput.value;
+            if (oldText === '') return;
+            
+            textInput.value = '';
+            updateStats('');
+            pushState('');
+            showToast('Workspace cleared');
+        }
+
+        // File download utility
+        function downloadText() {
+            const text = textInput.value;
+            if (!text) {
+                showToast('No text to download!', 'error');
+                return;
+            }
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `converted_text_${new Date().toISOString().slice(0, 10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Downloaded converted text file!');
+        }
+
+        // Drag and drop text / txt files
+        const dragOverlay = document.getElementById('drag-overlay');
+        
+        textInput.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dragOverlay.classList.remove('hidden');
+        });
+
+        textInput.addEventListener('dragleave', () => {
+            dragOverlay.classList.add('hidden');
+        });
+
+        textInput.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dragOverlay.classList.add('hidden');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type === "text/plain" || file.name.endsWith('.txt')) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const content = event.target.result;
+                        textInput.value = content;
+                        updateStats(content);
+                        pushState(content);
+                        showToast(`Imported text from ${file.name}`);
+                    };
+                    reader.readAsText(file);
+                } else {
+                    showToast('Only .txt and plain text files are supported', 'error');
+                }
+            }
+        });
+
+        // --- Core Case Conversion Algorithms ---
+
+        // Developer cases word splitter
+        function getWords(str) {
+            return str
+                .replace(/([a-z\d])([A-Z])/g, '$1 $2') // split camelCase
+                .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2') // split acronyms
+                .replace(/[-\s_./\\]+/g, ' ') // convert separators to spaces
+                .trim()
+                .split(/\s+/)
+                .filter(w => w.length > 0);
+        }
+
+        function convert(caseType) {
+            const originalText = textInput.value;
+            if (!originalText.trim()) {
+                showToast('Please enter some text first!', 'error');
+                return;
+            }
+
+            let convertedText = '';
+
+            switch (caseType) {
+                case 'sentence':
+                    convertedText = toSentenceCase(originalText);
+                    break;
+                case 'lower':
+                    convertedText = originalText.toLowerCase();
+                    break;
+                case 'upper':
+                    convertedText = originalText.toUpperCase();
+                    break;
+                case 'capitalized':
+                    convertedText = toCapitalizedCase(originalText);
+                    break;
+                case 'title':
+                    convertedText = toTitleCase(originalText);
+                    break;
+                case 'camel':
+                    convertedText = toCamelCase(originalText);
+                    break;
+                case 'pascal':
+                    convertedText = toPascalCase(originalText);
+                    break;
+                case 'snake':
+                    convertedText = toSnakeCase(originalText);
+                    break;
+                case 'kebab':
+                    convertedText = toKebabCase(originalText);
+                    break;
+                case 'dot':
+                    convertedText = toDotCase(originalText);
+                    break;
+                case 'screaming':
+                    convertedText = toScreamingSnakeCase(originalText);
+                    break;
+                case 'alternating':
+                    convertedText = toAlternatingCase(originalText);
+                    break;
+                case 'inverse':
+                    convertedText = toInverseCase(originalText);
+                    break;
+                default:
+                    return;
+            }
+
+            textInput.value = convertedText;
+            updateStats(convertedText);
+            pushState(convertedText);
+            showToast('Text converted successfully!');
+        }
+
+        // 1. Sentence Case
+        function toSentenceCase(str) {
+            let lower = str.toLowerCase();
+            // Capitalize first character of string and first letter of every sentence
+            let sentenceCased = lower.replace(/(^\s*|[.!?]\s+)([a-z])/g, (match, separator, char) => {
+                return separator + char.toUpperCase();
+            });
+            // Capitalize standalone "i"
+            return sentenceCased.replace(/\b(i)\b/g, 'I');
+        }
+
+        // 2. Capitalized Case
+        function toCapitalizedCase(str) {
+            return str.toLowerCase().replace(/\b(\w)/g, char => char.toUpperCase());
+        }
+
+        // 3. Title Case
+        function toTitleCase(str) {
+            const minorWords = new Set([
+                'a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at', 
+                'to', 'by', 'from', 'with', 'in', 'of', 'as', 'over'
+            ]);
+            
+            return str.split('\n').map(line => {
+                let words = line.split(/(\s+)/);
+                return words.map((word, index, arr) => {
+                    if (/^\s*$/.test(word)) return word; // skip spaces
+                    
+                    // Determine if it is first or last word in line
+                    let isFirst = true;
+                    for (let i = 0; i < index; i++) {
+                        if (!/^\s*$/.test(arr[i])) { isFirst = false; break; }
+                    }
+                    let isLast = true;
+                    for (let i = index + 1; i < arr.length; i++) {
+                        if (!/^\s*$/.test(arr[i])) { isLast = false; break; }
+                    }
+                    
+                    let lowerWord = word.toLowerCase();
+                    if (minorWords.has(lowerWord) && !isFirst && !isLast) {
+                        return lowerWord;
+                    }
+                    
+                    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                }).join('');
+            }).join('\n');
+        }
+
+        // 4. Alternating Case
+        function toAlternatingCase(str) {
+            let count = 0;
+            return str.split('').map(char => {
+                if (/[a-zA-Z]/.test(char)) {
+                    let res = count % 2 === 0 ? char.toLowerCase() : char.toUpperCase();
+                    count++;
+                    return res;
+                }
+                return char;
+            }).join('');
+        }
+
+        // 5. Inverse Case
+        function toInverseCase(str) {
+            return str.split('').map(char => {
+                if (char === char.toUpperCase()) {
+                    return char.toLowerCase();
+                } else {
+                    return char.toUpperCase();
+                }
+            }).join('');
+        }
+
+        // 6. camelCase
+        function toCamelCase(str) {
+            const words = getWords(str);
+            if (words.length === 0) return '';
+            return words[0].toLowerCase() + words.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+        }
+
+        // 7. PascalCase
+        function toPascalCase(str) {
+            const words = getWords(str);
+            return words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('');
+        }
+
+        // 8. snake_case
+        function toSnakeCase(str) {
+            const words = getWords(str);
+            return words.map(w => w.toLowerCase()).join('_');
+        }
+
+        // 9. kebab-case
+        function toKebabCase(str) {
+            const words = getWords(str);
+            return words.map(w => w.toLowerCase()).join('-');
+        }
+
+        // 10. dot.case
+        function toDotCase(str) {
+            const words = getWords(str);
+            return words.map(w => w.toLowerCase()).join('.');
+        }
+
+        // 11. SCREAMING_SNAKE_CASE (CONSTANT_CASE)
+        function toScreamingSnakeCase(str) {
+            const words = getWords(str);
+            return words.map(w => w.toUpperCase()).join('_');
+        }
+    </script>
+</body>
+
+</html>
