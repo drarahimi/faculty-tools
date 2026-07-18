@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSERC Discovery Grant Helper - Faculty Tools</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%23be123c'/%3E%3Cpath d='M30,75 L30,25 L45,45 L45,25 L55,25 L55,75 L40,55 L40,75 Z M70,55 C70,66 62,68 62,68 L62,75 L70,75 Z' fill='white'/%3E%3C/svg%3E">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            200: '#fecdd3',
+                            500: '#e11d48', // Crimson red
+                            600: '#be123c',
+                            700: '#9f1239',
+                            900: '#4c0519',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .tab-btn.active {
+            border-color: #be123c;
+            color: #be123c;
+            background-color: #fff1f2;
+        }
+        
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #1e293b;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 12px 24px;
+            position: fixed;
+            z-index: 50;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s, visibility 0.3s;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans antialiased flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/95">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-brand-50 text-brand-600 rounded-lg border border-brand-100">
+                    <i data-lucide="award" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900 leading-tight">NSERC Discovery Grant Helper</h1>
+                    <p class="text-xs text-slate-500">Simplify budget planning, text character checks, and HQP/EDI compliance</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                    <button onclick="exportJSON()" class="text-xs font-semibold text-slate-600 hover:text-brand-600 hover:bg-white px-2 py-1 rounded transition-colors flex items-center gap-1">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        Export Draft
+                    </button>
+                    <button onclick="triggerImport()" class="text-xs font-semibold text-slate-600 hover:text-brand-600 hover:bg-white px-2 py-1 rounded transition-colors flex items-center gap-1">
+                        <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                        Import Draft
+                    </button>
+                    <input type="file" id="importFileInput" onchange="importJSON(event)" class="hidden" accept=".json">
+                </div>
+                <span id="saveStatus" class="text-xs text-slate-400 flex items-center gap-1.5 bg-slate-100 px-2.5 py-1.5 rounded-md">
+                    <i data-lucide="cloud-lightning" class="w-3.5 h-3.5 text-emerald-500"></i>
+                    Autosaved
+                </span>
+                <a href="index.html" class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors bg-slate-100 hover:bg-brand-50 px-3.5 py-1.5 rounded-lg border border-slate-200">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    Back
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col lg:flex-row gap-6">
+        
+        <!-- Left Sidebar / Navigation Tabs -->
+        <aside class="w-full lg:w-64 flex-shrink-0">
+            <nav class="flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible bg-white p-2 rounded-xl border border-slate-200 shadow-sm gap-1 scrollbar-none sticky top-20">
+                <button onclick="switchTab('checklist')" id="tab-checklist" class="tab-btn active flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
+                    <i data-lucide="check-square" class="w-4 h-4"></i>
+                    <span>Proposal Checklist</span>
+                </button>
+                <button onclick="switchTab('budget')" id="tab-budget" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
+                    <i data-lucide="calculator" class="w-4 h-4"></i>
+                    <span>5-Year Budget & HQP</span>
+                </button>
+                <button onclick="switchTab('outliner')" id="tab-outliner" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
+                    <i data-lucide="book-open" class="w-4 h-4"></i>
+                    <span>Proposal Outliner</span>
+                </button>
+                <button onclick="switchTab('limits')" id="tab-limits" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
+                    <i data-lucide="text-cursor-input" class="w-4 h-4"></i>
+                    <span>Portal Text Limit Checker</span>
+                </button>
+                <button onclick="switchTab('edi')" id="tab-edi" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    <span>HQP EDI Plan Builder</span>
+                </button>
+                <button onclick="switchTab('merit')" id="tab-merit" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
+                    <i data-lucide="grid" class="w-4 h-4"></i>
+                    <span>Merit Rubric Assessor</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow flex flex-col min-w-0">
+
+            <!-- TAB 1: CHECKLIST -->
+            <section id="content-checklist" class="tab-content flex flex-col gap-6">
+                <!-- Overview & Progress Card -->
+                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 mb-1">Proposal Completeness Checklist</h2>
+                        <p class="text-sm text-slate-500">Track all components required for a complete NSERC Discovery Grant application package.</p>
+                    </div>
+                    <div class="flex items-center gap-4 bg-slate-50 px-5 py-3 rounded-lg border border-slate-100 min-w-[240px]">
+                        <div class="relative w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                            <!-- Circular Progress SVG -->
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                <path class="text-slate-200" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path id="progressCircle" class="text-brand-600 transition-all duration-500" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <span id="progressText" class="absolute text-xs font-bold text-slate-800">0%</span>
+                        </div>
+                        <div>
+                            <div class="text-sm font-semibold text-slate-800" id="progressTitle">Getting Started</div>
+                            <div class="text-xs text-slate-500" id="progressSubtitle">0 of 8 sections completed</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Checklist Table -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="divide-y divide-slate-100" id="checklistContainer">
+                        <!-- Items injected dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: BUDGET & HQP PLANNER -->
+            <section id="content-budget" class="tab-content hidden flex flex-col gap-6">
+                <!-- Info Alert -->
+                <div class="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-5 shadow-sm flex gap-3">
+                    <i data-lucide="info" class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5"></i>
+                    <div class="text-sm leading-relaxed">
+                        <span class="font-semibold">NSERC Budget Principle:</span> The training of Highly Qualified Personnel (HQP) is the paramount objective. Direct costs of research should heavily favor graduate student stipends, undergraduate wages, and postdoctoral salary packages. Aim to maintain an HQP investment ratio of <span class="font-semibold">65% or higher</span>.
+                    </div>
+                </div>
+
+                <!-- Configurations Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- University Baseline Rates -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1.5">
+                                <i data-lucide="building" class="w-4 h-4 text-brand-600"></i>
+                                <h3 class="text-sm font-bold text-slate-800">Graduate Stipend Baselines</h3>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mb-3">Load reference student stipends (typical package rates) for Canadian institutions.</p>
+                            <div class="flex gap-2">
+                                <select id="selUniversity" onchange="changeUniversity()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 flex-grow focus:ring-brand-500 focus:border-brand-500 bg-white">
+                                    <option value="custom">-- Select University Baseline --</option>
+                                    <option value="uwindsor">University of Windsor</option>
+                                    <option value="utoronto">University of Toronto</option>
+                                    <option value="uwaterloo">University of Waterloo</option>
+                                    <option value="mcgill">McGill University</option>
+                                    <option value="ubc">University of British Columbia</option>
+                                </select>
+                                <button onclick="applyUniRates()" class="text-xs font-semibold text-white bg-slate-700 hover:bg-slate-800 px-3 py-1.5 rounded-lg transition-colors flex-shrink-0">
+                                    Apply Baseline
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Sub panel showing rates -->
+                        <div id="uniRatesPanel" class="hidden mt-3.5 p-3 bg-slate-50 rounded-lg text-xs border border-slate-100 grid grid-cols-2 gap-2 text-slate-600">
+                            <div>PhD: <span id="ratePhD" class="font-bold text-slate-800">$0/yr</span></div>
+                            <div>MSc: <span id="rateMSc" class="font-bold text-slate-800">$0/yr</span></div>
+                            <div>Undergrad: <span id="rateUndergrad" class="font-bold text-slate-800">$0/yr</span></div>
+                            <div>Postdoc: <span id="ratePDF" class="font-bold text-slate-800">$0/yr</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Evaluation Group Comparison -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1.5">
+                                <i data-lucide="bar-chart-3" class="w-4 h-4 text-brand-600"></i>
+                                <h3 class="text-sm font-bold text-slate-800">Evaluation Group (EG) Guide</h3>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mb-3">Benchmark requested funds against historical average Discovery Grant size for your peer group.</p>
+                            <select id="selEG" onchange="changeEG()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 w-full focus:ring-brand-500 focus:border-brand-500 bg-white">
+                                <option value="none">-- Select Evaluation Group --</option>
+                                <option value="1501">1501 - Genes, Cells and Molecules ($42k/yr)</option>
+                                <option value="1502">1502 - Biological Systems and Functions ($39k/yr)</option>
+                                <option value="1503">1503 - Materials and Chemical Engineering ($35k/yr)</option>
+                                <option value="1504">1504 - Chemistry ($37k/yr)</option>
+                                <option value="1505">1505 - Physics ($38k/yr)</option>
+                                <option value="1506">1506 - Geosciences ($34k/yr)</option>
+                                <option value="1507">1507 - Computer Science ($33k/yr)</option>
+                                <option value="1508">1508 - Mathematics and Statistics ($24k/yr)</option>
+                                <option value="1509">1509 - Civil, Industrial and Systems Engineering ($31k/yr)</option>
+                                <option value="1510">1510 - Electrical and Computer Engineering ($34k/yr)</option>
+                                <option value="1511">1511 - Mechanical Engineering ($35k/yr)</option>
+                            </select>
+                        </div>
+                        <!-- Sub panel showing comparison stats -->
+                        <div id="egComparisonPanel" class="hidden mt-3.5 p-3 bg-slate-50 rounded-lg text-xs border border-slate-100 flex items-center justify-between text-slate-600">
+                            <div>EG Average: <span id="egAvgVal" class="font-bold text-slate-800">$0</span></div>
+                            <div class="font-semibold px-2.5 py-0.5 rounded text-[10px]" id="egCompareBadge">0% of average</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget Table Container -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">5-Year Financial & HQP Forecast</h2>
+                            <p class="text-xs text-slate-500">Provide direct salaries for HQP alongside operating and dissemination costs</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="addBudgetRow('hqp')" class="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 px-3 py-2 rounded-lg shadow-sm transition-colors">
+                                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                                Add HQP Salary
+                            </button>
+                            <button onclick="addBudgetRow('operating')" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 px-3 py-2 rounded-lg shadow-sm transition-colors">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                Add Operating Cost
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Spreadsheet Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold text-[11px] uppercase tracking-wider">
+                                    <th class="px-6 py-3 min-w-[200px]">Item / Description</th>
+                                    <th class="px-6 py-3 w-32">Type</th>
+                                    <th class="px-4 py-3 w-28 text-right">Year 1 ($)</th>
+                                    <th class="px-4 py-3 w-28 text-right">Year 2 ($)</th>
+                                    <th class="px-4 py-3 w-28 text-right">Year 3 ($)</th>
+                                    <th class="px-4 py-3 w-28 text-right">Year 4 ($)</th>
+                                    <th class="px-4 py-3 w-28 text-right">Year 5 ($)</th>
+                                    <th class="px-6 py-3 w-20 text-center">Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100" id="budgetTableBody">
+                                <!-- Budget Rows Injected dynamically -->
+                            </tbody>
+                            <tfoot>
+                                <!-- Totals dynamically updated -->
+                                <tr class="bg-slate-50/50 font-bold border-t border-slate-200 text-slate-900">
+                                    <td class="px-6 py-4" colspan="2">Yearly Requested Direct Costs</td>
+                                    <td class="px-4 py-4 text-right" id="tot-y1">$0</td>
+                                    <td class="px-4 py-4 text-right" id="tot-y2">$0</td>
+                                    <td class="px-4 py-4 text-right" id="tot-y3">$0</td>
+                                    <td class="px-4 py-4 text-right" id="tot-y4">$0</td>
+                                    <td class="px-4 py-4 text-right" id="tot-y5">$0</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Gantt Pipeline Visualizer -->
+                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800">HQP Training Pipeline Visualizer</h3>
+                        <p class="text-xs text-slate-500">Visual mapping of student overlap. NSERC reviewers favor pipeline structures with graduation overlap for student peer mentoring.</p>
+                    </div>
+                    <div class="flex flex-col gap-3.5 border-t border-slate-100 pt-4" id="ganttChartContainer">
+                        <!-- Gantt bars injected dynamically -->
+                    </div>
+                </div>
+
+                <!-- Budget Summary Card Matrix -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Grand Stats -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Total Requested Amount</span>
+                            <h3 class="text-3xl font-extrabold text-slate-900 leading-tight" id="sum-grand">$0</h3>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between text-xs text-slate-500">
+                            <span>Annual Average:</span>
+                            <span class="font-semibold text-slate-800" id="sum-average">$0 / year</span>
+                        </div>
+                    </div>
+
+                    <!-- HQP Support Meter -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">HQP Funding Ratio</span>
+                            <div class="flex items-baseline gap-2">
+                                <h3 class="text-3xl font-extrabold text-slate-900" id="hqp-ratio-text">0%</h3>
+                                <span class="text-xs px-2 py-0.5 rounded-full font-medium" id="hqp-ratio-badge">Healthy</span>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="hqp-ratio-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-2" id="hqp-ratio-feedback">Adequate budget allocation to student support.</p>
+                        </div>
+                    </div>
+
+                    <!-- Copy / LaTeX Export utilities -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Formatted Table Exporters</span>
+                            <p class="text-xs text-slate-500 leading-relaxed mb-4">Export tables directly into your Word draft, Overleaf LaTeX document, or Google Doc.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="exportLaTeX()" class="flex-grow inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 px-3 py-2.5 rounded-lg shadow-sm transition-colors">
+                                <i data-lucide="code-2" class="w-3.5 h-3.5"></i>
+                                LaTeX Code
+                            </button>
+                            <button onclick="exportMarkdown()" class="flex-grow inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 px-3 py-2.5 rounded-lg shadow-sm transition-colors">
+                                <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                Markdown Table
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Modal / Textarea Drawer -->
+                <div id="exportDrawer" class="hidden bg-slate-900 rounded-xl p-5 text-slate-200 border border-slate-800 shadow-xl flex flex-col gap-3.5 animate-fadeIn">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="terminal" class="w-4 h-4 text-brand-400"></i>
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-300" id="drawerTitle">LaTeX Export</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="copyDrawerContent()" class="text-xs font-medium bg-brand-600 hover:bg-brand-700 text-white px-3 py-1 rounded transition-colors flex items-center gap-1.5">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                Copy to Clipboard
+                            </button>
+                            <button onclick="closeDrawer()" class="text-slate-400 hover:text-white transition-colors">
+                                <i data-lucide="x" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="drawerTextarea" readonly class="w-full h-48 bg-slate-950 text-slate-300 p-4 rounded-lg font-mono text-xs focus:outline-none border border-slate-800 shadow-inner scrollbar-none"></textarea>
+                </div>
+            </section>
+
+            <!-- TAB 3: PROPOSAL OUTLINER -->
+            <section id="content-outliner" class="tab-content hidden flex flex-col gap-6">
+                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 mb-1">5-Page Proposal Structure Outliner</h2>
+                        <p class="text-sm text-slate-500">Draft and gauge the length of your proposal subsections to fit cleanly into the hard NSERC 5-page PDF limit.</p>
+                    </div>
+                    <!-- Page budget estimator -->
+                    <div class="flex items-center gap-4 bg-slate-50 px-5 py-3 rounded-lg border border-slate-100 min-w-[260px]">
+                        <div class="relative w-12 h-12 flex-shrink-0 flex items-center justify-center">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                <path class="text-slate-200" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                <path id="outlinerProgressCircle" class="text-brand-600 transition-all duration-500" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            </svg>
+                            <span id="outlinerProgressText" class="absolute text-[10px] font-bold text-slate-800">0.0 p</span>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-800">Total Page Count Estimate</div>
+                            <div class="text-[11px] text-slate-500" id="outlinerProgressSubtitle">0.0 / 5.0 pages occupied</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF Page simulator -->
+                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800">Visual PDF Page Sheet Allocation</h3>
+                        <p class="text-xs text-slate-500">Standard formatting (12pt Times, single-space, 0.75" margins) translates to roughly 4,000 characters per page. Ensure combined length fits in 5.0 pages.</p>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4" id="pdfPagesStack">
+                        <!-- Dynamic page cards rendered here -->
+                    </div>
+                </div>
+
+                <!-- Outline editors list -->
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- Section 1 -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                        <div class="flex items-start justify-between flex-wrap gap-2">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800">1. Recent Progress (Target: 1.0 Page)</h3>
+                                <p class="text-[11px] text-slate-400">Describe research successes, publications, and trainees from the previous NSERC funding cycle.</p>
+                            </div>
+                            <span id="cntOutliner-1" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">0 / 4,000 chars</span>
+                        </div>
+                        <textarea id="txtOutliner-1" oninput="checkOutlinerChars(1, 4000)" placeholder="Draft recent progress details... (approx 4,000 characters)" class="w-full h-36 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <!-- Style warnings -->
+                        <div id="auditOutliner-1"></div>
+                    </div>
+                    
+                    <!-- Section 2 -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                        <div class="flex items-start justify-between flex-wrap gap-2">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800">2. Short-Term & Long-Term Objectives (Target: 0.5 Page)</h3>
+                                <p class="text-[11px] text-slate-400">Long-term vision (5-10 yrs) and short-term specific grant milestones (1-5 yrs).</p>
+                            </div>
+                            <span id="cntOutliner-2" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">0 / 2,000 chars</span>
+                        </div>
+                        <textarea id="txtOutliner-2" oninput="checkOutlinerChars(2, 2000)" placeholder="Draft research objectives... (approx 2,000 characters)" class="w-full h-32 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <!-- Style warnings -->
+                        <div id="auditOutliner-2"></div>
+                    </div>
+
+                    <!-- Section 3 -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                        <div class="flex items-start justify-between flex-wrap gap-2">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800">3. Literature Review (Target: 1.0 Page)</h3>
+                                <p class="text-[11px] text-slate-400">Position your work against current state-of-the-art and identify key gaps in the field.</p>
+                            </div>
+                            <span id="cntOutliner-3" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">0 / 4,000 chars</span>
+                        </div>
+                        <textarea id="txtOutliner-3" oninput="checkOutlinerChars(3, 4000)" placeholder="Draft literature review... (approx 4,000 characters)" class="w-full h-36 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <!-- Style warnings -->
+                        <div id="auditOutliner-3"></div>
+                    </div>
+
+                    <!-- Section 4 -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                        <div class="flex items-start justify-between flex-wrap gap-2">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800">4. Methodology & Feasibility (Target: 2.0 Pages)</h3>
+                                <p class="text-[11px] text-slate-400">Detail experiments, tools, datasets, student responsibilities, and key risks / mitigations.</p>
+                            </div>
+                            <span id="cntOutliner-4" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">0 / 8,000 chars</span>
+                        </div>
+                        <textarea id="txtOutliner-4" oninput="checkOutlinerChars(4, 8000)" placeholder="Draft methodology details... (approx 8,000 characters)" class="w-full h-48 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <!-- Style warnings -->
+                        <div id="auditOutliner-4"></div>
+                    </div>
+
+                    <!-- Section 5 -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                        <div class="flex items-start justify-between flex-wrap gap-2">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800">5. Significance & Impact (Target: 0.5 Page)</h3>
+                                <p class="text-[11px] text-slate-400">Scientific significance, technology transfer potential, and student training benefits.</p>
+                            </div>
+                            <span id="cntOutliner-5" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">0 / 2,000 chars</span>
+                        </div>
+                        <textarea id="txtOutliner-5" oninput="checkOutlinerChars(5, 2000)" placeholder="Draft impact statement... (approx 2,000 characters)" class="w-full h-32 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <!-- Style warnings -->
+                        <div id="auditOutliner-5"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: PORTAL TEXT LIMIT CHECKER -->
+            <section id="content-limits" class="tab-content hidden flex flex-col gap-6">
+                <!-- Info Header -->
+                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                    <h2 class="text-lg font-bold text-slate-900 mb-1">Strict Limits Format Checker</h2>
+                    <p class="text-sm text-slate-500 leading-relaxed">
+                        The NSERC Research Portal enforces hard limits on textboxes. Smart quotes (curly quotes), double spacing, and weird bullet points copied from Word often bloat character lengths or cause submission parsing failures. Use these utilities to sanitize draft paragraphs.
+                    </p>
+                </div>
+
+                <!-- Textboxes grid -->
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- Summary of Proposal -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                        <div class="flex items-start justify-between flex-wrap gap-2">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800">1. Summary of Proposal</h3>
+                                <p class="text-[11px] text-slate-400">Must be written in lay terms suitable for public dissemination</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button onclick="sanitizeTextbox('txtSummary')" class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 hover:text-brand-600 transition-colors border border-slate-200 hover:border-brand-200 px-2 py-1 rounded">
+                                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                                    Sanitize Quotes & Whitespace
+                                </button>
+                                <span id="cntSummary" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                                    0 / 2,500 chars
+                                </span>
+                            </div>
+                        </div>
+                        <textarea id="txtSummary" oninput="checkChars('txtSummary', 2500, 'cntSummary')" placeholder="Write layout/summary of proposal here... (max 2,500 characters)" class="w-full h-36 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <!-- Style warnings -->
+                        <div id="auditSummary"></div>
+                    </div>
+
+                    <!-- Most Significant Contributions -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                        <div class="flex items-start justify-between flex-wrap gap-2">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800">2. Most Significant Contributions</h3>
+                                <p class="text-[11px] text-slate-400">Explanations of your top 5 scientific achievements, student placements, and venue quality</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button onclick="sanitizeTextbox('txtContributions')" class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 hover:text-brand-600 transition-colors border border-slate-200 hover:border-brand-200 px-2 py-1 rounded">
+                                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                                    Sanitize Quotes & Whitespace
+                                </button>
+                                <span id="cntContributions" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                                    0 / 9,000 chars
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Collapsible MSC Builder Section -->
+                        <details class="border border-slate-200 rounded-lg overflow-hidden bg-slate-50/50">
+                            <summary class="bg-slate-100 hover:bg-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 cursor-pointer list-none flex items-center justify-between">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="pencil-ruler" class="w-4 h-4 text-brand-600"></i>
+                                    Interactive Contribution Builder (Click to Expand)
+                                </span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform group-open:rotate-180"></i>
+                            </summary>
+                            <div class="p-4 flex flex-col gap-3 text-xs">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Citation / Paper Reference</label>
+                                        <input type="text" id="mscRef" placeholder="e.g. J. Doe et al., IEEE Transactions, 2025" class="w-full border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500">
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Key Trainees Involved (HQP)</label>
+                                        <input type="text" id="mscHQP" placeholder="e.g. PhD candidate A. Smith, Undergrad J. Lee" class="w-full border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-700 mb-1">Scientific Novelty & Key Findings</label>
+                                    <textarea id="mscImpact" placeholder="e.g. Developed the first real-time algorithm that solves X under constraints Y, achieving 40% speedup..." class="w-full h-16 border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 font-sans"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-700 mb-1">Applicant's Role & Venue Significance</label>
+                                    <textarea id="mscRole" placeholder="e.g. As corresponding author, I supervised the project. Published in the field's top journal..." class="w-full h-16 border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 font-sans"></textarea>
+                                </div>
+                                <div class="flex justify-end mt-1">
+                                    <button onclick="generateMSCParagraph()" class="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 px-3.5 py-1.5 rounded transition-colors shadow">
+                                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                        Generate & Append Contribution
+                                    </button>
+                                </div>
+                            </div>
+                        </details>
+
+                        <textarea id="txtContributions" oninput="checkChars('txtContributions', 9000, 'cntContributions')" placeholder="Outline top 5 scientific contributions, publications, and exact role... (max 9,000 characters)" class="w-full h-48 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <!-- Style warnings -->
+                        <div id="auditContributions"></div>
+                    </div>
+
+                    <!-- Relationship to Other Sources of Support -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                        <div class="flex items-start justify-between flex-wrap gap-2">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800">3. Relationship to Other Sources of Support</h3>
+                                <p class="text-[11px] text-slate-400">Explain conceptual/financial differences with CIHR, SSHRC, or other active grants</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button onclick="sanitizeTextbox('txtRelationship')" class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 hover:text-brand-600 transition-colors border border-slate-200 hover:border-brand-200 px-2 py-1 rounded">
+                                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                                    Sanitize Quotes & Whitespace
+                                </button>
+                                <span id="cntRelationship" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                                    0 / 12,000 chars
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Collapsible Support Builder Section -->
+                        <details class="border border-slate-200 rounded-lg overflow-hidden bg-slate-50/50">
+                            <summary class="bg-slate-100 hover:bg-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 cursor-pointer list-none flex items-center justify-between">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="split" class="w-4 h-4 text-brand-600"></i>
+                                    Interactive Support Overlap Builder (Click to Expand)
+                                </span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform group-open:rotate-180"></i>
+                            </summary>
+                            <div class="p-4 flex flex-col gap-3 text-xs">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Agency / Source of Other Support</label>
+                                        <input type="text" id="suppAgency" placeholder="e.g. CIHR Project Grant, Mitacs Accelerate" class="w-full border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500">
+                                    </div>
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">Title of Grant</label>
+                                        <input type="text" id="suppTitle" placeholder="e.g. Clinical validation of smartwatch heart monitor" class="w-full border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-slate-700 mb-1">Specific Objectives & Applied Target Focus of Other Support</label>
+                                    <textarea id="suppObjectives" placeholder="e.g. Focuses strictly on recruiting 100 clinical subjects and validating commercial smartwatch sensors against ECG benchmarks." class="w-full h-16 border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 font-sans"></textarea>
+                                </div>
+                                <div class="flex justify-end mt-1">
+                                    <button onclick="generateSupportParagraph()" class="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 px-3.5 py-1.5 rounded transition-colors shadow">
+                                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                        Generate & Append Justification
+                                    </button>
+                                </div>
+                            </div>
+                        </details>
+
+                        <textarea id="txtRelationship" oninput="checkChars('txtRelationship', 12000, 'cntRelationship')" placeholder="Specify zero overlap with any active CIHR/SSHRC/industry awards... (max 12,000 characters)" class="w-full h-40 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <!-- Style warnings -->
+                        <div id="auditRelationship"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: HQP EDI PLAN BUILDER -->
+            <section id="content-edi" class="tab-content hidden flex flex-col gap-6">
+                <!-- Title Header -->
+                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                    <h2 class="text-lg font-bold text-slate-900 mb-1">EDI Integration Plan Builder (HQP Philosophy)</h2>
+                    <p class="text-sm text-slate-500 leading-relaxed">
+                        Under the NSERC evaluation criteria, applicants must demonstrate concrete, active measures to address equity, diversity, and inclusion in recruitment, mentoring, and lab dynamics. Complete this questionnaire to scaffold structural bullet points for your HQP Philosophy document.
+                    </p>
+                </div>
+
+                <!-- Split layout -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                    <!-- Form options -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-6">
+                        <!-- Recruitment practices -->
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                <span class="flex items-center justify-center w-5 h-5 bg-brand-50 text-brand-600 rounded-full text-xs">1</span>
+                                Recruitment Practices & Outreach
+                            </h3>
+                            <div class="space-y-2.5">
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                    <input type="checkbox" id="edi-rec-1" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
+                                    <span>Advertise roles widely on specialized diverse outlets and network mailing lists (e.g., Women in Science, NSBE).</span>
+                                </label>
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                    <input type="checkbox" id="edi-rec-2" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
+                                    <span>Run all job posts through a gender-bias decoder to ensure neutral, encouraging language.</span>
+                                </label>
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                    <input type="checkbox" id="edi-rec-3" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
+                                    <span>Formulate structured, standardized interview questions and evaluation rubrics for all applications.</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Mentorship philosophy -->
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                <span class="flex items-center justify-center w-5 h-5 bg-brand-50 text-brand-600 rounded-full text-xs">2</span>
+                                Mentoring & Development
+                            </h3>
+                            <div class="space-y-2.5">
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                    <input type="checkbox" id="edi-men-1" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
+                                    <span>Co-design customized Individual Development Plans (IDPs) setting annual career/technical milestones.</span>
+                                </label>
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                    <input type="checkbox" id="edi-men-2" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
+                                    <span>Fund students to attend professional training workshops (e.g., academic writing, grant application, presentation).</span>
+                                </label>
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                    <input type="checkbox" id="edi-men-3" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
+                                    <span>Conduct regular formal reviews alongside informal weekly 1-on-1 feedback sessions to track welfare.</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Laboratory dynamics -->
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                <span class="flex items-center justify-center w-5 h-5 bg-brand-50 text-brand-600 rounded-full text-xs">3</span>
+                                Inclusive Lab Environment
+                            </h3>
+                            <div class="space-y-2.5">
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                    <input type="checkbox" id="edi-env-1" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
+                                    <span>Implement collaborative guidelines via a student-drafted Laboratory Code of Conduct agreement.</span>
+                                </label>
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                    <input type="checkbox" id="edi-env-2" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
+                                    <span>Offer flexible work configurations to support religious observances, caregiving duties, and accessibility needs.</span>
+                                </label>
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                    <input type="checkbox" id="edi-env-3" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
+                                    <span>All laboratory participants will commit to participating in structural institutional equity seminars and unconscious bias workshops annually.</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Draft generation output -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-4 sticky top-20">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Generated Draft Blueprints</span>
+                            <button onclick="copyEDIDraft()" class="text-xs text-brand-600 hover:text-brand-700 font-semibold flex items-center gap-1">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                Copy Text
+                            </button>
+                        </div>
+                        <div id="ediDraftContainer" class="bg-slate-50 border border-slate-200 p-5 rounded-lg text-xs leading-relaxed text-slate-600 min-h-[300px] whitespace-pre-line font-sans">
+                            Select one or more items on the left to begin compiling custom structural components for your EDI section.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: MERIT RUBRIC ASSESSOR -->
+            <section id="content-merit" class="tab-content hidden flex flex-col gap-6">
+                <!-- Info Header -->
+                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 mb-1">NSERC Merit Indicators Reference</h2>
+                        <p class="text-sm text-slate-500">Benchmark your track record and proposal structure against official scoring definitions.</p>
+                    </div>
+                    <!-- Self score tracking -->
+                    <div class="flex items-center gap-5 border-l border-slate-200 pl-6 flex-shrink-0">
+                        <div class="text-right">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Researcher Excellence</span>
+                            <span id="score-res" class="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">Not Evaluated</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Proposal Merit</span>
+                            <span id="score-prop" class="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">Not Evaluated</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">HQP Mentorship</span>
+                            <span id="score-hqp" class="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">Not Evaluated</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Merit matrix grid tabs/table -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-3">Filter by Evaluation Section</span>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="switchMeritFilter('res')" id="mfilter-res" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-brand-600 text-white shadow-sm border border-brand-700 transition-colors">
+                                Excellence of the Researcher
+                            </button>
+                            <button onclick="switchMeritFilter('prop')" id="mfilter-prop" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-600 hover:text-slate-800 border border-slate-300 transition-colors">
+                                Merit of the Proposal
+                            </button>
+                            <button onclick="switchMeritFilter('hqp')" id="mfilter-hqp" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-600 hover:text-slate-800 border border-slate-300 transition-colors">
+                                Contribution to HQP Training
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Merit Matrix Grid Body -->
+                    <div class="p-6 flex flex-col gap-5" id="meritCardsContainer">
+                        <!-- Dynamic indicator cards are rendered here -->
+                    </div>
+                </div>
+
+                <!-- Actionable Merit Advice Panel -->
+                <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm mt-6 flex flex-col gap-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800">Actionable Merit Score Recommendations</h3>
+                        <p class="text-xs text-slate-500">Targeted strategic tips to elevate your scores based on your self-assessments.</p>
+                    </div>
+                    <div id="meritAdviceContainer" class="flex flex-col gap-3">
+                        <!-- Dynamic recommendation bullets rendered here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-400">
+            &copy; 2026 Faculty Tools. Client-side storage and data encryption compliance.
+        </div>
+    </footer>
+
+    <!-- Toast message alert -->
+    <div id="toast" class="toast flex items-center gap-2 shadow-lg">
+        <i data-lucide="check" class="w-4 h-4 text-emerald-400"></i>
+        <span id="toastMessage">Done!</span>
+    </div>
+
+    <!-- Application Script Logic -->
+    <script>
+        // --- 1. GLOBAL STATE DATA & INITIALIZATION ---
+        const state = {
+            checklist: [
+                { id: 'ccv', title: 'Canadian Common CV (CCV)', type: 'CV', status: 'not-started', desc: 'Must include full training records, publication histories, and active/completed research funding profiles for the last 6 years.', tips: 'Update CCV at least a week early. NSERC servers slow down heavily on submission day.' },
+                { id: 'summary', title: 'Summary of Proposal (Lay Terminology)', type: 'Portal Text', status: 'not-started', desc: 'A plain-language synopsis (Max 2,500 characters) for public communication.', tips: 'Avoid technical jargon. Describe WHAT you will do, WHY it is significant, and WHO benefits.' },
+                { id: 'proposal', title: 'Research Proposal (5 Pages Max)', type: 'PDF Attachment', status: 'not-started', desc: 'Contains Recent Progress, Short & Long-term objectives, Lit Review, Methodology, and Impact.', tips: 'Check margins (3/4 inch minimum) and font sizing (Times New Roman 12pt or Arial 11pt, single line spacing).' },
+                { id: 'hqpphilosophy', title: 'HQP Training Philosophy (1.5 Pages Max)', type: 'PDF Attachment', status: 'not-started', desc: 'Outline training approach, academic objectives, and active measures implemented for EDI.', tips: 'Do not discuss individual students by name due to privacy guidelines. Emphasize active mentoring.' },
+                { id: 'hqpenvironment', title: 'Research Environment (0.5 Page Max)', type: 'PDF Attachment', status: 'not-started', desc: 'Detail laboratory setups, compute clusters, specialized tools, and collaborative frameworks.', tips: 'Describe physical/collaborative spaces and how they foster interaction and co-learning.' },
+                { id: 'budgetjust', title: 'Budget Justification (2 Pages Max)', type: 'PDF Attachment', status: 'not-started', desc: 'Exhaustive textual breakdown of direct costs, student stipend calculations, and travel demands.', tips: 'Explicitly explain what each student will work on. Ensure rates match university standards.' },
+                { id: 'relationship', title: 'Relationship to Other Sources (12,000 Chars)', type: 'Portal Text', status: 'not-started', desc: 'Detailed case proving zero conceptual or financial overlap with existing funding (e.g. CIHR/SSHRC).', tips: 'Clearly demarcate objectives. Discovery Grants support long-term fundamental exploration.' },
+                { id: 'referees', title: 'Suggested Referees (5 Contacts)', type: 'Portal Input', status: 'not-started', desc: 'Supply names and details of 5 external evaluators who have no conflict of interest.', tips: 'Ensure no recent co-authorship (past 6 years) or supervisor relationships exist with referees.' }
+            ],
+            budget: [
+                { id: 'b1', desc: 'PhD Student Stipend (1)', type: 'hqp', y1: 22000, y2: 22000, y3: 22000, y4: 22000, y5: 0 },
+                { id: 'b2', desc: 'MSc Student Stipend (1)', type: 'hqp', y1: 18000, y2: 18000, y3: 0, y4: 0, y5: 0 },
+                { id: 'b3', desc: 'Conference Travel Support', type: 'operating', y1: 3000, y2: 3000, y3: 3000, y4: 3000, y5: 3000 },
+                { id: 'b4', desc: 'Materials & Lab Consumables', type: 'operating', y1: 4000, y2: 4000, y3: 4000, y4: 4000, y5: 4000 },
+                { id: 'b5', desc: 'Dissemination (APC/Journal Fees)', type: 'operating', y1: 1500, y2: 1500, y3: 1500, y4: 1500, y5: 1500 }
+            ],
+            texts: {
+                txtSummary: '',
+                txtContributions: '',
+                txtRelationship: ''
+            },
+            edi: {
+                checkboxes: {}
+            },
+            meritRatings: {
+                res: '',
+                prop: '',
+                hqp: ''
+            },
+            uniSelection: 'custom',
+            egSelection: 'none',
+            outlinerDrafts: {
+                1: '',
+                2: '',
+                3: '',
+                4: '',
+                5: ''
+            }
+        };
+
+        const uniRatesDb = {
+            uwindsor: { name: 'University of Windsor', phd: 22000, msc: 18000, ug: 8000, pdf: 50000 },
+            utoronto: { name: 'University of Toronto', phd: 29000, msc: 24000, ug: 9000, pdf: 60000 },
+            uwaterloo: { name: 'University of Waterloo', phd: 26000, msc: 21000, ug: 9500, pdf: 55000 },
+            mcgill: { name: 'McGill University', phd: 25000, msc: 20000, ug: 8500, pdf: 52000 },
+            ubc: { name: 'University of British Columbia', phd: 28000, msc: 23000, ug: 9000, pdf: 58000 }
+        };
+
+        const egDb = {
+            1501: { name: 'Genes, Cells and Molecules', avg: 42000 },
+            1502: { name: 'Biological Systems and Functions', avg: 39000 },
+            1503: { name: 'Materials and Chemical Engineering', avg: 35000 },
+            1504: { name: 'Chemistry', avg: 37000 },
+            1505: { name: 'Physics', avg: 38000 },
+            1506: { name: 'Geosciences', avg: 34000 },
+            1507: { name: 'Computer Science', avg: 33000 },
+            1508: { name: 'Mathematics and Statistics', avg: 24000 },
+            1509: { name: 'Civil, Industrial and Systems Engineering', avg: 31000 },
+            1510: { name: 'Electrical and Computer Engineering', avg: 34000 },
+            1511: { name: 'Mechanical Engineering', avg: 35000 }
+        };
+
+        const rubrics = {
+            res: [
+                { rating: 'Outstanding', desc: 'International reputation and visibility. Seminal contributions that have shaped the field. Outstanding output in high-impact journals and venues. Outstanding track record of student mentorship.', tips: 'Emphasize international keynote invitations, standard committee service, or awards.' },
+                { rating: 'Very Strong', desc: 'National/international visibility. Highly impactful contributions with clear industrial or academic value. Excellent research outputs in top-tier journals. Strong mentoring history.', tips: 'Highlight high citation indices, major collaborations, and where former trainees are employed.' },
+                { rating: 'Strong', desc: 'Steady contributions of high quality with solid academic outcomes. Trainees are progressing well. Regular peer-reviewed outputs.', tips: 'Make sure your publications in the last 6 years are complete and clearly formatted.' },
+                { rating: 'Moderate', desc: 'Limited peer-reviewed contributions or output frequency. Training contributions are minimal or lack documentation.', tips: 'Include non-refereed contributions, software, or technical reports if they show active engagement.' },
+                { rating: 'Insufficient', desc: 'Lack of active peer-reviewed publications within the 6-year window, or insufficient support metrics.', tips: 'Provide explanation for career interruptions if applicable.' }
+            ],
+            prop: [
+                { rating: 'Outstanding', desc: 'Novel, highly original concept that promises significant breakthroughs. Exceptionally clear methodology, fully articulated risk mitigations, and high feasibility.', tips: 'Introduce high-risk, high-reward elements alongside fallback paths.' },
+                { rating: 'Very Strong', desc: 'Original, well-conceptualized research. Solid, comprehensive methodology, reasonable risk-assessment, and clear significance.', tips: 'Ensure long-term objectives and short-term milestones are logically connected.' },
+                { rating: 'Strong', desc: 'Competent, useful scientific questions. Feasible work plan and straightforward methodology.', tips: 'Review clarity of objectives. Ensure literature review references recent work (past 3 years).' },
+                { rating: 'Moderate', desc: 'Unclear objectives, sparse methodological details, or questionable feasibility.', tips: 'Flesh out exactly how experiments are performed, what data is collected, and what tools are used.' },
+                { rating: 'Insufficient', desc: 'Vague proposal lacking focus, structure, or scientific relevance.', tips: 'Ensure there is a clean layout separating objectives from methodology.' }
+            ],
+            hqp: [
+                { rating: 'Outstanding', desc: 'Exceptional EDI integration with concrete, actionable measures. Highly diverse trainee placements. Outstanding training philosophy with customized mentoring models.', tips: 'Provide clear, quantitative context on structural EDI barriers in your field and how you address them.' },
+                { rating: 'Very Strong', desc: 'Very strong EDI plan outlining proactive recruitment and lab culture rules. Clear, qualitative description of mentoring tools.', tips: 'Avoid generic statements like "I hire based purely on merit." Discuss inclusive practices.' },
+                { rating: 'Strong', desc: 'Satisfactory EDI plan and training philosophy. Good distribution of student duties.', tips: 'Clearly define the specific tasks and learning outcomes for each student in the proposal.' },
+                { rating: 'Moderate', desc: 'Generic HQP training statements lacking local focus or concrete EDI steps.', tips: 'Explain what professional skills (communication, writing, safety) trainees will gain.' },
+                { rating: 'Insufficient', desc: 'Missing or inadequate training philosophy, or zero consideration of EDI.', tips: 'Read NSERC\'s guide on integrating EDI in HQP plans.' }
+            ]
+        };
+
+        let activeMeritSection = 'res';
+
+        // --- 2. LOCAL STORAGE AUTO-SAVE LOGIC ---
+        function loadState() {
+            try {
+                const stored = localStorage.getItem('nserc_discovery_helper_state');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    if (parsed.checklist) state.checklist = parsed.checklist;
+                    if (parsed.budget) state.budget = parsed.budget;
+                    if (parsed.texts) state.texts = parsed.texts;
+                    if (parsed.edi) state.edi = parsed.edi;
+                    if (parsed.meritRatings) state.meritRatings = parsed.meritRatings;
+                    if (parsed.uniSelection) state.uniSelection = parsed.uniSelection;
+                    if (parsed.egSelection) state.egSelection = parsed.egSelection;
+                    if (parsed.outlinerDrafts) state.outlinerDrafts = parsed.outlinerDrafts;
+                }
+            } catch (err) {
+                console.error("Could not load state from localStorage", err);
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem('nserc_discovery_helper_state', JSON.stringify(state));
+                const saveStatus = document.getElementById('saveStatus');
+                saveStatus.innerHTML = `<i data-lucide="cloud-lightning" class="w-3.5 h-3.5 text-emerald-500 animate-pulse"></i> Saved`;
+                lucide.createIcons();
+            } catch (err) {
+                console.error("Could not save state to localStorage", err);
+            }
+        }
+
+        // --- 3. IMPORT / EXPORT JSON STATE ---
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "nserc_discovery_grant_draft.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast("Draft exported successfully!");
+        }
+
+        function triggerImport() {
+            document.getElementById('importFileInput').click();
+        }
+
+        function importJSON(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const parsed = JSON.parse(evt.target.result);
+                    if (parsed.checklist && parsed.budget && parsed.texts && parsed.edi) {
+                        Object.assign(state, parsed);
+                        saveState();
+
+                        // Restore DOM text values
+                        document.getElementById('txtSummary').value = state.texts.txtSummary || '';
+                        document.getElementById('txtContributions').value = state.texts.txtContributions || '';
+                        document.getElementById('txtRelationship').value = state.texts.txtRelationship || '';
+                        
+                        // Restore checkboxes
+                        const checkIds = ['edi-rec-1', 'edi-rec-2', 'edi-rec-3', 'edi-men-1', 'edi-men-2', 'edi-men-3', 'edi-env-1', 'edi-env-2', 'edi-env-3'];
+                        checkIds.forEach(id => {
+                            if (state.edi.checkboxes[id] !== undefined) {
+                                document.getElementById(id).checked = state.edi.checkboxes[id];
+                            } else {
+                                document.getElementById(id).checked = false;
+                            }
+                        });
+
+                        // Restore selectors values
+                        if (state.uniSelection) document.getElementById('selUniversity').value = state.uniSelection;
+                        if (state.egSelection) document.getElementById('selEG').value = state.egSelection;
+
+                        // Restore outliner drafts
+                        if (!state.outlinerDrafts) {
+                            state.outlinerDrafts = { 1: '', 2: '', 3: '', 4: '', 5: '' };
+                        }
+                        for (let i = 1; i <= 5; i++) {
+                            if (state.outlinerDrafts[i] !== undefined) {
+                                document.getElementById(`txtOutliner-${i}`).value = state.outlinerDrafts[i];
+                            } else {
+                                document.getElementById(`txtOutliner-${i}`).value = '';
+                            }
+                        }
+
+                        // Run triggers
+                        renderChecklist();
+                        renderBudget();
+                        generateEDIDraft();
+                        changeUniversity();
+                        changeEG();
+                        recalculateBudget();
+                        for (let i = 1; i <= 5; i++) {
+                            checkOutlinerChars(i, i === 1 ? 4000 : (i === 2 ? 2000 : (i === 3 ? 4000 : (i === 4 ? 8000 : 2000))));
+                        }
+                        showToast("Draft imported successfully!");
+                    } else {
+                        showToast("Invalid JSON schema configuration.");
+                    }
+                } catch(err) {
+                    console.error(err);
+                    showToast("Error parsing selected file.");
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = ''; // clear input
+        }
+
+        // --- 4. TOAST NOTIFICATION ---
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
+        }
+
+        // --- 5. TABS CONTROLLER ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            const activeContent = document.getElementById(`content-${tabId}`);
+            if (activeContent) activeContent.classList.remove('hidden');
+        }
+
+        // --- 6. CHECKLIST COMPONENT LOGIC ---
+        function renderChecklist() {
+            const container = document.getElementById('checklistContainer');
+            container.innerHTML = state.checklist.map((item, idx) => {
+                const isCompleted = item.status === 'completed';
+                const isInProgress = item.status === 'in-progress';
+                const badgeColor = isCompleted ? 'bg-emerald-100 text-emerald-800' : (isInProgress ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-500');
+                const badgeLabel = isCompleted ? 'Completed' : (isInProgress ? 'In Progress' : 'Not Started');
+                
+                return `
+                    <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4 transition-all duration-200">
+                        <div class="flex-grow flex gap-3">
+                            <button onclick="toggleChecklistItem('${item.id}')" class="mt-1 flex-shrink-0 w-5 h-5 rounded border ${isCompleted ? 'bg-brand-600 border-brand-600 text-white' : 'border-slate-300 bg-white hover:border-brand-500'} flex items-center justify-center transition-all">
+                                ${isCompleted ? '<i data-lucide="check" class="w-3.5 h-3.5"></i>' : ''}
+                            </button>
+                            <div>
+                                <h4 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                                    ${item.title}
+                                    <span class="text-[10px] px-2 py-0.5 rounded-full font-medium ${badgeColor}">${badgeLabel}</span>
+                                </h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">${item.desc}</p>
+                                <details class="group mt-2">
+                                    <summary class="text-xs font-semibold text-brand-600 hover:text-brand-700 cursor-pointer list-none flex items-center gap-1">
+                                        <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
+                                        <span>Pro Tips & Requirements</span>
+                                    </summary>
+                                    <div class="mt-1.5 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 leading-relaxed">
+                                        ${item.tips}
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 flex items-center gap-2 self-end sm:self-start">
+                            <select onchange="updateChecklistItemStatus('${item.id}', this.value)" class="text-xs border border-slate-300 rounded px-2.5 py-1 focus:ring-brand-500 focus:border-brand-500">
+                                <option value="not-started" ${item.status === 'not-started' ? 'selected' : ''}>Not Started</option>
+                                <option value="in-progress" ${item.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+                                <option value="completed" ${item.status === 'completed' ? 'selected' : ''}>Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            lucide.createIcons();
+            updateProgressGauge();
+        }
+
+        function toggleChecklistItem(id) {
+            const item = state.checklist.find(i => i.id === id);
+            if (item) {
+                item.status = item.status === 'completed' ? 'not-started' : 'completed';
+                renderChecklist();
+                saveState();
+            }
+        }
+
+        function updateChecklistItemStatus(id, newStatus) {
+            const item = state.checklist.find(i => i.id === id);
+            if (item) {
+                item.status = newStatus;
+                renderChecklist();
+                saveState();
+            }
+        }
+
+        function updateProgressGauge() {
+            const total = state.checklist.length;
+            const completed = state.checklist.filter(i => i.status === 'completed').length;
+            const percentage = Math.round((completed / total) * 100);
+
+            // Update Circle Stroke
+            const circle = document.getElementById('progressCircle');
+            circle.setAttribute('stroke-dasharray', `${percentage}, 100`);
+
+            // Update Texts
+            document.getElementById('progressText').textContent = `${percentage}%`;
+            document.getElementById('progressSubtitle').textContent = `${completed} of ${total} sections completed`;
+
+            const title = document.getElementById('progressTitle');
+            if (percentage === 100) {
+                title.textContent = "Ready to Submit!";
+                title.className = "text-sm font-semibold text-emerald-600";
+            } else if (percentage >= 50) {
+                title.textContent = "Making Good Progress";
+                title.className = "text-sm font-semibold text-amber-600";
+            } else {
+                title.textContent = "Getting Started";
+                title.className = "text-sm font-semibold text-slate-800";
+            }
+        }
+
+        // --- 7. BUDGET & BASELINES MODULE LOGIC ---
+        function renderBudget() {
+            const tbody = document.getElementById('budgetTableBody');
+            tbody.innerHTML = state.budget.map((row, idx) => {
+                const labelColor = row.type === 'hqp' ? 'bg-rose-50 text-rose-700 border-rose-100' : 'bg-slate-100 text-slate-600 border-slate-200';
+                const labelText = row.type === 'hqp' ? 'HQP' : 'Direct';
+                
+                return `
+                    <tr class="hover:bg-slate-50/50">
+                        <td class="px-6 py-3.5">
+                            <input type="text" value="${row.desc}" onchange="updateBudgetRowDesc('${row.id}', this.value)" class="w-full bg-transparent font-medium border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5">
+                        </td>
+                        <td class="px-6 py-3.5">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${labelColor}">
+                                ${labelText}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3.5 text-right">
+                            <input type="number" value="${row.y1}" onchange="updateBudgetRowVal('${row.id}', 'y1', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
+                        </td>
+                        <td class="px-4 py-3.5 text-right">
+                            <input type="number" value="${row.y2}" onchange="updateBudgetRowVal('${row.id}', 'y2', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
+                        </td>
+                        <td class="px-4 py-3.5 text-right">
+                            <input type="number" value="${row.y3}" onchange="updateBudgetRowVal('${row.id}', 'y3', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
+                        </td>
+                        <td class="px-4 py-3.5 text-right">
+                            <input type="number" value="${row.y4}" onchange="updateBudgetRowVal('${row.id}', 'y4', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
+                        </td>
+                        <td class="px-4 py-3.5 text-right">
+                            <input type="number" value="${row.y5}" onchange="updateBudgetRowVal('${row.id}', 'y5', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
+                        </td>
+                        <td class="px-6 py-3.5 text-center">
+                            <button onclick="deleteBudgetRow('${row.id}')" class="text-slate-400 hover:text-brand-600 transition-colors">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+            recalculateBudget();
+        }
+
+        function addBudgetRow(type) {
+            const newId = 'b' + Date.now();
+            const desc = type === 'hqp' ? 'New HQP Stipend' : 'New Direct Cost';
+            state.budget.push({
+                id: newId,
+                desc: desc,
+                type: type,
+                y1: 0, y2: 0, y3: 0, y4: 0, y5: 0
+            });
+            renderBudget();
+            saveState();
+        }
+
+        function deleteBudgetRow(id) {
+            state.budget = state.budget.filter(row => row.id !== id);
+            renderBudget();
+            saveState();
+        }
+
+        function updateBudgetRowDesc(id, newDesc) {
+            const row = state.budget.find(r => r.id === id);
+            if (row) {
+                row.desc = newDesc;
+                saveState();
+            }
+        }
+
+        function updateBudgetRowVal(id, year, val) {
+            const row = state.budget.find(r => r.id === id);
+            if (row) {
+                row[year] = Number(val) || 0;
+                recalculateBudget();
+                saveState();
+            }
+        }
+
+        function changeUniversity() {
+            const sel = document.getElementById('selUniversity').value;
+            const panel = document.getElementById('uniRatesPanel');
+            if (sel === 'custom') {
+                panel.classList.add('hidden');
+                state.uniSelection = 'custom';
+            } else {
+                const data = uniRatesDb[sel];
+                document.getElementById('ratePhD').textContent = formatCurrency(data.phd) + '/yr';
+                document.getElementById('rateMSc').textContent = formatCurrency(data.msc) + '/yr';
+                document.getElementById('rateUndergrad').textContent = formatCurrency(data.ug) + '/yr';
+                document.getElementById('ratePDF').textContent = formatCurrency(data.pdf) + '/yr';
+                panel.classList.remove('hidden');
+                state.uniSelection = sel;
+            }
+            saveState();
+        }
+
+        function applyUniRates() {
+            const sel = document.getElementById('selUniversity').value;
+            if (sel === 'custom' || !uniRatesDb[sel]) {
+                showToast("Select a valid university baseline first.");
+                return;
+            }
+            const data = uniRatesDb[sel];
+            
+            // Push standard baseline items to table
+            state.budget.push({ id: 'b_uni_phd_' + Date.now(), desc: `${data.name} PhD Stipend`, type: 'hqp', y1: data.phd, y2: data.phd, y3: data.phd, y4: data.phd, y5: 0 });
+            state.budget.push({ id: 'b_uni_msc_' + Date.now(), desc: `${data.name} MSc Stipend`, type: 'hqp', y1: data.msc, y2: data.msc, y3: 0, y4: 0, y5: 0 });
+            renderBudget();
+            showToast(`Applied ${data.name} stipend guidelines.`);
+        }
+
+        function changeEG() {
+            const sel = document.getElementById('selEG').value;
+            const panel = document.getElementById('egComparisonPanel');
+            if (sel === 'none') {
+                panel.classList.add('hidden');
+                state.egSelection = 'none';
+            } else {
+                const data = egDb[sel];
+                document.getElementById('egAvgVal').textContent = formatCurrency(data.avg) + '/yr';
+                panel.classList.remove('hidden');
+                state.egSelection = sel;
+                updateEGComparison();
+            }
+            saveState();
+        }
+
+        function updateEGComparison() {
+            const sel = document.getElementById('selEG').value;
+            if (sel === 'none' || !egDb[sel]) return;
+            const data = egDb[sel];
+            
+            // Requested annual average
+            let grandTotal = 0;
+            state.budget.forEach(row => {
+                grandTotal += row.y1 + row.y2 + row.y3 + row.y4 + row.y5;
+            });
+            const reqAvg = Math.round(grandTotal / 5);
+            const pct = data.avg > 0 ? Math.round((reqAvg / data.avg) * 100) : 0;
+            
+            const badge = document.getElementById('egCompareBadge');
+            badge.textContent = `${pct}% of peer average`;
+            if (pct > 120) {
+                badge.className = 'font-semibold px-2 py-0.5 rounded text-[10px] bg-rose-100 text-rose-800 border border-rose-200';
+            } else if (pct >= 85) {
+                badge.className = 'font-semibold px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-200';
+            } else {
+                badge.className = 'font-semibold px-2 py-0.5 rounded text-[10px] bg-amber-100 text-amber-800 border border-amber-200';
+            }
+        }
+
+        function recalculateBudget() {
+            let y1Tot = 0, y2Tot = 0, y3Tot = 0, y4Tot = 0, y5Tot = 0;
+            let hqpTotal = 0;
+            let grandTotal = 0;
+
+            state.budget.forEach(row => {
+                const rowTotal = row.y1 + row.y2 + row.y3 + row.y4 + row.y5;
+                grandTotal += rowTotal;
+
+                if (row.type === 'hqp') {
+                    hqpTotal += rowTotal;
+                }
+
+                y1Tot += row.y1;
+                y2Tot += row.y2;
+                y3Tot += row.y3;
+                y4Tot += row.y4;
+                y5Tot += row.y5;
+            });
+
+            // Update row totals
+            document.getElementById('tot-y1').textContent = formatCurrency(y1Tot);
+            document.getElementById('tot-y2').textContent = formatCurrency(y2Tot);
+            document.getElementById('tot-y3').textContent = formatCurrency(y3Tot);
+            document.getElementById('tot-y4').textContent = formatCurrency(y4Tot);
+            document.getElementById('tot-y5').textContent = formatCurrency(y5Tot);
+
+            // Update summary cards
+            document.getElementById('sum-grand').textContent = formatCurrency(grandTotal);
+            const annualAvg = Math.round(grandTotal / 5);
+            document.getElementById('sum-average').textContent = `${formatCurrency(annualAvg)} / year`;
+
+            // Calculate HQP Ratio
+            const hqpRatio = grandTotal > 0 ? Math.round((hqpTotal / grandTotal) * 100) : 0;
+            const hqpRatioText = document.getElementById('hqp-ratio-text');
+            const hqpRatioBar = document.getElementById('hqp-ratio-bar');
+            const hqpRatioBadge = document.getElementById('hqp-ratio-badge');
+            const hqpRatioFeedback = document.getElementById('hqp-ratio-feedback');
+
+            hqpRatioText.textContent = `${hqpRatio}%`;
+            hqpRatioBar.style.width = `${Math.min(hqpRatio, 100)}%`;
+
+            if (hqpRatio >= 65) {
+                hqpRatioBadge.textContent = 'Excellent';
+                hqpRatioBadge.className = 'text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-100 text-emerald-800';
+                hqpRatioBar.className = 'h-full bg-emerald-500 transition-all duration-300';
+                hqpRatioFeedback.textContent = 'Excellent student support ratio. Budget is well-aligned with NSERC HQP targets.';
+            } else if (hqpRatio >= 50) {
+                hqpRatioBadge.textContent = 'Moderate';
+                hqpRatioBadge.className = 'text-xs px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-800';
+                hqpRatioBar.className = 'h-full bg-amber-500 transition-all duration-300';
+                hqpRatioFeedback.textContent = 'Shifting secondary travel/supply costs directly into stipends will strengthen proposal scores.';
+            } else {
+                hqpRatioBadge.textContent = 'Review Needed';
+                hqpRatioBadge.className = 'text-xs px-2 py-0.5 rounded-full font-medium bg-rose-100 text-rose-800';
+                hqpRatioBar.className = 'h-full bg-rose-500 transition-all duration-300';
+                hqpRatioFeedback.textContent = 'Low student support ratio. NSERC reviews look closely at student hiring. Ensure rigorous justification.';
+            }
+
+            // Sync comparison and visualization
+            updateEGComparison();
+            renderGanttChart();
+        }
+
+        // --- 8. GANTT PIPELINE CHART RENDERING ---
+        function renderGanttChart() {
+            const container = document.getElementById('ganttChartContainer');
+            const hqpRows = state.budget.filter(r => r.type === 'hqp');
+
+            if (hqpRows.length === 0) {
+                container.innerHTML = `<div class="text-xs text-slate-400 italic text-center py-4">No HQP stipends defined in budget to render timeline overlap.</div>`;
+                return;
+            }
+
+            let html = '';
+            hqpRows.forEach(row => {
+                const yrs = [row.y1, row.y2, row.y3, row.y4, row.y5];
+                
+                let colHtml = '';
+                for (let i = 0; i < 5; i++) {
+                    const active = yrs[i] > 0;
+                    const amt = active ? formatCurrency(yrs[i]) : '';
+                    const activeClass = active ? 'bg-rose-500 text-white font-bold border-rose-600 shadow-inner' : 'bg-slate-100/50 border-slate-200 text-slate-300';
+                    colHtml += `
+                        <div class="flex-grow flex-1 border text-[10px] py-1.5 text-center rounded-md ${activeClass} transition-all duration-300 select-none cursor-help" title="${row.desc} Year ${i+1}: ${amt || '$0'}">
+                            ${active ? 'Active' : '-'}
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="w-full sm:w-1/3 flex-shrink-0 text-xs font-semibold text-slate-700 truncate" title="${row.desc}">
+                            ${row.desc}
+                        </div>
+                        <div class="w-full sm:w-2/3 flex gap-1">
+                            ${colHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            const headerHtml = `
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <div class="w-full sm:w-1/3">Trainee / Post</div>
+                    <div class="w-full sm:w-2/3 flex justify-between gap-1 text-center font-mono">
+                        <div class="flex-grow flex-1">Year 1</div>
+                        <div class="flex-grow flex-1">Year 2</div>
+                        <div class="flex-grow flex-1">Year 3</div>
+                        <div class="flex-grow flex-1">Year 4</div>
+                        <div class="flex-grow flex-1">Year 5</div>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = headerHtml + html;
+        }
+
+        function formatCurrency(num) {
+            return '$' + num.toLocaleString('en-US');
+        }
+
+        // --- 9. EXPORTERS ---
+        function exportLaTeX() {
+            const title = "LaTeX Tabular Representation";
+            let code = `\\begin{table}[h]\n\\centering\n\\begin{tabular}{lrrrrr}\n\\hline\n`;
+            code += `\\textbf{Direct Cost Item} & \\textbf{Year 1} & \\textbf{Year 2} & \\textbf{Year 3} & \\textbf{Year 4} & \\textbf{Year 5} \\\\ \\hline\n`;
+            
+            state.budget.forEach(row => {
+                code += `${row.desc.replace(/&/g, '\\&')} & \\$${row.y1.toLocaleString()} & \\$${row.y2.toLocaleString()} & \\$${row.y3.toLocaleString()} & \\$${row.y4.toLocaleString()} & \\$${row.y5.toLocaleString()} \\\\\n`;
+            });
+
+            let y1Tot = 0, y2Tot = 0, y3Tot = 0, y4Tot = 0, y5Tot = 0;
+            state.budget.forEach(row => {
+                y1Tot += row.y1; y2Tot += row.y2; y3Tot += row.y3; y4Tot += row.y4; y5Tot += row.y5;
+            });
+            code += `\\hline\n\\textbf{Total} & \\textbf{\\$${y1Tot.toLocaleString()}} & \\textbf{\\$${y2Tot.toLocaleString()}} & \\textbf{\\$${y3Tot.toLocaleString()}} & \\textbf{\\$${y4Tot.toLocaleString()}} & \\textbf{\\$${y5Tot.toLocaleString()}} \\\\ \\hline\n`;
+            code += `\\end{tabular}\n\\caption{Requested NSERC Discovery Grant direct operating costs and student support.}\n\\label{tab:nserc_budget}\n\\end{table}`;
+
+            openDrawer(title, code);
+        }
+
+        function exportMarkdown() {
+            const title = "Markdown Table Representation";
+            let code = `| Direct Cost Item / HQP | Year 1 ($) | Year 2 ($) | Year 3 ($) | Year 4 ($) | Year 5 ($) |\n`;
+            code += `| :--- | :---: | :---: | :---: | :---: | :---: |\n`;
+
+            state.budget.forEach(row => {
+                code += `| ${row.desc} | \$${row.y1.toLocaleString()} | \$${row.y2.toLocaleString()} | \$${row.y3.toLocaleString()} | \$${row.y4.toLocaleString()} | \$${row.y5.toLocaleString()} |\n`;
+            });
+
+            let y1Tot = 0, y2Tot = 0, y3Tot = 0, y4Tot = 0, y5Tot = 0;
+            state.budget.forEach(row => {
+                y1Tot += row.y1; y2Tot += row.y2; y3Tot += row.y3; y4Tot += row.y4; y5Tot += row.y5;
+            });
+            code += `| **Total Requested** | **\$${y1Tot.toLocaleString()}** | **\$${y2Tot.toLocaleString()}** | **\$${y3Tot.toLocaleString()}** | **\$${y4Tot.toLocaleString()}** | **\$${y5Tot.toLocaleString()}** |\n`;
+
+            openDrawer(title, code);
+        }
+
+        function openDrawer(title, content) {
+            const drawer = document.getElementById('exportDrawer');
+            const titleEl = document.getElementById('drawerTitle');
+            const textarea = document.getElementById('drawerTextarea');
+
+            titleEl.textContent = title;
+            textarea.value = content;
+            drawer.classList.remove('hidden');
+            
+            drawer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function closeDrawer() {
+            document.getElementById('exportDrawer').classList.add('hidden');
+        }
+
+        function copyDrawerContent() {
+            const textarea = document.getElementById('drawerTextarea');
+            textarea.select();
+            document.execCommand('copy');
+            showToast("Copied to clipboard!");
+        }
+
+        // --- 10. PROPOSAL OUTLINER LOGIC ---
+        function checkOutlinerChars(index, limit) {
+            const textarea = document.getElementById(`txtOutliner-${index}`);
+            const span = document.getElementById(`cntOutliner-${index}`);
+            const length = textarea.value.length;
+
+            span.textContent = `${length.toLocaleString()} / ${limit.toLocaleString()} chars`;
+            
+            state.outlinerDrafts[index] = textarea.value;
+            saveState();
+
+            if (length > limit) {
+                span.className = 'text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded border border-red-200 animate-pulse';
+            } else {
+                span.className = 'text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded';
+            }
+
+            // Sync total counts and run Style Auditor
+            updateOutlinerTotalCount();
+            runStyleAudit(`txtOutliner-${index}`, `auditOutliner-${index}`);
+        }
+
+        function updateOutlinerTotalCount() {
+            let totalChars = 0;
+            for (let i = 1; i <= 5; i++) {
+                totalChars += (state.outlinerDrafts[i] || '').length;
+            }
+
+            // Standards calculate roughly 4000 characters per single-spaced 12pt Times Roman page
+            const totalPages = Math.round((totalChars / 4000) * 10) / 10;
+            
+            document.getElementById('outlinerProgressText').textContent = `${totalPages.toFixed(1)} p`;
+            document.getElementById('outlinerProgressSubtitle').textContent = `${totalPages.toFixed(1)} / 5.0 pages occupied`;
+
+            const circle = document.getElementById('outlinerProgressCircle');
+            const pct = Math.min((totalPages / 5) * 100, 100);
+            circle.setAttribute('stroke-dasharray', `${pct}, 100`);
+
+            const fillText = document.getElementById('outlinerProgressSubtitle');
+            if (totalPages > 5.0) {
+                fillText.className = 'text-[11px] text-red-500 font-semibold animate-pulse';
+            } else {
+                fillText.className = 'text-[11px] text-slate-500';
+            }
+
+            // Sync Visual PDF Page Stack
+            renderPDFPages(totalPages);
+        }
+
+        function renderPDFPages(totalPages) {
+            const container = document.getElementById('pdfPagesStack');
+            let html = '';
+            
+            for (let p = 1; p <= 5; p++) {
+                let fillPct = 0;
+                if (totalPages >= p) {
+                    fillPct = 100;
+                } else if (totalPages > p - 1) {
+                    fillPct = Math.round((totalPages - (p - 1)) * 100);
+                }
+                
+                let fillClass = 'bg-brand-500';
+                let borderClass = 'border-slate-200';
+                let statusText = 'Empty';
+                
+                if (fillPct === 100) {
+                    fillClass = 'bg-rose-600';
+                    borderClass = 'border-rose-300 shadow';
+                    statusText = 'Full';
+                } else if (fillPct > 0) {
+                    fillClass = 'bg-brand-500';
+                    borderClass = 'border-brand-300 shadow-sm';
+                    statusText = `${fillPct}%`;
+                }
+                
+                html += `
+                    <div class="border rounded-lg bg-white overflow-hidden flex flex-col items-center justify-between h-32 p-3 ${borderClass} transition-all duration-300 relative select-none">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Page ${p}</span>
+                        <div class="w-full bg-slate-100 h-10 rounded overflow-hidden relative border border-slate-200">
+                            <div class="${fillClass} h-full transition-all duration-300" style="width: ${fillPct}%"></div>
+                        </div>
+                        <span class="text-[10px] font-semibold text-slate-600">${statusText}</span>
+                    </div>
+                `;
+            }
+            
+            if (totalPages > 5.0) {
+                const overflowVal = Math.round((totalPages - 5.0) * 10) / 10;
+                html += `
+                    <div class="border rounded-lg bg-red-50 overflow-hidden flex flex-col items-center justify-between h-32 p-3 border-red-300 shadow-md ring-2 ring-red-100 animate-pulse">
+                        <span class="text-[10px] font-bold text-red-600 uppercase tracking-wider">Overflow</span>
+                        <i data-lucide="alert-triangle" class="w-6 h-6 text-red-600"></i>
+                        <span class="text-[10px] font-bold text-red-600">+${overflowVal.toFixed(1)} Pages</span>
+                    </div>
+                `;
+            }
+            
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        // --- 11. PORTAL LIMITS CHECKER LOGIC ---
+        function checkChars(textareaId, maxLimit, countSpanId) {
+            const textarea = document.getElementById(textareaId);
+            const countSpan = document.getElementById(countSpanId);
+            const length = textarea.value.length;
+
+            countSpan.textContent = `${length.toLocaleString()} / ${maxLimit.toLocaleString()} chars`;
+            
+            state.texts[textareaId] = textarea.value;
+            saveState();
+
+            if (length > maxLimit) {
+                countSpan.className = 'text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded border border-red-200 animate-pulse';
+            } else {
+                countSpan.className = 'text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded';
+            }
+
+            // Sync Style Auditor for limits textareas
+            const auditDivId = textareaId === 'txtSummary' ? 'auditSummary' : (textareaId === 'txtContributions' ? 'auditContributions' : 'auditRelationship');
+            runStyleAudit(textareaId, auditDivId);
+        }
+
+        function sanitizeTextbox(textareaId) {
+            const textarea = document.getElementById(textareaId);
+            let text = textarea.value;
+
+            if (!text) {
+                showToast("Textbox is empty!");
+                return;
+            }
+
+            text = text
+                .replace(/[\u201C\u201D]/g, '"') 
+                .replace(/[\u2018\u2019]/g, "'") 
+                .replace(/\u2013/g, "-")         
+                .replace(/\u2014/g, "--")        
+                .replace(/\u2026/g, "...");      
+
+            text = text.replace(/[ \t]+/g, ' ');
+            text = text.replace(/(\r?\n){3,}/g, '\n\n');
+
+            textarea.value = text;
+            
+            const limit = textareaId === 'txtSummary' ? 2500 : (textareaId === 'txtContributions' ? 9000 : 12000);
+            const countId = textareaId === 'txtSummary' ? 'cntSummary' : (textareaId === 'txtContributions' ? 'cntContributions' : 'cntRelationship');
+            
+            checkChars(textareaId, limit, countId);
+            showToast("Formatting sanitized!");
+        }
+
+        function generateMSCParagraph() {
+            const ref = document.getElementById('mscRef').value.trim();
+            const hqp = document.getElementById('mscHQP').value.trim();
+            const impact = document.getElementById('mscImpact').value.trim();
+            const role = document.getElementById('mscRole').value.trim();
+
+            if (!ref || !impact) {
+                showToast("Citation and Novelty fields are required.");
+                return;
+            }
+
+            // Build structured paragraph
+            let paragraph = `Contribution: ${ref}. `;
+            if (hqp) paragraph += `This work directly trained HQP including ${hqp}. `;
+            paragraph += `Impact: ${impact} `;
+            if (role) paragraph += `Role & Significance: ${role}`;
+            paragraph += `\n\n`;
+
+            const textarea = document.getElementById('txtContributions');
+            textarea.value += paragraph;
+            
+            // Clear builder values
+            document.getElementById('mscRef').value = '';
+            document.getElementById('mscHQP').value = '';
+            document.getElementById('mscImpact').value = '';
+            document.getElementById('mscRole').value = '';
+
+            // Re-trigger counter
+            checkChars('txtContributions', 9000, 'cntContributions');
+            showToast("MSC paragraph generated & appended!");
+        }
+
+        function generateSupportParagraph() {
+            const agency = document.getElementById('suppAgency').value.trim();
+            const title = document.getElementById('suppTitle').value.trim();
+            const objectives = document.getElementById('suppObjectives').value.trim();
+
+            if (!agency || !title || !objectives) {
+                showToast("Agency, Title, and Objectives are required.");
+                return;
+            }
+
+            // Build structured justification paragraph
+            let paragraph = `Funding Source: ${agency} ("${title}"). `;
+            paragraph += `This grant focuses on targeted application goals, namely: ${objectives}. `;
+            paragraph += `In contrast, the requested NSERC Discovery Grant supports the fundamental, long-term research program focused on structural core developments and generic modeling parameters, with no conceptual or financial overlap in objectives.`;
+            paragraph += `\n\n`;
+
+            const textarea = document.getElementById('txtRelationship');
+            textarea.value += paragraph;
+
+            // Clear inputs
+            document.getElementById('suppAgency').value = '';
+            document.getElementById('suppTitle').value = '';
+            document.getElementById('suppObjectives').value = '';
+
+            // Re-trigger counter
+            checkChars('txtRelationship', 12000, 'cntRelationship');
+            showToast("Justification generated & appended!");
+        }
+
+        // --- 12. STYLE & PASSIVE VOICE AUDITOR LOGIC ---
+        function runStyleAudit(textareaId, auditDivId) {
+            const text = document.getElementById(textareaId).value;
+            const container = document.getElementById(auditDivId);
+            
+            if (!text.trim()) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            const passiveVoiceRegex = /\b(am|is|are|was|were|be|been|being|has\s+been|have\s+been|had\s+been|will\s+be|shall\s+be)\s+([a-z]+ed|built|done|taken|given|seen|chosen|shown|conducted|performed|analyzed|evaluated|tested|formulated|developed|written|made|sought)\b/gi;
+            
+            const hyperboleWords = ['groundbreaking', 'unprecedented', 'revolutionary', 'paradigm-shifting', 'world-first', 'unrivaled', 'outstanding', 'astonishing', 'game-changing', 'miraculous'];
+            
+            const weakVerbsMap = {
+                'make a decision': 'decide',
+                'conduct an investigation': 'investigate',
+                'perform an analysis': 'analyze',
+                'provide a description': 'describe',
+                'reach a conclusion': 'conclude',
+                'take into consideration': 'consider',
+                'give consideration to': 'consider',
+                'has the capability': 'can',
+                'with the exception of': 'except'
+            };
+            
+            let warnings = [];
+            
+            // Check passive voice
+            let match;
+            let passiveMatches = [];
+            while ((match = passiveVoiceRegex.exec(text)) !== null) {
+                passiveMatches.push(`"${match[0]}"`);
+            }
+            if (passiveMatches.length > 0) {
+                const unique = [...new Set(passiveMatches)];
+                warnings.push({
+                    type: 'Passive Voice',
+                    icon: 'feather',
+                    desc: `Detected passive voice: ${unique.slice(0, 3).join(', ')}${unique.length > 3 ? '...' : ''}. NSERC reviewers prefer active voice (e.g., "We will analyze data" rather than "Data will be analyzed").`
+                });
+            }
+            
+            // Check hyperbole
+            let foundHyperboles = [];
+            hyperboleWords.forEach(word => {
+                const reg = new RegExp(`\\b${word}\\b`, 'gi');
+                if (reg.test(text)) {
+                    foundHyperboles.push(`"${word}"`);
+                }
+            });
+            if (foundHyperboles.length > 0) {
+                warnings.push({
+                    type: 'Exaggeration / Hyperbole',
+                    icon: 'alert-triangle',
+                    desc: `Detected hyperbole: ${foundHyperboles.join(', ')}. NSERC panels evaluate based on objective peer outcomes. Avoid overly dramatic terms unless backed by quantitative metrics.`
+                });
+            }
+            
+            // Check weak verbs
+            let foundWeak = [];
+            Object.keys(weakVerbsMap).forEach(phrase => {
+                const reg = new RegExp(`\\b${phrase}\\b`, 'gi');
+                if (reg.test(text)) {
+                    foundWeak.push(`"${phrase}" (use "${weakVerbsMap[phrase]}" instead)`);
+                }
+            });
+            if (foundWeak.length > 0) {
+                warnings.push({
+                    type: 'Wordy Phrasing',
+                    icon: 'scissors',
+                    desc: `Detected wordy phrasing: ${foundWeak.join(', ')}. Use direct verbs to save characters and make your sentences punchier.`
+                });
+            }
+            
+            if (warnings.length === 0) {
+                container.innerHTML = `
+                    <div class="mt-2 text-[11px] text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg p-2 flex items-center gap-1.5">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        Style Auditor: No passive voice, weak verbs, or hyperbole flags found!
+                    </div>
+                `;
+            } else {
+                let warningsHtml = warnings.map(w => `
+                    <div class="flex items-start gap-2 text-[11px] text-amber-700 bg-amber-50/50 p-2 rounded border border-amber-100">
+                        <i data-lucide="${w.icon}" class="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="font-bold text-slate-800">${w.type}:</span> ${w.desc}
+                        </div>
+                    </div>
+                `).join('');
+                container.innerHTML = `
+                    <div class="mt-2 flex flex-col gap-1.5 border border-slate-100 rounded-lg p-2 bg-slate-50/50">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Style Audit Suggestions</span>
+                        ${warningsHtml}
+                    </div>
+                `;
+            }
+            lucide.createIcons();
+        }
+
+        // --- 13. EDI PLAN SCAFFOLDER LOGIC ---
+        function generateEDIDraft() {
+            const recChecked = [
+                { el: 'edi-rec-1', text: 'To ensure unbiased outreach, recruitment advertisements for research openings will be disseminated widely through diverse networks, including Women in Science networks and national EDI science collectives.' },
+                { el: 'edi-rec-2', text: 'All written job postings and application profiles are cross-checked using gender-neutral decoders to eliminate unconsciously biased terminology.' },
+                { el: 'edi-rec-3', text: 'Candidate reviews will employ standardized questionnaires, structured interview templates, and objective ranking rubrics to evaluate applicants uniformly.' }
+            ];
+
+            const menChecked = [
+                { el: 'edi-men-1', text: 'Each trainee will establish customized Individual Development Plans (IDPs) reviewed semi-annually to chart specific engineering skill goals and publication milestones.' },
+                { el: 'edi-men-2', text: 'Financial support is fully allocated to send trainees to non-technical professional development workshops covering grant-writing, public speaking, and project leadership.' },
+                { el: 'edi-men-3', text: 'Formal progress reporting is conducted at regular team lunches alongside weekly 1-on-1 progress check-ins to monitor research progress and student welfare.' }
+            ];
+
+            const envChecked = [
+                { el: 'edi-env-1', text: 'Laboratory operations are governed by a student-authored Laboratory Code of Conduct highlighting mutual respect, safety rules, and inclusive communications.' },
+                { el: 'edi-env-2', text: 'Trainees are offered customized, flexible working hours to accommodate accessibility needs, caregiving responsibilities, and religious holidays.' },
+                { el: 'edi-env-3', text: 'All laboratory participants will commit to participating in structural institutional equity seminars and unconscious bias workshops annually.' }
+            ];
+
+            let draftText = '';
+            
+            const selectedRec = recChecked.filter(item => {
+                const checked = document.getElementById(item.el).checked;
+                state.edi.checkboxes[item.el] = checked;
+                return checked;
+            });
+            if (selectedRec.length > 0) {
+                draftText += `**Recruitment & Selection Strategy:**\n`;
+                selectedRec.forEach(i => draftText += `• ${i.text}\n`);
+                draftText += `\n`;
+            }
+
+            const selectedMen = menChecked.filter(item => {
+                const checked = document.getElementById(item.el).checked;
+                state.edi.checkboxes[item.el] = checked;
+                return checked;
+            });
+            if (selectedMen.length > 0) {
+                draftText += `**Development & Mentorship Philosophy:**\n`;
+                selectedMen.forEach(i => draftText += `• ${i.text}\n`);
+                draftText += `\n`;
+            }
+
+            const selectedEnv = envChecked.filter(item => {
+                const checked = document.getElementById(item.el).checked;
+                state.edi.checkboxes[item.el] = checked;
+                return checked;
+            });
+            if (selectedEnv.length > 0) {
+                draftText += `**Inclusive Laboratory Culture:**\n`;
+                selectedEnv.forEach(i => draftText += `• ${i.text}\n`);
+            }
+
+            const container = document.getElementById('ediDraftContainer');
+            if (draftText === '') {
+                container.textContent = 'Select one or more items on the left to begin compiling custom structural components for your EDI section.';
+            } else {
+                container.textContent = draftText;
+            }
+            saveState();
+        }
+
+        function copyEDIDraft() {
+            const container = document.getElementById('ediDraftContainer');
+            const text = container.textContent;
+
+            if (text.startsWith("Select one")) {
+                showToast("Nothing to copy!");
+                return;
+            }
+
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+
+            showToast("EDI draft blueprint copied!");
+        }
+
+        // --- 14. MERIT RUBRIC ASSESSOR LOGIC ---
+        function switchMeritFilter(sectionId) {
+            activeMeritSection = sectionId;
+            document.querySelectorAll("[id^='mfilter-']").forEach(btn => {
+                btn.className = 'px-4 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-600 hover:text-slate-800 border border-slate-300 transition-colors';
+            });
+            const activeBtn = document.getElementById(`mfilter-${sectionId}`);
+            if (activeBtn) {
+                activeBtn.className = 'px-4 py-1.5 rounded-lg text-xs font-bold bg-brand-600 text-white shadow-sm border border-brand-700 transition-colors';
+            }
+            renderMeritMatrix();
+        }
+
+        function renderMeritMatrix() {
+            const container = document.getElementById('meritCardsContainer');
+            const items = rubrics[activeMeritSection];
+
+            container.innerHTML = items.map((item, idx) => {
+                const isSelected = state.meritRatings[activeMeritSection] === item.rating;
+                
+                return `
+                    <div onclick="rateMerit('${activeMeritSection}', '${item.rating}')" class="group border rounded-xl p-5 cursor-pointer transition-all duration-200 bg-white ${isSelected ? 'border-brand-500 bg-brand-50/20 shadow-md ring-2 ring-brand-100' : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'} flex flex-col gap-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold ${isSelected ? 'text-brand-600' : 'text-slate-800 group-hover:text-brand-600 transition-colors'}">${item.rating}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-semibold ${isSelected ? 'text-brand-600 bg-brand-50' : 'text-slate-400'} px-2 py-0.5 rounded">
+                                    ${isSelected ? 'Self-Rated Selection' : 'Click to Rate'}
+                                </span>
+                                <div class="w-4 h-4 rounded-full border flex items-center justify-center transition-all ${isSelected ? 'bg-brand-600 border-brand-600 text-white' : 'border-slate-300 group-hover:border-brand-500'}">
+                                    ${isSelected ? '<i data-lucide="check" class="w-3.5 h-3.5"></i>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-500 leading-relaxed">${item.desc}</p>
+                        <div class="p-3 bg-slate-50 rounded-lg text-[11px] text-slate-600 border border-slate-100 flex gap-2">
+                            <i data-lucide="lightbulb" class="w-3.5 h-3.5 text-brand-500 mt-0.5 flex-shrink-0"></i>
+                            <div>
+                                <span class="font-bold">Tips to achieve:</span> ${item.tips}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+            updateScoresHeader();
+        }
+
+        function rateMerit(section, rating) {
+            state.meritRatings[section] = state.meritRatings[section] === rating ? '' : rating;
+            renderMeritMatrix();
+            saveState();
+        }
+
+        function updateScoresHeader() {
+            const sections = ['res', 'prop', 'hqp'];
+            sections.forEach(s => {
+                const el = document.getElementById(`score-${s}`);
+                const rating = state.meritRatings[s];
+                if (rating) {
+                    el.textContent = rating;
+                    el.className = 'text-xs font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded border border-brand-100';
+                } else {
+                    el.textContent = 'Not Rated';
+                    el.className = 'text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-transparent';
+                }
+            });
+            
+            // Sync Advice panel
+            updateMeritAdvice();
+        }
+
+        function updateMeritAdvice() {
+            const container = document.getElementById('meritAdviceContainer');
+            let bullets = [];
+
+            // Excellence of Researcher advice
+            const resVal = state.meritRatings.res;
+            if (!resVal) {
+                bullets.push(`Self-rate "Excellence of the Researcher" under the rubric list to receive tips.`);
+            } else if (resVal === 'Outstanding') {
+                bullets.push(`<strong>Researcher Excellence is Outstanding:</strong> Verify that your top 5 significant contributions explicitly mention your supervisor role on student co-authored publications and state venual impact metrics.`);
+            } else if (resVal === 'Very Strong') {
+                bullets.push(`<strong>To reach Outstanding:</strong> Emphasize the national and international impact of your work. Detail trainee placements (e.g. graduates securing industrial R&D roles or faculty tenure) and quantitative citation parameters.`);
+            } else {
+                bullets.push(`<strong>To reach Very Strong/Outstanding:</strong> Focus your CCV narrative on peer-reviewed journal and flagship conference venues. Group publications logically and clearly specify supervisor responsibilities vs. student workloads.`);
+            }
+
+            // Proposal Merit advice
+            const propVal = state.meritRatings.prop;
+            if (!propVal) {
+                bullets.push(`Self-rate "Merit of the Proposal" to receive tips.`);
+            } else if (propVal === 'Outstanding') {
+                bullets.push(`<strong>Proposal Merit is Outstanding:</strong> Double-check page size guidelines (12pt Times, 0.75" margins). Ensure writing is active and free of passive auxiliary structures.`);
+            } else if (propVal === 'Very Strong') {
+                bullets.push(`<strong>To reach Outstanding:</strong> Frame your short-term objectives with high-risk, high-reward methodologies. Support feasibility by adding clear fallback protocols and risk mitigation parameters.`);
+            } else {
+                bullets.push(`<strong>To reach Very Strong/Outstanding:</strong> Ensure objectives (long-term vision vs. short-term milestones) are clearly mapped. Make the methodology dense, naming tools, data formats, and structural timelines.`);
+            }
+
+            // HQP Mentorship advice
+            const hqpVal = state.meritRatings.hqp;
+            if (!hqpVal) {
+                bullets.push(`Self-rate "Contribution to HQP Training" to receive tips.`);
+            } else if (hqpVal === 'Outstanding') {
+                bullets.push(`<strong>HQP Mentorship is Outstanding:</strong> Verify that no individual student names are mentioned due to privacy. Focus purely on mentoring philosophy and active laboratory guidelines.`);
+            } else if (hqpVal === 'Very Strong') {
+                bullets.push(`<strong>To reach Outstanding:</strong> Incorporate localized EDI barriers in HQP recruitment. Include concrete strategies (e.g., gender decoders for ads) and inclusive lab policies (e.g., flexible schedules, lab conduct codes) directly in the philosophy statement.`);
+            } else {
+                bullets.push(`<strong>To reach Very Strong/Outstanding:</strong> Shifting budget items directly into stipends rather than general operations will strengthen HQP scores. Explicitly explain what objectives students are assigned to.`);
+            }
+
+            container.innerHTML = bullets.map(b => `
+                <div class="flex items-start gap-2.5 text-xs text-slate-700 bg-slate-50 border border-slate-200/60 p-3 rounded-lg leading-relaxed shadow-inner">
+                    <i data-lucide="lightbulb" class="w-4 h-4 text-brand-500 mt-0.5 flex-shrink-0"></i>
+                    <div>${b}</div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // --- 15. INITIAL APP BOOTSTRAP ---
+        function init() {
+            loadState();
+
+            // Populate text inputs
+            document.getElementById('txtSummary').value = state.texts.txtSummary || '';
+            document.getElementById('txtContributions').value = state.texts.txtContributions || '';
+            document.getElementById('txtRelationship').value = state.texts.txtRelationship || '';
+
+            // Run counters once to set state
+            checkChars('txtSummary', 2500, 'cntSummary');
+            checkChars('txtContributions', 9000, 'cntContributions');
+            checkChars('txtRelationship', 12000, 'cntRelationship');
+
+            // Restore EDI checklists
+            const recCheckboxes = ['edi-rec-1', 'edi-rec-2', 'edi-rec-3'];
+            const menCheckboxes = ['edi-men-1', 'edi-men-2', 'edi-men-3'];
+            const envCheckboxes = ['edi-env-1', 'edi-env-2', 'edi-env-3'];
+
+            [...recCheckboxes, ...menCheckboxes, ...envCheckboxes].forEach(id => {
+                if (state.edi.checkboxes[id] !== undefined) {
+                    document.getElementById(id).checked = state.edi.checkboxes[id];
+                }
+            });
+
+            // Make sure outlinerDrafts is structured
+            if (!state.outlinerDrafts) {
+                state.outlinerDrafts = { 1: '', 2: '', 3: '', 4: '', 5: '' };
+            }
+
+            // Restore outliner drafts
+            for (let i = 1; i <= 5; i++) {
+                if (state.outlinerDrafts[i] !== undefined) {
+                    document.getElementById(`txtOutliner-${i}`).value = state.outlinerDrafts[i];
+                }
+                checkOutlinerChars(i, i === 1 ? 4000 : (i === 2 ? 2000 : (i === 3 ? 4000 : (i === 4 ? 8000 : 2000))));
+            }
+
+            // Set up views
+            renderChecklist();
+            renderBudget();
+            generateEDIDraft();
+            switchMeritFilter('res');
+
+            // Restore configurations selectors
+            if (state.uniSelection) {
+                document.getElementById('selUniversity').value = state.uniSelection;
+                changeUniversity();
+            }
+            if (state.egSelection) {
+                document.getElementById('selEG').value = state.egSelection;
+                changeEG();
+            }
+        }
+
+        // Run application setup
+        init();
+    </script>
+</body>
+
+</html>
