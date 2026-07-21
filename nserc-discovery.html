@@ -112,6 +112,15 @@
             </div>
             <div class="flex flex-wrap items-center gap-3">
                 <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200">
+                    <select id="selProfile" onchange="switchProfile(this.value)" title="Switch between saved proposal profiles (e.g. separate drafts per year or co-applicant)" class="text-xs font-semibold text-slate-600 bg-white border-none rounded px-2 py-1 focus:ring-1 focus:ring-brand-500 max-w-[140px]"></select>
+                    <button onclick="createProfile()" title="Create a new named proposal profile (kept separate from this one)" class="text-xs font-semibold text-slate-600 hover:text-brand-600 hover:bg-white px-2 py-1 rounded transition-colors flex items-center gap-1">
+                        <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button onclick="deleteProfile()" title="Delete the current profile" class="text-xs font-semibold text-slate-600 hover:text-brand-600 hover:bg-white px-2 py-1 rounded transition-colors flex items-center gap-1">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+                <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-lg border border-slate-200">
                     <button onclick="exportJSON()" class="text-xs font-semibold text-slate-600 hover:text-brand-600 hover:bg-white px-2 py-1 rounded transition-colors flex items-center gap-1">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         Export Draft
@@ -119,6 +128,10 @@
                     <button onclick="triggerImport()" class="text-xs font-semibold text-slate-600 hover:text-brand-600 hover:bg-white px-2 py-1 rounded transition-colors flex items-center gap-1">
                         <i data-lucide="upload" class="w-3.5 h-3.5"></i>
                         Import Draft
+                    </button>
+                    <button onclick="exportFullApplication()" title="Compile checklist, outliner, budget, EDI, referees and risk register into one document" class="text-xs font-semibold text-slate-600 hover:text-brand-600 hover:bg-white px-2 py-1 rounded transition-colors flex items-center gap-1">
+                        <i data-lucide="file-stack" class="w-3.5 h-3.5"></i>
+                        Export Full Application
                     </button>
                     <input type="file" id="importFileInput" onchange="importJSON(event)" class="hidden" accept=".json">
                 </div>
@@ -163,6 +176,10 @@
                 <button onclick="switchTab('merit')" id="tab-merit" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
                     <i data-lucide="grid" class="w-4 h-4"></i>
                     <span>Merit Rubric Assessor</span>
+                </button>
+                <button onclick="switchTab('referees')" id="tab-referees" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
+                    <i data-lucide="calendar-clock" class="w-4 h-4"></i>
+                    <span>Timeline & Referees</span>
                 </button>
             </nav>
         </aside>
@@ -390,6 +407,34 @@
                     </div>
                 </div>
 
+                <!-- Prior Competition Comparison -->
+                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800">Prior Competition Comparison</h3>
+                        <p class="text-xs text-slate-500">Enter your previous Discovery Grant's total requested amount and HQP ratio. Reviewers look closely at trajectory since the last award.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-slate-600">Previous 5-Year Total Requested ($)</label>
+                            <input type="number" min="0" id="inpPrevTotal" onchange="updatePriorComparison()" placeholder="e.g. 150000" class="text-sm border border-slate-300 rounded-lg px-2.5 py-1.5 focus:ring-brand-500 focus:border-brand-500 bg-white">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-slate-600">Previous HQP Funding Ratio (%)</label>
+                            <input type="number" min="0" max="100" id="inpPrevHqpRatio" onchange="updatePriorComparison()" placeholder="e.g. 58" class="text-sm border border-slate-300 rounded-lg px-2.5 py-1.5 focus:ring-brand-500 focus:border-brand-500 bg-white">
+                        </div>
+                    </div>
+                    <div id="priorComparisonPanel" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
+                        <div class="p-3 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                            <span>Total Requested Delta:</span>
+                            <span class="font-bold" id="priorTotalDelta">--</span>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                            <span>HQP Ratio Delta:</span>
+                            <span class="font-bold" id="priorHqpDelta">--</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Export Modal / Textarea Drawer -->
                 <div id="exportDrawer" class="hidden bg-slate-900 rounded-xl p-5 text-slate-200 border border-slate-800 shadow-xl flex flex-col gap-3.5 animate-fadeIn">
                     <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -432,6 +477,10 @@
                             <div class="text-[11px] text-slate-500" id="outlinerProgressSubtitle">0.0 / 5.0 pages occupied</div>
                         </div>
                     </div>
+                    <button onclick="openFormattedPreview()" title="Open a Times New Roman 12pt, 0.75in margin preview in a new tab. Use your browser's Print > Save as PDF to check real pagination." class="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 px-3 py-2 rounded-lg shadow-sm transition-colors flex-shrink-0">
+                        <i data-lucide="file-output" class="w-3.5 h-3.5"></i>
+                        Formatted Print Preview
+                    </button>
                 </div>
 
                 <!-- PDF Page simulator -->
@@ -517,6 +566,35 @@
                         <div id="auditOutliner-5"></div>
                     </div>
                 </div>
+
+                <!-- Risk Register (supports Methodology & Feasibility section) -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">Methodology Risk Register</h3>
+                            <p class="text-xs text-slate-500">Reviewers explicitly credit named risks and concrete mitigations in the Methodology & Feasibility section.</p>
+                        </div>
+                        <button onclick="addRiskRow()" class="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 px-3 py-2 rounded-lg shadow-sm transition-colors">
+                            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                            Add Risk
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold text-[11px] uppercase tracking-wider">
+                                    <th class="px-4 py-3 min-w-[200px]">Risk</th>
+                                    <th class="px-4 py-3 w-28">Likelihood</th>
+                                    <th class="px-4 py-3 min-w-[220px]">Mitigation</th>
+                                    <th class="px-4 py-3 w-16 text-center">Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100" id="riskTableBody">
+                                <!-- Risk rows injected dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
 
             <!-- TAB 4: PORTAL TEXT LIMIT CHECKER -->
@@ -538,17 +616,37 @@
                                 <h3 class="text-sm font-bold text-slate-800">1. Summary of Proposal</h3>
                                 <p class="text-[11px] text-slate-400">Must be written in lay terms suitable for public dissemination</p>
                             </div>
-                            <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-3 flex-wrap">
                                 <button onclick="sanitizeTextbox('txtSummary')" class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 hover:text-brand-600 transition-colors border border-slate-200 hover:border-brand-200 px-2 py-1 rounded">
                                     <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
                                     Sanitize Quotes & Whitespace
                                 </button>
+                                <button onclick="runAISimplify()" id="btnAISimplify" title="Runs a small AI model entirely in your browser (no data sent anywhere) to draft a plain-language rewrite for review" class="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-700 transition-colors border border-indigo-200 hover:border-indigo-300 bg-indigo-50 px-2 py-1 rounded">
+                                    <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                                    AI: Simplify to Lay Language
+                                </button>
                                 <span id="cntSummary" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">
                                     0 / 2,500 chars
                                 </span>
+                                <span id="wcSummary" class="text-[11px] font-semibold text-slate-400">0 words &middot; ~0s read</span>
                             </div>
                         </div>
                         <textarea id="txtSummary" oninput="checkChars('txtSummary', 2500, 'cntSummary')" placeholder="Write layout/summary of proposal here... (max 2,500 characters)" class="w-full h-36 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <span id="aiSimplifyStatus" class="text-[11px] text-slate-400"></span>
+                        <!-- AI Simplification Preview (not auto-applied) -->
+                        <div id="aiSimplifyPreview" class="hidden bg-indigo-50 border border-indigo-200 rounded-lg p-3 flex flex-col gap-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="text-[11px] font-bold text-indigo-700 flex items-center gap-1.5">
+                                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                                    AI-Suggested Simplification (runs locally in your browser &mdash; review carefully before using)
+                                </span>
+                                <div class="flex gap-2">
+                                    <button onclick="acceptAISimplify()" class="text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1 rounded transition-colors">Use This</button>
+                                    <button onclick="dismissAISimplify()" class="text-[11px] font-semibold text-slate-500 hover:text-slate-700 px-2.5 py-1 rounded transition-colors">Discard</button>
+                                </div>
+                            </div>
+                            <div id="aiSimplifyText" class="text-xs text-slate-700 whitespace-pre-line"></div>
+                        </div>
                         <!-- Style warnings -->
                         <div id="auditSummary"></div>
                     </div>
@@ -599,12 +697,52 @@
                                     <label class="block font-bold text-slate-700 mb-1">Applicant's Role & Venue Significance</label>
                                     <textarea id="mscRole" placeholder="e.g. As corresponding author, I supervised the project. Published in the field's top journal..." class="w-full h-16 border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 font-sans"></textarea>
                                 </div>
-                                <div class="flex justify-end mt-1">
+                                <div class="flex justify-end mt-1 gap-2">
+                                    <button onclick="runAITightenMSC()" id="btnAITightenMSC" title="Runs a small AI model entirely in your browser to tighten this paragraph before appending, for review" class="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-3.5 py-1.5 rounded transition-colors">
+                                        <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                                        AI: Tighten & Append
+                                    </button>
                                     <button onclick="generateMSCParagraph()" class="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 px-3.5 py-1.5 rounded transition-colors shadow">
                                         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                                         Generate & Append Contribution
                                     </button>
                                 </div>
+                                <span id="aiMscStatus" class="text-[11px] text-slate-400"></span>
+                                <div id="aiMscPreview" class="hidden bg-indigo-50 border border-indigo-200 rounded-lg p-3 flex flex-col gap-2">
+                                    <div class="flex items-center justify-between flex-wrap gap-2">
+                                        <span class="text-[11px] font-bold text-indigo-700 flex items-center gap-1.5">
+                                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                                            AI-Tightened Paragraph (runs locally &mdash; review before appending)
+                                        </span>
+                                        <div class="flex gap-2">
+                                            <button onclick="acceptAIMsc()" class="text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1 rounded transition-colors">Append This</button>
+                                            <button onclick="dismissAIMsc()" class="text-[11px] font-semibold text-slate-500 hover:text-slate-700 px-2.5 py-1 rounded transition-colors">Discard</button>
+                                        </div>
+                                    </div>
+                                    <div id="aiMscText" class="text-xs text-slate-700 whitespace-pre-line"></div>
+                                </div>
+                            </div>
+                        </details>
+
+                        <!-- CCV Coverage Checker -->
+                        <details class="border border-slate-200 rounded-lg overflow-hidden bg-slate-50/50">
+                            <summary class="bg-slate-100 hover:bg-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 cursor-pointer list-none flex items-center justify-between">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="list-checks" class="w-4 h-4 text-brand-600"></i>
+                                    CCV Coverage Checker (Click to Expand)
+                                </span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 transition-transform group-open:rotate-180"></i>
+                            </summary>
+                            <div class="p-4 flex flex-col gap-3 text-xs">
+                                <p class="text-slate-500">Paste your Canadian Common CV publication list below (one entry per line). We'll flag entries that don't appear to be mentioned in your Most Significant Contributions text, so your Portal narrative and CCV stay consistent.</p>
+                                <textarea id="ccvList" oninput="state.ccvText = this.value; saveState();" placeholder="e.g.&#10;J. Doe, A. Smith. 'Title of Paper.' IEEE Transactions, 2025.&#10;J. Doe, B. Lee. 'Another Paper.' Nature Comms, 2024." class="w-full h-24 border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 font-sans"></textarea>
+                                <div class="flex justify-end">
+                                    <button onclick="checkCCVCoverage()" class="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 px-3.5 py-1.5 rounded transition-colors shadow">
+                                        <i data-lucide="search-check" class="w-3.5 h-3.5"></i>
+                                        Check Coverage
+                                    </button>
+                                </div>
+                                <div id="ccvCoverageResult"></div>
                             </div>
                         </details>
 
@@ -754,15 +892,35 @@
 
                     <!-- Draft generation output -->
                     <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-4 sticky top-20">
-                        <div class="flex items-center justify-between">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
                             <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Generated Draft Blueprints</span>
-                            <button onclick="copyEDIDraft()" class="text-xs text-brand-600 hover:text-brand-700 font-semibold flex items-center gap-1">
-                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                                Copy Text
-                            </button>
+                            <div class="flex items-center gap-3">
+                                <button onclick="runAISmoothEDI()" id="btnAISmoothEDI" title="Runs a small AI model entirely in your browser to turn these bullets into flowing prose, for review" class="text-xs text-indigo-600 hover:text-indigo-700 font-semibold flex items-center gap-1">
+                                    <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                                    AI: Smooth into Prose
+                                </button>
+                                <button onclick="copyEDIDraft()" class="text-xs text-brand-600 hover:text-brand-700 font-semibold flex items-center gap-1">
+                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                    Copy Text
+                                </button>
+                            </div>
                         </div>
                         <div id="ediDraftContainer" class="bg-slate-50 border border-slate-200 p-5 rounded-lg text-xs leading-relaxed text-slate-600 min-h-[300px] whitespace-pre-line font-sans">
                             Select one or more items on the left to begin compiling custom structural components for your EDI section.
+                        </div>
+                        <span id="aiEdiStatus" class="text-[11px] text-slate-400"></span>
+                        <div id="aiEdiPreview" class="hidden bg-indigo-50 border border-indigo-200 rounded-lg p-3 flex flex-col gap-2">
+                            <div class="flex items-center justify-between flex-wrap gap-2">
+                                <span class="text-[11px] font-bold text-indigo-700 flex items-center gap-1.5">
+                                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                                    AI-Suggested Prose (runs locally &mdash; review before using)
+                                </span>
+                                <div class="flex gap-2">
+                                    <button onclick="acceptAIEdi()" class="text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1 rounded transition-colors">Use This</button>
+                                    <button onclick="dismissAIEdi()" class="text-[11px] font-semibold text-slate-500 hover:text-slate-700 px-2.5 py-1 rounded transition-colors">Discard</button>
+                                </div>
+                            </div>
+                            <div id="aiEdiText" class="text-xs text-slate-700 whitespace-pre-line"></div>
                         </div>
                     </div>
                 </div>
@@ -827,6 +985,62 @@
                     </div>
                 </div>
             </section>
+
+            <!-- TAB 7: TIMELINE & REFEREES -->
+            <section id="content-referees" class="tab-content hidden flex flex-col gap-6">
+                <!-- Deadline Tracker -->
+                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 mb-1">Deadline Tracker</h2>
+                        <p class="text-sm text-slate-500">Track the NSERC portal deadline and your institution's earlier internal submission deadline.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-slate-600">Institutional Internal Deadline</label>
+                            <input type="date" id="inpInstDeadline" onchange="updateDeadlines()" class="text-sm border border-slate-300 rounded-lg px-2.5 py-1.5 focus:ring-brand-500 focus:border-brand-500 bg-white">
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <label class="text-xs font-bold text-slate-600">NSERC Portal Deadline</label>
+                            <input type="date" id="inpNsercDeadline" onchange="updateDeadlines()" class="text-sm border border-slate-300 rounded-lg px-2.5 py-1.5 focus:ring-brand-500 focus:border-brand-500 bg-white">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="deadlineCardsContainer">
+                        <!-- Countdown cards rendered here -->
+                    </div>
+                </div>
+
+                <!-- Referee Tracker -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">Suggested Referees (5 Required)</h2>
+                            <p class="text-xs text-slate-500">NSERC requires referees with no recent co-authorship or supervisory relationship (past 6 years). Conflicts are flagged automatically.</p>
+                        </div>
+                        <button onclick="addReferee()" class="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 px-3 py-2 rounded-lg shadow-sm transition-colors">
+                            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                            Add Referee
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold text-[11px] uppercase tracking-wider">
+                                    <th class="px-4 py-3 min-w-[160px]">Name</th>
+                                    <th class="px-4 py-3 min-w-[160px]">Institution</th>
+                                    <th class="px-4 py-3 min-w-[140px]">Relationship</th>
+                                    <th class="px-4 py-3 w-32">Last Collab. Year</th>
+                                    <th class="px-4 py-3 w-28 text-center">Contacted</th>
+                                    <th class="px-4 py-3 w-32 text-center">Conflict Check</th>
+                                    <th class="px-4 py-3 w-16 text-center">Delete</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100" id="refereeTableBody">
+                                <!-- Referee rows injected dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
         </main>
     </div>
 
@@ -842,6 +1056,56 @@
         <i data-lucide="check" class="w-4 h-4 text-emerald-400"></i>
         <span id="toastMessage">Done!</span>
     </div>
+
+    <!-- Client-side AI (Transformers.js) — loaded lazily, only when the AI Simplify button is used.
+         Runs fully in-browser (WASM/WebGPU); no proposal text is ever sent to a server. -->
+    <script type="module">
+        let generatorPromise = null;
+        async function getGenerator(onStatus) {
+            if (!generatorPromise) {
+                onStatus('Downloading local AI model (one-time, ~60-80MB)...');
+                const { pipeline } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+                generatorPromise = pipeline('text2text-generation', 'Xenova/flan-t5-small');
+            }
+            return generatorPromise;
+        }
+
+        window.__aiGenerate = async function (promptText, onStatus, maxNewTokens) {
+            const generator = await getGenerator(onStatus);
+            onStatus('Generating...');
+            // repetition_penalty + no_repeat_ngram_size guard against the repetition-loop
+            // failure mode small greedy-decoded seq2seq models fall into on longer prompts.
+            const output = await generator(promptText, {
+                max_new_tokens: maxNewTokens || 200,
+                repetition_penalty: 1.3,
+                no_repeat_ngram_size: 3
+            });
+            let text = (output[0] && output[0].generated_text) ? output[0].generated_text.trim() : '';
+            text = collapseRepeatedSentences(text);
+            return text;
+        };
+
+        // Belt-and-suspenders cleanup: if the model still repeats a whole sentence/clause
+        // verbatim, keep only the first occurrence so a failed generation is at least visible
+        // and short rather than a wall of duplicated text.
+        function collapseRepeatedSentences(text) {
+            const parts = text.split(/(?<=[.!?])\s+/);
+            const seen = new Set();
+            const kept = [];
+            for (const part of parts) {
+                const key = part.trim().toLowerCase();
+                if (key && seen.has(key)) continue;
+                seen.add(key);
+                kept.push(part);
+            }
+            return kept.join(' ').trim();
+        }
+
+        window.__aiSimplify = async function (text, onStatus) {
+            const prompt = `Rewrite the following research project description in simple, plain language for a general public audience, in 2-3 short sentences. Avoid technical jargon.\n\nResearch description: ${text}`;
+            return window.__aiGenerate(prompt, onStatus, 180);
+        };
+    </script>
 
     <!-- Application Script Logic -->
     <script>
@@ -885,7 +1149,12 @@
                 3: '',
                 4: '',
                 5: ''
-            }
+            },
+            referees: [],
+            deadlines: { instDate: '', nsercDate: '' },
+            priorCompetition: { prevTotal: '', prevHqpRatio: '' },
+            riskRegister: [],
+            ccvText: ''
         };
 
         const uniRatesDb = {
@@ -936,10 +1205,90 @@
 
         let activeMeritSection = 'res';
 
-        // --- 2. LOCAL STORAGE AUTO-SAVE LOGIC ---
+        // --- 2. LOCAL STORAGE AUTO-SAVE LOGIC (MULTI-PROFILE) ---
+        const PROFILES_KEY = 'nserc_discovery_helper_profiles';
+        const ACTIVE_PROFILE_KEY = 'nserc_discovery_helper_active_profile';
+        const LEGACY_STATE_KEY = 'nserc_discovery_helper_state';
+
+        function profileStateKey(name) {
+            return `nserc_discovery_helper_state::${name}`;
+        }
+
+        function getProfiles() {
+            try {
+                const stored = localStorage.getItem(PROFILES_KEY);
+                return stored ? JSON.parse(stored) : [];
+            } catch (err) {
+                return [];
+            }
+        }
+
+        function getActiveProfile() {
+            return localStorage.getItem(ACTIVE_PROFILE_KEY) || 'Default';
+        }
+
+        function ensureProfilesInitialized() {
+            let profiles = getProfiles();
+            if (profiles.length === 0) {
+                // Migrate legacy single-state key into a "Default" profile
+                const legacy = localStorage.getItem(LEGACY_STATE_KEY);
+                if (legacy) {
+                    localStorage.setItem(profileStateKey('Default'), legacy);
+                }
+                profiles = ['Default'];
+                localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+                localStorage.setItem(ACTIVE_PROFILE_KEY, 'Default');
+            }
+            return profiles;
+        }
+
+        function renderProfileSelector() {
+            const profiles = getProfiles();
+            const active = getActiveProfile();
+            const sel = document.getElementById('selProfile');
+            sel.innerHTML = profiles.map(p => `<option value="${p}" ${p === active ? 'selected' : ''}>${p}</option>`).join('');
+        }
+
+        function createProfile() {
+            const name = prompt("Name this new proposal profile (e.g. '2026 Cycle', 'Co-App Smith'):");
+            if (!name || !name.trim()) return;
+            const trimmed = name.trim();
+            let profiles = getProfiles();
+            if (profiles.includes(trimmed)) {
+                showToast("A profile with that name already exists.");
+                return;
+            }
+            profiles.push(trimmed);
+            localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+            localStorage.setItem(ACTIVE_PROFILE_KEY, trimmed);
+            location.reload();
+        }
+
+        function deleteProfile() {
+            const profiles = getProfiles();
+            if (profiles.length <= 1) {
+                showToast("Cannot delete the only remaining profile.");
+                return;
+            }
+            const active = getActiveProfile();
+            if (!confirm(`Delete profile "${active}" and all its saved data? This cannot be undone.`)) return;
+            localStorage.removeItem(profileStateKey(active));
+            const remaining = profiles.filter(p => p !== active);
+            localStorage.setItem(PROFILES_KEY, JSON.stringify(remaining));
+            localStorage.setItem(ACTIVE_PROFILE_KEY, remaining[0]);
+            location.reload();
+        }
+
+        function switchProfile(name) {
+            if (!name || name === getActiveProfile()) return;
+            localStorage.setItem(ACTIVE_PROFILE_KEY, name);
+            location.reload();
+        }
+
         function loadState() {
             try {
-                const stored = localStorage.getItem('nserc_discovery_helper_state');
+                ensureProfilesInitialized();
+                const stored = localStorage.getItem(profileStateKey(getActiveProfile()));
                 if (stored) {
                     const parsed = JSON.parse(stored);
                     if (parsed.checklist) state.checklist = parsed.checklist;
@@ -950,6 +1299,11 @@
                     if (parsed.uniSelection) state.uniSelection = parsed.uniSelection;
                     if (parsed.egSelection) state.egSelection = parsed.egSelection;
                     if (parsed.outlinerDrafts) state.outlinerDrafts = parsed.outlinerDrafts;
+                    if (parsed.referees) state.referees = parsed.referees;
+                    if (parsed.deadlines) state.deadlines = parsed.deadlines;
+                    if (parsed.priorCompetition) state.priorCompetition = parsed.priorCompetition;
+                    if (parsed.riskRegister) state.riskRegister = parsed.riskRegister;
+                    if (parsed.ccvText) state.ccvText = parsed.ccvText;
                 }
             } catch (err) {
                 console.error("Could not load state from localStorage", err);
@@ -958,7 +1312,7 @@
 
         function saveState() {
             try {
-                localStorage.setItem('nserc_discovery_helper_state', JSON.stringify(state));
+                localStorage.setItem(profileStateKey(getActiveProfile()), JSON.stringify(state));
                 const saveStatus = document.getElementById('saveStatus');
                 saveStatus.innerHTML = `<i data-lucide="cloud-lightning" class="w-3.5 h-3.5 text-emerald-500 animate-pulse"></i> Saved`;
                 lucide.createIcons();
@@ -1025,6 +1379,18 @@
                             }
                         }
 
+                        // Restore new modules (backward-compatible with older export files)
+                        if (!state.referees) state.referees = [];
+                        if (!state.deadlines) state.deadlines = { instDate: '', nsercDate: '' };
+                        if (!state.priorCompetition) state.priorCompetition = { prevTotal: '', prevHqpRatio: '' };
+                        if (!state.riskRegister) state.riskRegister = [];
+                        if (!state.ccvText) state.ccvText = '';
+                        document.getElementById('inpInstDeadline').value = state.deadlines.instDate || '';
+                        document.getElementById('inpNsercDeadline').value = state.deadlines.nsercDate || '';
+                        document.getElementById('inpPrevTotal').value = state.priorCompetition.prevTotal || '';
+                        document.getElementById('inpPrevHqpRatio').value = state.priorCompetition.prevHqpRatio || '';
+                        document.getElementById('ccvList').value = state.ccvText || '';
+
                         // Run triggers
                         renderChecklist();
                         renderBudget();
@@ -1032,6 +1398,10 @@
                         changeUniversity();
                         changeEG();
                         recalculateBudget();
+                        renderDeadlines();
+                        renderReferees();
+                        renderRiskRegister();
+                        updatePriorComparison();
                         for (let i = 1; i <= 5; i++) {
                             checkOutlinerChars(i, i === 1 ? 4000 : (i === 2 ? 2000 : (i === 3 ? 4000 : (i === 4 ? 8000 : 2000))));
                         }
@@ -1179,19 +1549,19 @@
                             </span>
                         </td>
                         <td class="px-4 py-3.5 text-right">
-                            <input type="number" value="${row.y1}" onchange="updateBudgetRowVal('${row.id}', 'y1', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
+                            <input type="number" min="0" value="${row.y1}" onchange="updateBudgetRowVal('${row.id}', 'y1', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
                         </td>
                         <td class="px-4 py-3.5 text-right">
-                            <input type="number" value="${row.y2}" onchange="updateBudgetRowVal('${row.id}', 'y2', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
+                            <input type="number" min="0" value="${row.y2}" onchange="updateBudgetRowVal('${row.id}', 'y2', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
                         </td>
                         <td class="px-4 py-3.5 text-right">
-                            <input type="number" value="${row.y3}" onchange="updateBudgetRowVal('${row.id}', 'y3', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
+                            <input type="number" min="0" value="${row.y3}" onchange="updateBudgetRowVal('${row.id}', 'y3', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
                         </td>
                         <td class="px-4 py-3.5 text-right">
-                            <input type="number" value="${row.y4}" onchange="updateBudgetRowVal('${row.id}', 'y4', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
+                            <input type="number" min="0" value="${row.y4}" onchange="updateBudgetRowVal('${row.id}', 'y4', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
                         </td>
                         <td class="px-4 py-3.5 text-right">
-                            <input type="number" value="${row.y5}" onchange="updateBudgetRowVal('${row.id}', 'y5', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
+                            <input type="number" min="0" value="${row.y5}" onchange="updateBudgetRowVal('${row.id}', 'y5', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
                         </td>
                         <td class="px-6 py-3.5 text-center">
                             <button onclick="deleteBudgetRow('${row.id}')" class="text-slate-400 hover:text-brand-600 transition-colors">
@@ -1236,8 +1606,8 @@
         function updateBudgetRowVal(id, year, val) {
             const row = state.budget.find(r => r.id === id);
             if (row) {
-                row[year] = Number(val) || 0;
-                recalculateBudget();
+                row[year] = Math.max(0, Number(val) || 0);
+                renderBudget();
                 saveState();
             }
         }
@@ -1463,7 +1833,8 @@
             code += `| :--- | :---: | :---: | :---: | :---: | :---: |\n`;
 
             state.budget.forEach(row => {
-                code += `| ${row.desc} | \$${row.y1.toLocaleString()} | \$${row.y2.toLocaleString()} | \$${row.y3.toLocaleString()} | \$${row.y4.toLocaleString()} | \$${row.y5.toLocaleString()} |\n`;
+                const desc = row.desc.replace(/\|/g, '\\|');
+                code += `| ${desc} | \$${row.y1.toLocaleString()} | \$${row.y2.toLocaleString()} | \$${row.y3.toLocaleString()} | \$${row.y4.toLocaleString()} | \$${row.y5.toLocaleString()} |\n`;
             });
 
             let y1Tot = 0, y2Tot = 0, y3Tot = 0, y4Tot = 0, y5Tot = 0;
@@ -1619,6 +1990,61 @@
             // Sync Style Auditor for limits textareas
             const auditDivId = textareaId === 'txtSummary' ? 'auditSummary' : (textareaId === 'txtContributions' ? 'auditContributions' : 'auditRelationship');
             runStyleAudit(textareaId, auditDivId);
+
+            if (textareaId === 'txtSummary') {
+                updateWordCountReadTime(textarea.value);
+            }
+        }
+
+        function updateWordCountReadTime(text) {
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            // Average public reading speed ~200 wpm for lay-audience text
+            const seconds = Math.round((words / 200) * 60);
+            document.getElementById('wcSummary').textContent = `${words.toLocaleString()} words · ~${seconds}s read`;
+        }
+
+        // --- AI-ASSISTED LAY-LANGUAGE SIMPLIFICATION (client-side model, review-before-use) ---
+        async function runAISimplify() {
+            const text = document.getElementById('txtSummary').value.trim();
+            if (!text) {
+                showToast("Write a draft summary first.");
+                return;
+            }
+            const btn = document.getElementById('btnAISimplify');
+            const status = document.getElementById('aiSimplifyStatus');
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            try {
+                const result = await window.__aiSimplify(text, (msg) => { status.textContent = msg; });
+                if (!result) {
+                    status.textContent = "AI model returned an empty result. Try shortening the draft first.";
+                    return;
+                }
+                document.getElementById('aiSimplifyText').textContent = result;
+                document.getElementById('aiSimplifyPreview').classList.remove('hidden');
+                status.textContent = "Done — review the suggestion below before using it.";
+            } catch (err) {
+                console.error(err);
+                status.textContent = "AI simplification unavailable (requires an internet connection on first use, and a modern browser).";
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                lucide.createIcons();
+            }
+        }
+
+        function acceptAISimplify() {
+            const suggestion = document.getElementById('aiSimplifyText').textContent;
+            document.getElementById('txtSummary').value = suggestion;
+            checkChars('txtSummary', 2500, 'cntSummary');
+            document.getElementById('aiSimplifyPreview').classList.add('hidden');
+            showToast("AI-suggested text inserted — please review carefully before submitting.");
+        }
+
+        function dismissAISimplify() {
+            document.getElementById('aiSimplifyPreview').classList.add('hidden');
+            document.getElementById('aiSimplifyStatus').textContent = '';
         }
 
         function sanitizeTextbox(textareaId) {
@@ -1631,11 +2057,13 @@
             }
 
             text = text
-                .replace(/[\u201C\u201D]/g, '"') 
-                .replace(/[\u2018\u2019]/g, "'") 
-                .replace(/\u2013/g, "-")         
-                .replace(/\u2014/g, "--")        
-                .replace(/\u2026/g, "...");      
+                .replace(/[\u201C\u201D]/g, '"')
+                .replace(/[\u2018\u2019]/g, "'")
+                .replace(/\u2013/g, "-")
+                .replace(/\u2014/g, "--")
+                .replace(/\u2026/g, "...")
+                .replace(/[\u2022\u25CF\u25AA\u25E6\u2023\u2043]/g, '-')
+                .replace(/[\u00A0\u2007\u202F]/g, ' ');
 
             text = text.replace(/[ \t]+/g, ' ');
             text = text.replace(/(\r?\n){3,}/g, '\n\n');
@@ -1649,36 +2077,86 @@
             showToast("Formatting sanitized!");
         }
 
-        function generateMSCParagraph() {
+        function buildMSCParagraph() {
             const ref = document.getElementById('mscRef').value.trim();
             const hqp = document.getElementById('mscHQP').value.trim();
             const impact = document.getElementById('mscImpact').value.trim();
             const role = document.getElementById('mscRole').value.trim();
 
-            if (!ref || !impact) {
-                showToast("Citation and Novelty fields are required.");
-                return;
-            }
+            if (!ref || !impact) return null;
 
-            // Build structured paragraph
             let paragraph = `Contribution: ${ref}. `;
             if (hqp) paragraph += `This work directly trained HQP including ${hqp}. `;
             paragraph += `Impact: ${impact} `;
             if (role) paragraph += `Role & Significance: ${role}`;
-            paragraph += `\n\n`;
+            return paragraph;
+        }
 
+        function appendMSCParagraph(paragraph) {
             const textarea = document.getElementById('txtContributions');
-            textarea.value += paragraph;
-            
-            // Clear builder values
+            textarea.value += paragraph + `\n\n`;
+            checkChars('txtContributions', 9000, 'cntContributions');
+        }
+
+        function clearMSCBuilderInputs() {
             document.getElementById('mscRef').value = '';
             document.getElementById('mscHQP').value = '';
             document.getElementById('mscImpact').value = '';
             document.getElementById('mscRole').value = '';
+        }
 
-            // Re-trigger counter
-            checkChars('txtContributions', 9000, 'cntContributions');
+        function generateMSCParagraph() {
+            const paragraph = buildMSCParagraph();
+            if (!paragraph) {
+                showToast("Citation and Novelty fields are required.");
+                return;
+            }
+            appendMSCParagraph(paragraph);
+            clearMSCBuilderInputs();
             showToast("MSC paragraph generated & appended!");
+        }
+
+        async function runAITightenMSC() {
+            const paragraph = buildMSCParagraph();
+            if (!paragraph) {
+                showToast("Citation and Novelty fields are required.");
+                return;
+            }
+            const btn = document.getElementById('btnAITightenMSC');
+            const status = document.getElementById('aiMscStatus');
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            try {
+                const prompt = `Tighten and rewrite the following grant-application contribution paragraph into 2-3 clear, concise sentences. Keep all names, citations, and factual details unchanged.\n\n${paragraph}`;
+                const result = await window.__aiGenerate(prompt, (msg) => { status.textContent = msg; });
+                if (!result) {
+                    status.textContent = "AI returned an empty result.";
+                    return;
+                }
+                document.getElementById('aiMscText').textContent = result;
+                document.getElementById('aiMscPreview').classList.remove('hidden');
+                status.textContent = "Done — review before appending.";
+            } catch (err) {
+                console.error(err);
+                status.textContent = "AI unavailable (needs internet on first use, and a modern browser).";
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                lucide.createIcons();
+            }
+        }
+
+        function acceptAIMsc() {
+            const suggestion = document.getElementById('aiMscText').textContent;
+            appendMSCParagraph(suggestion);
+            clearMSCBuilderInputs();
+            document.getElementById('aiMscPreview').classList.add('hidden');
+            showToast("AI-tightened contribution appended — please review carefully.");
+        }
+
+        function dismissAIMsc() {
+            document.getElementById('aiMscPreview').classList.add('hidden');
+            document.getElementById('aiMscStatus').textContent = '';
         }
 
         function generateSupportParagraph() {
@@ -1722,7 +2200,7 @@
             
             const passiveVoiceRegex = /\b(am|is|are|was|were|be|been|being|has\s+been|have\s+been|had\s+been|will\s+be|shall\s+be)\s+([a-z]+ed|built|done|taken|given|seen|chosen|shown|conducted|performed|analyzed|evaluated|tested|formulated|developed|written|made|sought)\b/gi;
             
-            const hyperboleWords = ['groundbreaking', 'unprecedented', 'revolutionary', 'paradigm-shifting', 'world-first', 'unrivaled', 'outstanding', 'astonishing', 'game-changing', 'miraculous'];
+            const hyperboleWords = ['groundbreaking', 'unprecedented', 'revolutionary', 'paradigm-shifting', 'world-first', 'unrivaled', 'astonishing', 'game-changing', 'miraculous'];
             
             const weakVerbsMap = {
                 'make a decision': 'decide',
@@ -1801,14 +2279,81 @@
                         </div>
                     </div>
                 `).join('');
+
+                const hasPassive = warnings.some(w => w.type === 'Passive Voice');
+                const aiResultId = `${auditDivId}-aiActive`;
+                const aiBlockHtml = hasPassive ? `
+                    <div class="mt-0.5">
+                        <button onclick="runAIActiveVoice('${textareaId}', '${aiResultId}')" title="Runs a small AI model entirely in your browser to rewrite this text in active voice, for review" class="text-[11px] font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
+                            <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
+                            AI: Suggest Active-Voice Rewrite
+                        </button>
+                        <div id="${aiResultId}" class="mt-1.5"></div>
+                    </div>
+                ` : '';
+
                 container.innerHTML = `
                     <div class="mt-2 flex flex-col gap-1.5 border border-slate-100 rounded-lg p-2 bg-slate-50/50">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Style Audit Suggestions</span>
                         ${warningsHtml}
+                        ${aiBlockHtml}
                     </div>
                 `;
             }
             lucide.createIcons();
+        }
+
+        // --- AI-ASSISTED ACTIVE-VOICE REWRITE (client-side model, review-before-use) ---
+        async function runAIActiveVoice(textareaId, resultElId) {
+            const textarea = document.getElementById(textareaId);
+            const text = textarea.value.trim();
+            const resultEl = document.getElementById(resultElId);
+            if (!text || !resultEl) return;
+
+            resultEl.innerHTML = `<span class="text-[11px] text-slate-400">Loading local AI model...</span>`;
+            try {
+                const prompt = `Rewrite the following text, converting any passive-voice sentences into active voice. Keep all facts, names, and numbers unchanged. Output only the revised text.\n\n${text}`;
+                const result = await window.__aiGenerate(prompt, (msg) => { resultEl.innerHTML = `<span class="text-[11px] text-slate-400">${msg}</span>`; }, 260);
+                if (!result) {
+                    resultEl.innerHTML = `<span class="text-[11px] text-slate-400">AI returned an empty result.</span>`;
+                    return;
+                }
+                const safeTextId = `${resultElId}-text`;
+                resultEl.innerHTML = `
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-2 flex flex-col gap-1.5">
+                        <div class="flex items-center justify-between flex-wrap gap-1">
+                            <span class="text-[10px] font-bold text-indigo-700">AI-Suggested Active-Voice Rewrite (review before using)</span>
+                            <div class="flex gap-1.5">
+                                <button onclick="acceptAIActiveVoice('${textareaId}', '${safeTextId}')" class="text-[10px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2 py-0.5 rounded">Use This</button>
+                                <button onclick="document.getElementById('${resultElId}').innerHTML=''" class="text-[10px] font-semibold text-slate-500 hover:text-slate-700 px-2 py-0.5 rounded">Discard</button>
+                            </div>
+                        </div>
+                        <div id="${safeTextId}" class="text-[11px] text-slate-700 whitespace-pre-line">${result}</div>
+                    </div>
+                `;
+                lucide.createIcons();
+            } catch (err) {
+                console.error(err);
+                resultEl.innerHTML = `<span class="text-[11px] text-rose-500">AI unavailable (needs internet on first use, and a modern browser).</span>`;
+            }
+        }
+
+        function acceptAIActiveVoice(textareaId, safeTextElId) {
+            const suggestion = document.getElementById(safeTextElId).textContent;
+            document.getElementById(textareaId).value = suggestion;
+
+            if (textareaId === 'txtSummary') {
+                checkChars('txtSummary', 2500, 'cntSummary');
+            } else if (textareaId === 'txtContributions') {
+                checkChars('txtContributions', 9000, 'cntContributions');
+            } else if (textareaId === 'txtRelationship') {
+                checkChars('txtRelationship', 12000, 'cntRelationship');
+            } else if (textareaId.startsWith('txtOutliner-')) {
+                const idx = Number(textareaId.split('-')[1]);
+                const limits = { 1: 4000, 2: 2000, 3: 4000, 4: 8000, 5: 2000 };
+                checkOutlinerChars(idx, limits[idx]);
+            }
+            showToast("AI-suggested active-voice rewrite applied — please review carefully.");
         }
 
         // --- 13. EDI PLAN SCAFFOLDER LOGIC ---
@@ -1872,6 +2417,47 @@
                 container.textContent = draftText;
             }
             saveState();
+        }
+
+        async function runAISmoothEDI() {
+            const bulletText = document.getElementById('ediDraftContainer').textContent.trim();
+            if (!bulletText || bulletText.startsWith('Select one')) {
+                showToast("Select one or more EDI checklist items first.");
+                return;
+            }
+            const btn = document.getElementById('btnAISmoothEDI');
+            const status = document.getElementById('aiEdiStatus');
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            try {
+                const prompt = `Rewrite the following bullet-point list as 2-3 flowing, professional paragraphs suitable for a grant application HQP training philosophy section. Keep all the specific practices mentioned.\n\n${bulletText}`;
+                const result = await window.__aiGenerate(prompt, (msg) => { status.textContent = msg; }, 220);
+                if (!result) {
+                    status.textContent = "AI returned an empty result.";
+                    return;
+                }
+                document.getElementById('aiEdiText').textContent = result;
+                document.getElementById('aiEdiPreview').classList.remove('hidden');
+                status.textContent = "Done — review before using. Note: toggling checkboxes above will regenerate the bullet list.";
+            } catch (err) {
+                console.error(err);
+                status.textContent = "AI unavailable (needs internet on first use, and a modern browser).";
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                lucide.createIcons();
+            }
+        }
+
+        function acceptAIEdi() {
+            document.getElementById('ediDraftContainer').textContent = document.getElementById('aiEdiText').textContent;
+            document.getElementById('aiEdiPreview').classList.add('hidden');
+            showToast("AI-smoothed prose inserted — please review carefully.");
+        }
+
+        function dismissAIEdi() {
+            document.getElementById('aiEdiPreview').classList.add('hidden');
+            document.getElementById('aiEdiStatus').textContent = '';
         }
 
         function copyEDIDraft() {
@@ -2014,8 +2600,358 @@
             lucide.createIcons();
         }
 
+        // --- 15. PRIOR COMPETITION COMPARISON ---
+        function updatePriorComparison() {
+            const prevTotalInput = document.getElementById('inpPrevTotal').value;
+            const prevRatioInput = document.getElementById('inpPrevHqpRatio').value;
+            state.priorCompetition.prevTotal = prevTotalInput;
+            state.priorCompetition.prevHqpRatio = prevRatioInput;
+            saveState();
+
+            const panel = document.getElementById('priorComparisonPanel');
+            if (!prevTotalInput && !prevRatioInput) {
+                panel.classList.add('hidden');
+                return;
+            }
+            panel.classList.remove('hidden');
+
+            let currentTotal = 0;
+            let currentHqpTotal = 0;
+            state.budget.forEach(row => {
+                const rowTotal = row.y1 + row.y2 + row.y3 + row.y4 + row.y5;
+                currentTotal += rowTotal;
+                if (row.type === 'hqp') currentHqpTotal += rowTotal;
+            });
+            const currentHqpRatio = currentTotal > 0 ? Math.round((currentHqpTotal / currentTotal) * 100) : 0;
+
+            const totalDeltaEl = document.getElementById('priorTotalDelta');
+            if (prevTotalInput) {
+                const prevTotal = Number(prevTotalInput) || 0;
+                const diff = currentTotal - prevTotal;
+                const pctChange = prevTotal > 0 ? Math.round((diff / prevTotal) * 100) : 0;
+                const sign = diff >= 0 ? '+' : '';
+                totalDeltaEl.textContent = `${sign}${formatCurrency(diff)} (${sign}${pctChange}%)`;
+                totalDeltaEl.className = 'font-bold ' + (diff >= 0 ? 'text-emerald-600' : 'text-rose-600');
+            } else {
+                totalDeltaEl.textContent = '--';
+            }
+
+            const hqpDeltaEl = document.getElementById('priorHqpDelta');
+            if (prevRatioInput) {
+                const prevRatio = Number(prevRatioInput) || 0;
+                const diff = currentHqpRatio - prevRatio;
+                const sign = diff >= 0 ? '+' : '';
+                hqpDeltaEl.textContent = `${sign}${diff} pts (now ${currentHqpRatio}%)`;
+                hqpDeltaEl.className = 'font-bold ' + (diff >= 0 ? 'text-emerald-600' : 'text-rose-600');
+            } else {
+                hqpDeltaEl.textContent = '--';
+            }
+        }
+
+        // --- 16. DEADLINE TRACKER ---
+        function updateDeadlines() {
+            state.deadlines.instDate = document.getElementById('inpInstDeadline').value;
+            state.deadlines.nsercDate = document.getElementById('inpNsercDeadline').value;
+            saveState();
+            renderDeadlines();
+        }
+
+        function renderDeadlines() {
+            const container = document.getElementById('deadlineCardsContainer');
+            const cards = [
+                { label: 'Institutional Internal Deadline', dateStr: state.deadlines.instDate },
+                { label: 'NSERC Portal Deadline', dateStr: state.deadlines.nsercDate }
+            ];
+
+            container.innerHTML = cards.map(c => {
+                if (!c.dateStr) {
+                    return `
+                        <div class="p-4 bg-slate-50 rounded-lg border border-slate-100 text-xs text-slate-400 italic">
+                            Set the ${c.label.toLowerCase()} above to start the countdown.
+                        </div>
+                    `;
+                }
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const target = new Date(c.dateStr + 'T00:00:00');
+                const diffDays = Math.round((target - today) / (1000 * 60 * 60 * 24));
+
+                let colorClass = 'bg-emerald-50 border-emerald-200 text-emerald-800';
+                let statusText = `${diffDays} days remaining`;
+                if (diffDays < 0) {
+                    colorClass = 'bg-slate-100 border-slate-200 text-slate-500';
+                    statusText = `Passed ${Math.abs(diffDays)} days ago`;
+                } else if (diffDays <= 7) {
+                    colorClass = 'bg-rose-50 border-rose-200 text-rose-800';
+                } else if (diffDays <= 30) {
+                    colorClass = 'bg-amber-50 border-amber-200 text-amber-800';
+                }
+
+                return `
+                    <div class="p-4 rounded-lg border ${colorClass} flex flex-col gap-1">
+                        <span class="text-[10px] font-bold uppercase tracking-wider opacity-70">${c.label}</span>
+                        <span class="text-lg font-extrabold">${statusText}</span>
+                        <span class="text-[11px] opacity-70">${target.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- 17. REFEREE TRACKER ---
+        function renderReferees() {
+            const tbody = document.getElementById('refereeTableBody');
+            if (state.referees.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-6 text-center text-xs text-slate-400 italic">No referees added yet. NSERC requires 5 suggested referees with no recent conflict of interest.</td></tr>`;
+                return;
+            }
+
+            const currentYear = new Date().getFullYear();
+            tbody.innerHTML = state.referees.map(ref => {
+                const yearsSince = ref.lastYear ? (currentYear - Number(ref.lastYear)) : null;
+                const isConflict = (yearsSince !== null && yearsSince < 6) || ref.relationship === 'Current Supervisor' || ref.relationship === 'Former Supervisor (<6yr)';
+                const conflictBadge = isConflict
+                    ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200"><i data-lucide="alert-triangle" class="w-3 h-3"></i> Conflict</span>`
+                    : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200"><i data-lucide="check" class="w-3 h-3"></i> Clear</span>`;
+
+                return `
+                    <tr class="hover:bg-slate-50/50">
+                        <td class="px-4 py-2.5"><input type="text" value="${ref.name}" onchange="updateRefereeField('${ref.id}', 'name', this.value)" class="w-full bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5"></td>
+                        <td class="px-4 py-2.5"><input type="text" value="${ref.institution}" onchange="updateRefereeField('${ref.id}', 'institution', this.value)" class="w-full bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5"></td>
+                        <td class="px-4 py-2.5">
+                            <select onchange="updateRefereeField('${ref.id}', 'relationship', this.value)" class="text-xs border border-slate-200 rounded px-1.5 py-1 bg-white w-full">
+                                <option value="No Recent Relationship" ${ref.relationship === 'No Recent Relationship' ? 'selected' : ''}>No Recent Relationship</option>
+                                <option value="Past Co-Author (>6yr)" ${ref.relationship === 'Past Co-Author (>6yr)' ? 'selected' : ''}>Past Co-Author (&gt;6yr)</option>
+                                <option value="Recent Co-Author (<6yr)" ${ref.relationship === 'Recent Co-Author (<6yr)' ? 'selected' : ''}>Recent Co-Author (&lt;6yr)</option>
+                                <option value="Former Supervisor (<6yr)" ${ref.relationship === 'Former Supervisor (<6yr)' ? 'selected' : ''}>Former Supervisor (&lt;6yr)</option>
+                                <option value="Current Supervisor" ${ref.relationship === 'Current Supervisor' ? 'selected' : ''}>Current Supervisor</option>
+                            </select>
+                        </td>
+                        <td class="px-4 py-2.5"><input type="number" value="${ref.lastYear}" onchange="updateRefereeField('${ref.id}', 'lastYear', this.value)" placeholder="n/a" class="w-full bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono"></td>
+                        <td class="px-4 py-2.5 text-center"><input type="checkbox" ${ref.contacted ? 'checked' : ''} onchange="updateRefereeField('${ref.id}', 'contacted', this.checked)" class="rounded text-brand-600 focus:ring-brand-500"></td>
+                        <td class="px-4 py-2.5 text-center">${conflictBadge}</td>
+                        <td class="px-4 py-2.5 text-center">
+                            <button onclick="deleteReferee('${ref.id}')" class="text-slate-400 hover:text-brand-600 transition-colors">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function addReferee() {
+            state.referees.push({
+                id: 'ref' + Date.now(),
+                name: '', institution: '', relationship: 'No Recent Relationship', lastYear: '', contacted: false
+            });
+            renderReferees();
+            saveState();
+        }
+
+        function deleteReferee(id) {
+            state.referees = state.referees.filter(r => r.id !== id);
+            renderReferees();
+            saveState();
+        }
+
+        function updateRefereeField(id, field, value) {
+            const ref = state.referees.find(r => r.id === id);
+            if (ref) {
+                ref[field] = value;
+                renderReferees();
+                saveState();
+            }
+        }
+
+        // --- 18. METHODOLOGY RISK REGISTER ---
+        function renderRiskRegister() {
+            const tbody = document.getElementById('riskTableBody');
+            if (state.riskRegister.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-6 text-center text-xs text-slate-400 italic">No risks logged yet. Add named risks with mitigations to strengthen your Methodology & Feasibility score.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = state.riskRegister.map(risk => `
+                <tr class="hover:bg-slate-50/50">
+                    <td class="px-4 py-2.5"><input type="text" value="${risk.desc}" onchange="updateRiskField('${risk.id}', 'desc', this.value)" class="w-full bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5"></td>
+                    <td class="px-4 py-2.5">
+                        <select onchange="updateRiskField('${risk.id}', 'likelihood', this.value)" class="text-xs border border-slate-200 rounded px-1.5 py-1 bg-white w-full">
+                            <option value="Low" ${risk.likelihood === 'Low' ? 'selected' : ''}>Low</option>
+                            <option value="Medium" ${risk.likelihood === 'Medium' ? 'selected' : ''}>Medium</option>
+                            <option value="High" ${risk.likelihood === 'High' ? 'selected' : ''}>High</option>
+                        </select>
+                    </td>
+                    <td class="px-4 py-2.5"><input type="text" value="${risk.mitigation}" onchange="updateRiskField('${risk.id}', 'mitigation', this.value)" class="w-full bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5"></td>
+                    <td class="px-4 py-2.5 text-center">
+                        <button onclick="deleteRiskRow('${risk.id}')" class="text-slate-400 hover:text-brand-600 transition-colors">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function addRiskRow() {
+            state.riskRegister.push({ id: 'risk' + Date.now(), desc: '', likelihood: 'Medium', mitigation: '' });
+            renderRiskRegister();
+            saveState();
+        }
+
+        function deleteRiskRow(id) {
+            state.riskRegister = state.riskRegister.filter(r => r.id !== id);
+            renderRiskRegister();
+            saveState();
+        }
+
+        function updateRiskField(id, field, value) {
+            const risk = state.riskRegister.find(r => r.id === id);
+            if (risk) {
+                risk[field] = value;
+                saveState();
+            }
+        }
+
+        // --- 19. CCV COVERAGE CHECKER ---
+        function checkCCVCoverage() {
+            const ccvText = document.getElementById('ccvList').value;
+            const contributionsText = document.getElementById('txtContributions').value.toLowerCase();
+            const container = document.getElementById('ccvCoverageResult');
+
+            const lines = ccvText.split('\n').map(l => l.trim()).filter(l => l.length > 5);
+            if (lines.length === 0) {
+                container.innerHTML = `<div class="mt-2 text-[11px] text-slate-400 italic">Paste your CCV publication list above, one entry per line.</div>`;
+                return;
+            }
+
+            const uncovered = lines.filter(line => {
+                // Use the first meaningful words of the entry (skip author-list-heavy openings) as a fuzzy signature
+                const words = line.replace(/[^\w\s]/g, ' ').split(/\s+/).filter(w => w.length > 4);
+                if (words.length === 0) return false;
+                const sampleWords = words.slice(0, 6);
+                const hits = sampleWords.filter(w => contributionsText.includes(w.toLowerCase())).length;
+                return hits < Math.max(1, Math.ceil(sampleWords.length * 0.3));
+            });
+
+            if (uncovered.length === 0) {
+                container.innerHTML = `
+                    <div class="mt-2 text-[11px] text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg p-2 flex items-center gap-1.5">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        All ${lines.length} CCV entries appear referenced in your Most Significant Contributions text.
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="mt-2 flex flex-col gap-1.5 border border-amber-100 rounded-lg p-2 bg-amber-50/50">
+                        <span class="text-[10px] font-bold text-amber-700 uppercase tracking-wider block mb-1">${uncovered.length} of ${lines.length} entries not clearly mentioned</span>
+                        ${uncovered.map(l => `<div class="text-[11px] text-slate-600 flex gap-1.5"><i data-lucide="alert-triangle" class="w-3 h-3 text-amber-600 flex-shrink-0 mt-0.5"></i><span>${l}</span></div>`).join('')}
+                    </div>
+                `;
+            }
+            lucide.createIcons();
+        }
+
+        // --- 20. FORMATTED PRINT PREVIEW ---
+        function openFormattedPreview() {
+            const sections = [
+                { title: '1. Recent Progress', text: document.getElementById('txtOutliner-1').value },
+                { title: '2. Short-Term & Long-Term Objectives', text: document.getElementById('txtOutliner-2').value },
+                { title: '3. Literature Review', text: document.getElementById('txtOutliner-3').value },
+                { title: '4. Methodology & Feasibility', text: document.getElementById('txtOutliner-4').value },
+                { title: '5. Significance & Impact', text: document.getElementById('txtOutliner-5').value }
+            ];
+
+            const bodyHtml = sections.map(s => {
+                if (!s.text.trim()) return '';
+                return `<h2>${s.title}</h2><p>${s.text.replace(/\n/g, '<br>')}</p>`;
+            }).join('');
+
+            const win = window.open('', '_blank');
+            win.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Formatted Proposal Preview</title>
+                    <style>
+                        @page { margin: 0.75in; }
+                        body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.15; color: #000; max-width: 7in; margin: 0.75in auto; }
+                        h2 { font-size: 12pt; font-weight: bold; margin-top: 1.2em; margin-bottom: 0.4em; }
+                        p { margin: 0 0 0.8em 0; white-space: pre-wrap; }
+                        .notice { font-family: Arial, sans-serif; font-size: 10pt; color: #666; background: #f8f8f8; border: 1px solid #ddd; padding: 8px 12px; margin-bottom: 1.5em; }
+                        @media print { .notice { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="notice">Preview only &mdash; use your browser's Print &rarr; Save as PDF to check real pagination against the NSERC 5-page limit.</div>
+                    ${bodyHtml || '<p><em>No outliner content drafted yet.</em></p>'}
+                </body>
+                </html>
+            `);
+            win.document.close();
+        }
+
+        // --- 21. COMBINED FULL APPLICATION EXPORT ---
+        function exportFullApplication() {
+            let md = `# NSERC Discovery Grant Application Draft\n\n`;
+            md += `_Compiled ${new Date().toLocaleDateString('en-CA')}_\n\n`;
+
+            md += `## Checklist Status\n\n`;
+            state.checklist.forEach(item => {
+                md += `- [${item.status === 'completed' ? 'x' : ' '}] ${item.title} (${item.status})\n`;
+            });
+
+            md += `\n## Portal Text: Summary of Proposal\n\n${state.texts.txtSummary || '_Not drafted_'}\n`;
+            md += `\n## Portal Text: Most Significant Contributions\n\n${state.texts.txtContributions || '_Not drafted_'}\n`;
+            md += `\n## Portal Text: Relationship to Other Sources of Support\n\n${state.texts.txtRelationship || '_Not drafted_'}\n`;
+
+            md += `\n## Research Proposal Outline\n`;
+            const outlineTitles = { 1: 'Recent Progress', 2: 'Short-Term & Long-Term Objectives', 3: 'Literature Review', 4: 'Methodology & Feasibility', 5: 'Significance & Impact' };
+            for (let i = 1; i <= 5; i++) {
+                md += `\n### ${outlineTitles[i]}\n\n${state.outlinerDrafts[i] || '_Not drafted_'}\n`;
+            }
+
+            if (state.riskRegister.length > 0) {
+                md += `\n## Methodology Risk Register\n\n| Risk | Likelihood | Mitigation |\n| --- | --- | --- |\n`;
+                state.riskRegister.forEach(r => {
+                    md += `| ${r.desc} | ${r.likelihood} | ${r.mitigation} |\n`;
+                });
+            }
+
+            md += `\n## 5-Year Budget\n\n| Item | Type | Year 1 | Year 2 | Year 3 | Year 4 | Year 5 |\n| --- | --- | --- | --- | --- | --- | --- |\n`;
+            state.budget.forEach(row => {
+                const desc = row.desc.replace(/\|/g, '\\|');
+                md += `| ${desc} | ${row.type} | ${formatCurrency(row.y1)} | ${formatCurrency(row.y2)} | ${formatCurrency(row.y3)} | ${formatCurrency(row.y4)} | ${formatCurrency(row.y5)} |\n`;
+            });
+
+            md += `\n## EDI / HQP Training Philosophy Draft\n\n${document.getElementById('ediDraftContainer').textContent}\n`;
+
+            if (state.referees.length > 0) {
+                md += `\n## Suggested Referees\n\n| Name | Institution | Relationship | Last Collaboration Year | Contacted |\n| --- | --- | --- | --- | --- |\n`;
+                state.referees.forEach(r => {
+                    md += `| ${r.name} | ${r.institution} | ${r.relationship} | ${r.lastYear} | ${r.contacted ? 'Yes' : 'No'} |\n`;
+                });
+            }
+
+            if (state.deadlines.instDate || state.deadlines.nsercDate) {
+                md += `\n## Deadlines\n\n- Institutional Internal Deadline: ${state.deadlines.instDate || 'Not set'}\n- NSERC Portal Deadline: ${state.deadlines.nsercDate || 'Not set'}\n`;
+            }
+
+            const dataStr = "data:text/markdown;charset=utf-8," + encodeURIComponent(md);
+            const anchor = document.createElement('a');
+            anchor.setAttribute("href", dataStr);
+            anchor.setAttribute("download", "nserc_full_application_draft.md");
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+
+            openDrawer("Full Application Export (Markdown)", md);
+            showToast("Full application compiled and downloaded!");
+        }
+
         // --- 15. INITIAL APP BOOTSTRAP ---
         function init() {
+            ensureProfilesInitialized();
+            renderProfileSelector();
             loadState();
 
             // Populate text inputs
@@ -2057,6 +2993,7 @@
             renderBudget();
             generateEDIDraft();
             switchMeritFilter('res');
+            updateWordCountReadTime(state.texts.txtSummary || '');
 
             // Restore configurations selectors
             if (state.uniSelection) {
@@ -2067,6 +3004,17 @@
                 document.getElementById('selEG').value = state.egSelection;
                 changeEG();
             }
+
+            // Restore new modules
+            document.getElementById('inpInstDeadline').value = state.deadlines.instDate || '';
+            document.getElementById('inpNsercDeadline').value = state.deadlines.nsercDate || '';
+            document.getElementById('inpPrevTotal').value = state.priorCompetition.prevTotal || '';
+            document.getElementById('inpPrevHqpRatio').value = state.priorCompetition.prevHqpRatio || '';
+            document.getElementById('ccvList').value = state.ccvText || '';
+            renderDeadlines();
+            renderReferees();
+            renderRiskRegister();
+            updatePriorComparison();
         }
 
         // Run application setup
