@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Suite & Editor - Faculty Tools</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%230d9488'/%3E%3Cpath d='M50,18 A22,22 0 0,0 30.5,54.5 C34.5,58.8 37,63.2 37,69 L63,69 C63,63.2 65.5,58.8 69.5,54.5 A22,22 0 0,0 50,18 Z M42,74 L58,74 A2,2 0 0,1 42,74 Z' fill='white'/%3E%3C/svg%3E">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
+    <!-- pdf-lib -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+    <!-- JSZip for batch zip export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .toast {
+            visibility: hidden;
+            min-width: 280px;
+            background-color: #1e293b;
+            color: #fff;
+            text-align: center;
+            border-radius: 10px;
+            padding: 14px 20px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s, visibility 0.3s;
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+
+        .page-card {
+            transition: all 0.2s ease;
+        }
+
+        .page-card.selected {
+            border-color: #0d9488;
+            background-color: #f0fdfa;
+            box-shadow: 0 0 0 2px #14b8a6;
+        }
+
+        .dropzone-active {
+            border-color: #0d9488;
+            background-color: #f0fdfa;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans antialiased flex flex-col min-h-screen">
+
+    <!-- Header Navigation -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm backdrop-blur-md bg-white/90">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="p-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors" title="Back to Directory">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </a>
+                <div class="p-2 bg-brand-50 text-brand-600 rounded-lg">
+                    <i data-lucide="file-edit" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-gray-900 leading-tight">PDF Suite & Editor</h1>
+                    <p class="text-xs text-gray-500">Page extraction, PDF merging, rubber stamps, watermarks, reordering & page numbering</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> 100% In-Browser Privacy
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+
+        <!-- Navigation Tabs (Sticky on Scroll) -->
+        <div class="sticky top-[57px] z-40 bg-white/95 backdrop-blur-md rounded-xl p-1.5 border border-gray-200 shadow-md flex flex-wrap gap-1 transition-all">
+            <button onclick="switchTab('organize')" id="tab-organize"
+                class="tab-btn flex-1 min-w-[140px] px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 bg-brand-600 text-white shadow-sm transition-all">
+                <i data-lucide="layout-grid" class="w-4 h-4"></i> Organize & Reorder
+            </button>
+            <button onclick="switchTab('combine')" id="tab-combine"
+                class="tab-btn flex-1 min-w-[140px] px-4 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all">
+                <i data-lucide="layers" class="w-4 h-4"></i> Merge & Combine
+            </button>
+            <button onclick="switchTab('extract')" id="tab-extract"
+                class="tab-btn flex-1 min-w-[140px] px-4 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all">
+                <i data-lucide="scissors" class="w-4 h-4"></i> Extract & Split
+            </button>
+            <button onclick="switchTab('stamps')" id="tab-stamps"
+                class="tab-btn flex-1 min-w-[140px] px-4 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all">
+                <i data-lucide="stamp" class="w-4 h-4"></i> Stamps & Watermarks
+            </button>
+            <button onclick="switchTab('numbering')" id="tab-numbering"
+                class="tab-btn flex-1 min-w-[140px] px-4 py-2.5 rounded-lg text-sm font-medium flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all">
+                <i data-lucide="hash" class="w-4 h-4"></i> Page Numbers
+            </button>
+        </div>
+
+        <!-- Global File Upload Zone (shown when no main file loaded) -->
+        <div id="mainUploadZone" class="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-10 text-center hover:border-brand-500 transition-colors cursor-pointer group shadow-sm">
+            <input type="file" id="pdfFileInput" accept="application/pdf" class="hidden" multiple>
+            <div class="max-w-md mx-auto flex flex-col items-center">
+                <div class="p-4 bg-brand-50 text-brand-600 rounded-full group-hover:scale-110 transition-transform mb-4">
+                    <i data-lucide="upload-cloud" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 mb-1">Select or Drag & Drop PDF files</h3>
+                <p class="text-sm text-gray-500 mb-4">Upload one or multiple PDF documents (supports encrypted & password-protected files).</p>
+                <button onclick="document.getElementById('pdfFileInput').click()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm rounded-lg shadow-sm transition-colors flex items-center gap-2">
+                    <i data-lucide="file-plus" class="w-4 h-4"></i> Choose PDF Files
+                </button>
+            </div>
+        </div>
+
+        <!-- Loaded Document Workspace (Shown when documents loaded) -->
+        <div id="workspace" class="hidden flex flex-col gap-6">
+
+            <!-- Active File Toolbar (Sticky on Scroll) -->
+            <div class="sticky top-[112px] z-30 bg-white/95 backdrop-blur-md rounded-xl p-4 border border-gray-200 shadow-md flex flex-wrap items-center justify-between gap-4 transition-all">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-red-50 text-red-600 rounded-lg">
+                        <i data-lucide="file-text" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 id="currentDocName" class="text-sm font-bold text-gray-900 truncate max-w-xs sm:max-w-md">No file loaded</h2>
+                        <span id="currentDocStats" class="text-xs text-gray-500">0 pages total</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 flex-wrap">
+                    <button onclick="document.getElementById('pdfFileInput').click()" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add/Replace PDF
+                    </button>
+                    <button onclick="resetWorkspace()" class="px-3 py-1.5 bg-gray-100 hover:bg-red-50 text-red-600 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear All
+                    </button>
+                    <div class="h-4 w-px bg-gray-200 mx-1"></div>
+                    <button onclick="downloadModifiedPdf()" class="px-4 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center gap-1.5">
+                        <i data-lucide="download" class="w-4 h-4"></i> Export PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB 1: Organize & Reorder Pages -->
+            <div id="section-organize" class="tab-section flex flex-col gap-4">
+                <div class="sticky top-[177px] z-20 bg-white/95 backdrop-blur-md p-4 rounded-xl border border-gray-200 shadow-md flex flex-wrap items-center justify-between gap-3 transition-all">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Page Controls:</span>
+                        <button onclick="selectAllPages(true)" class="px-2.5 py-1 text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors">Select All</button>
+                        <button onclick="selectAllPages(false)" class="px-2.5 py-1 text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors">Deselect All</button>
+                        <button onclick="selectOddPages()" class="px-2.5 py-1 text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors">Select Odd</button>
+                        <button onclick="selectEvenPages()" class="px-2.5 py-1 text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors">Select Even</button>
+                        <span class="text-[11px] text-gray-400 font-normal ml-1 hidden md:inline">(Hold Shift + Click for range select)</span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button onclick="rotateSelectedPages(90)" class="px-3 py-1.5 bg-gray-100 hover:bg-brand-50 hover:text-brand-600 text-gray-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1">
+                            <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> Rotate 90° CW
+                        </button>
+                        <button onclick="rotateSelectedPages(-90)" class="px-3 py-1.5 bg-gray-100 hover:bg-brand-50 hover:text-brand-600 text-gray-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Rotate 90° CCW
+                        </button>
+                        <button onclick="deleteSelectedPages()" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-medium rounded-lg transition-colors flex items-center gap-1">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete Selected
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pages Grid -->
+                <div id="pagesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <!-- Page thumbnail cards generated dynamically -->
+                </div>
+            </div>
+
+            <!-- TAB 2: Merge & Combine PDFs -->
+            <div id="section-combine" class="tab-section hidden flex flex-col gap-4">
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-base font-bold text-gray-900">Multi-PDF Combiner</h3>
+                            <p class="text-xs text-gray-500">Drag files to reorder the merging sequence.</p>
+                        </div>
+                        <button onclick="document.getElementById('pdfFileInput').click()" class="px-4 py-2 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i> Add More PDFs
+                        </button>
+                    </div>
+
+                    <div id="combineFileList" class="flex flex-col gap-2 min-h-[120px]">
+                        <!-- List of PDFs to merge -->
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                        <button onclick="mergeAllPDFs()" class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-lg shadow-sm transition-all flex items-center gap-2">
+                            <i data-lucide="combine" class="w-4 h-4"></i> Merge All Documents
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: Extract & Split -->
+            <div id="section-extract" class="tab-section hidden flex flex-col gap-4">
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-6">
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">Page Extraction & Document Splitting</h3>
+                        <p class="text-xs text-gray-500">Extract specific pages into a new PDF or split the file into individual single-page documents.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Extraction Box -->
+                        <div class="p-5 border border-gray-200 rounded-xl bg-gray-50 flex flex-col justify-between gap-4">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center gap-2 text-brand-600 font-bold text-sm">
+                                        <i data-lucide="scissors" class="w-4 h-4"></i> Extract Range or Selected
+                                    </div>
+                                </div>
+
+                                <div id="selectedPagesBadge" class="mb-3">
+                                    <!-- Dynamic selection badge injected here -->
+                                </div>
+
+                                <label class="block text-xs font-semibold text-gray-700 mb-1">Enter Page Numbers / Ranges (e.g. 1, 3-5, 8):</label>
+                                <input type="text" id="extractRangeInput" placeholder="e.g. 1, 3, 5-7"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white">
+                                <p class="text-[11px] text-gray-500 mt-1">Or select page thumbnails in the "Organize & Reorder" tab.</p>
+                            </div>
+                            <button onclick="extractSpecifiedPages()" class="w-full py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+                                <i data-lucide="download" class="w-4 h-4"></i> Download Extracted PDF
+                            </button>
+                        </div>
+
+                        <!-- Split Box -->
+                        <div class="p-5 border border-gray-200 rounded-xl bg-gray-50 flex flex-col justify-between gap-4">
+                            <div>
+                                <div class="flex items-center gap-2 text-indigo-600 font-bold text-sm mb-2">
+                                    <i data-lucide="split" class="w-4 h-4"></i> Split into Separate Single-Page PDFs
+                                </div>
+                                <p class="text-xs text-gray-600 mb-3">Converts each page of the document into its own individual PDF file and packages them into a `.zip` archive.</p>
+                            </div>
+                            <button onclick="splitPdfToZip()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+                                <i data-lucide="archive" class="w-4 h-4"></i> Split Document to ZIP Archive
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: Stamps & Watermarks -->
+            <div id="section-stamps" class="tab-section hidden flex flex-col gap-4">
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-6">
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">Stamps & Watermarking Studio</h3>
+                        <p class="text-xs text-gray-500">Apply rubber stamps, custom confidential watermarks, or logo overlays onto document pages.</p>
+                    </div>
+
+                    <!-- Preset Rubber Stamps -->
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Quick Rubber Stamps:</label>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="applyPresetStamp('APPROVED', '#16a34a')" class="px-3 py-1.5 border-2 border-emerald-600 text-emerald-700 font-black text-xs tracking-wider rounded uppercase hover:bg-emerald-50 transition-colors">APPROVED</button>
+                            <button onclick="applyPresetStamp('CONFIDENTIAL', '#dc2626')" class="px-3 py-1.5 border-2 border-red-600 text-red-700 font-black text-xs tracking-wider rounded uppercase hover:bg-red-50 transition-colors">CONFIDENTIAL</button>
+                            <button onclick="applyPresetStamp('DRAFT', '#d97706')" class="px-3 py-1.5 border-2 border-amber-600 text-amber-700 font-black text-xs tracking-wider rounded uppercase hover:bg-amber-50 transition-colors">DRAFT</button>
+                            <button onclick="applyPresetStamp('FINAL', '#2563eb')" class="px-3 py-1.5 border-2 border-blue-600 text-blue-700 font-black text-xs tracking-wider rounded uppercase hover:bg-blue-50 transition-colors">FINAL</button>
+                            <button onclick="applyPresetStamp('RECEIVED', '#7c3aed')" class="px-3 py-1.5 border-2 border-purple-600 text-purple-700 font-black text-xs tracking-wider rounded uppercase hover:bg-purple-50 transition-colors">RECEIVED</button>
+                            <button onclick="applyPresetStamp('EXAM COPY', '#0284c7')" class="px-3 py-1.5 border-2 border-sky-600 text-sky-700 font-black text-xs tracking-wider rounded uppercase hover:bg-sky-50 transition-colors">EXAM COPY</button>
+                            <button onclick="applyPresetStamp('REJECTED', '#b91c1c')" class="px-3 py-1.5 border-2 border-rose-700 text-rose-800 font-black text-xs tracking-wider rounded uppercase hover:bg-rose-50 transition-colors">REJECTED</button>
+                            <button onclick="applyPresetStamp('URGENT', '#ea580c')" class="px-3 py-1.5 border-2 border-orange-600 text-orange-700 font-black text-xs tracking-wider rounded uppercase hover:bg-orange-50 transition-colors">URGENT</button>
+                        </div>
+                    </div>
+
+                    <hr class="border-gray-200">
+
+                    <!-- Custom Watermark Form -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="flex flex-col gap-4">
+                            <h4 class="text-sm font-bold text-gray-900">Custom Text Watermark</h4>
+
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Watermark Text:</label>
+                                <input type="text" id="wmText" value="CONFIDENTIAL - FOR FACULTY USE ONLY"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Font Size (pt):</label>
+                                    <input type="number" id="wmSize" value="36" min="10" max="120"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Color:</label>
+                                    <input type="color" id="wmColor" value="#dc2626" class="w-full h-9 p-1 border border-gray-300 rounded-lg cursor-pointer">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Opacity (<span id="opacityVal">0.3</span>):</label>
+                                    <input type="range" id="wmOpacity" min="0.05" max="1" step="0.05" value="0.3"
+                                        oninput="document.getElementById('opacityVal').textContent = this.value"
+                                        class="w-full">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Angle (deg):</label>
+                                    <input type="number" id="wmAngle" value="45" min="-90" max="90"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Position:</label>
+                                <select id="wmPosition" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                    <option value="center">Center of Page</option>
+                                    <option value="top-left">Top Left</option>
+                                    <option value="top-right">Top Right</option>
+                                    <option value="bottom-left">Bottom Left</option>
+                                    <option value="bottom-right">Bottom Right</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Apply To Pages:</label>
+                                <select id="wmPages" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                    <option value="all">All Pages</option>
+                                    <option value="selected">Selected Pages Only</option>
+                                    <option value="odd">Odd Pages Only</option>
+                                    <option value="even">Even Pages Only</option>
+                                </select>
+                            </div>
+
+                            <button onclick="applyWatermark()" class="py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+                                <i data-lucide="stamp" class="w-4 h-4"></i> Apply Text Watermark
+                            </button>
+                        </div>
+
+                        <!-- Image Stamp Overlay -->
+                        <div class="flex flex-col gap-4 p-5 border border-gray-200 rounded-xl bg-gray-50">
+                            <h4 class="text-sm font-bold text-gray-900">Image / Signature Stamp Overlay</h4>
+                            <p class="text-xs text-gray-500">Upload a logo or signature image (PNG/JPG) to place on pages.</p>
+
+                            <input type="file" id="imgStampInput" accept="image/png, image/jpeg" class="block w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer">
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Image Scale (%):</label>
+                                    <input type="number" id="imgStampScale" value="25" min="5" max="100" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Position:</label>
+                                    <select id="imgStampPosition" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white">
+                                        <option value="bottom-right">Bottom Right</option>
+                                        <option value="bottom-left">Bottom Left</option>
+                                        <option value="top-right">Top Right</option>
+                                        <option value="top-left">Top Left</option>
+                                        <option value="center">Center</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button onclick="applyImageStamp()" class="mt-auto py-2.5 bg-gray-800 hover:bg-gray-900 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+                                <i data-lucide="image" class="w-4 h-4"></i> Apply Image Stamp
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 5: Page Numbers & Headers/Footers -->
+            <div id="section-numbering" class="tab-section hidden flex flex-col gap-4">
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-6 max-w-2xl">
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">Page Numbers & Bates Stamping</h3>
+                        <p class="text-xs text-gray-500">Add dynamic page numbering or headers/footers across your document.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Format Pattern:</label>
+                            <select id="pgNumFormat" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                <option value="Page {n} of {total}">Page {n} of {total}</option>
+                                <option value="Page {n}">Page {n}</option>
+                                <option value="{n}">{n}</option>
+                                <option value="Bates: {bates}">Bates Stamping (BATES-001)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Position:</label>
+                            <select id="pgNumPos" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                                <option value="footer-center">Footer Center</option>
+                                <option value="footer-right">Footer Right</option>
+                                <option value="footer-left">Footer Left</option>
+                                <option value="header-right">Header Right</option>
+                                <option value="header-center">Header Center</option>
+                                <option value="header-left">Header Left</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Start Index:</label>
+                            <input type="number" id="pgNumStart" value="1" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Font Size (pt):</label>
+                            <input type="number" id="pgNumSize" value="10" min="6" max="30" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Text Color:</label>
+                            <input type="color" id="pgNumColor" value="#475569" class="w-full h-9 p-1 border border-gray-300 rounded-lg cursor-pointer">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="skipFirstPage" class="rounded text-brand-600 focus:ring-brand-500 h-4 w-4">
+                        <label for="skipFirstPage" class="text-xs font-medium text-gray-700">Skip First Page (e.g. Cover Page)</label>
+                    </div>
+
+                    <button onclick="applyPageNumbers()" class="py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+                        <i data-lucide="hash" class="w-4 h-4"></i> Apply Page Numbers
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Detailed Error Modal -->
+    <div id="errorModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-red-100 flex flex-col gap-4">
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-red-50 text-red-600 rounded-xl">
+                        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-gray-900">PDF Loading Error</h3>
+                        <p id="errorModalFilename" class="text-xs text-gray-500 font-medium">Failed to process file</p>
+                    </div>
+                </div>
+                <button onclick="closeErrorModal()" class="p-1 hover:bg-gray-100 text-gray-400 hover:text-gray-600 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Diagnostic Card -->
+            <div class="bg-red-50/70 border border-red-200/80 rounded-xl p-4 flex flex-col gap-2">
+                <div class="flex items-center justify-between text-xs font-bold text-red-900">
+                    <span id="errorModalType">Error Details</span>
+                    <span id="errorModalSize" class="text-[11px] font-normal text-red-700">0 KB</span>
+                </div>
+                <p id="errorModalSummary" class="text-xs text-red-800 leading-relaxed font-medium">An error occurred while parsing the document.</p>
+                <div class="mt-1">
+                    <span class="text-[11px] font-bold text-red-900 uppercase tracking-wider">Raw Diagnostic Trace & Stack:</span>
+                    <pre id="errorModalTrace" class="mt-1 p-2.5 bg-red-950 text-red-200 font-mono text-[11px] rounded-lg overflow-x-auto max-h-36 whitespace-pre-wrap select-all"></pre>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-3 pt-2">
+                <button onclick="copyErrorToClipboard()" class="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors flex items-center gap-1.5">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy Error Text
+                </button>
+                <button onclick="closeErrorModal()" class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Prompt Modal -->
+    <div id="passwordModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 flex flex-col gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
+                    <i data-lucide="lock" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-gray-900">Encrypted PDF File</h3>
+                    <p id="passwordModalSub" class="text-xs text-gray-500">This document requires a password to unlock.</p>
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-700 mb-1">Enter Document Password:</label>
+                <div class="relative">
+                    <input type="password" id="pdfPasswordInput" placeholder="Password"
+                        onkeydown="if(event.key==='Enter') submitPdfPassword()"
+                        class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none pr-10">
+                    <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600">
+                        <i data-lucide="eye" id="pwdEyeIcon" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closePasswordModal(false)" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors">Cancel</button>
+                <button onclick="submitPdfPassword()" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center gap-1.5">
+                    <i data-lucide="unlock" class="w-4 h-4"></i> Unlock PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast flex items-center gap-3 shadow-xl">
+        <i data-lucide="loader-2" class="h-5 w-5 animate-spin text-brand-400"></i>
+        <span id="toastMessage">Processing PDF...</span>
+    </div>
+
+    <!-- Application JavaScript -->
+    <script>
+        // PDF-lib global alias resolution (CDN exports window.PDFLib)
+        const pdfLib = window.PDFLib || window.pdfLib;
+        const PDFLib = window.PDFLib || window.pdfLib;
+
+        // State variables
+        let loadedPdfs = []; // Array of { id, name, pdfLibDoc, pageCount, bytes }
+        let pageList = [];   // Array of { pdfId, originalPageIndex, displayIndex, rotation, selected }
+        let activeTab = 'organize';
+
+        let passwordResolveFunc = null;
+
+        // DOM elements
+        const pdfFileInput = document.getElementById('pdfFileInput');
+        const mainUploadZone = document.getElementById('mainUploadZone');
+        const workspace = document.getElementById('workspace');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+
+        // Drag & Drop event setup
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            mainUploadZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        mainUploadZone.addEventListener('dragover', () => mainUploadZone.classList.add('dropzone-active'));
+        mainUploadZone.addEventListener('dragleave', () => mainUploadZone.classList.remove('dropzone-active'));
+        mainUploadZone.addEventListener('drop', (e) => {
+            mainUploadZone.classList.remove('dropzone-active');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) handleFileSelect(files);
+        });
+
+        pdfFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) handleFileSelect(e.target.files);
+        });
+
+        // Tab switcher
+        function switchTab(tabId) {
+            activeTab = tabId;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-600', 'text-white', 'shadow-sm');
+                btn.classList.add('text-gray-600', 'hover:text-gray-900', 'hover:bg-gray-100');
+            });
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-brand-600', 'text-white', 'shadow-sm');
+                activeBtn.classList.remove('text-gray-600', 'hover:text-gray-900', 'hover:bg-gray-100');
+            }
+
+            document.querySelectorAll('.tab-section').forEach(sec => sec.classList.add('hidden'));
+            const targetSec = document.getElementById(`section-${tabId}`);
+            if (targetSec) targetSec.classList.remove('hidden');
+
+            if (tabId === 'extract') {
+                updateExtractSelectedDisplay();
+            }
+        }
+
+        // Selection formatting helpers for Extract Tool
+        function formatSelectedPageRanges() {
+            const selectedIndices = [];
+            pageList.forEach((p, idx) => {
+                if (p.selected) selectedIndices.push(idx + 1);
+            });
+
+            if (selectedIndices.length === 0) return '';
+
+            const ranges = [];
+            let start = selectedIndices[0];
+            let prev = start;
+
+            for (let i = 1; i < selectedIndices.length; i++) {
+                const curr = selectedIndices[i];
+                if (curr === prev + 1) {
+                    prev = curr;
+                } else {
+                    ranges.push(start === prev ? `${start}` : `${start}-${prev}`);
+                    start = curr;
+                    prev = curr;
+                }
+            }
+            ranges.push(start === prev ? `${start}` : `${start}-${prev}`);
+
+            return ranges.join(', ');
+        }
+
+        function updateExtractSelectedDisplay() {
+            const rangeStr = formatSelectedPageRanges();
+            const inputEl = document.getElementById('extractRangeInput');
+            const badgeEl = document.getElementById('selectedPagesBadge');
+            if (!inputEl || !badgeEl) return;
+
+            if (rangeStr) {
+                inputEl.value = rangeStr;
+                const count = pageList.filter(p => p.selected).length;
+                badgeEl.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i> ${count} page${count === 1 ? '' : 's'} pre-selected: <span class="font-mono font-bold text-brand-700 bg-white px-1.5 py-0.5 rounded border border-emerald-200 ml-1">${rangeStr}</span>
+                </span>`;
+            } else {
+                badgeEl.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                    <i data-lucide="info" class="w-4 h-4 text-gray-400"></i> No pages selected yet. Type ranges above or select thumbnails in Organize tab.
+                </span>`;
+            }
+            lucide.createIcons();
+        }
+
+        // Show Toast
+        function showToast(msg, isSpinning = true) {
+            toastMessage.textContent = msg;
+            toast.classList.add('show');
+            if (!isSpinning) {
+                setTimeout(() => toast.classList.remove('show'), 3500);
+            }
+        }
+
+        function hideToast() {
+            toast.classList.remove('show');
+        }
+
+        // Detailed Error Reporting Modal Handlers
+        function showErrorModal(filename, sizeBytes, title, summary, trace) {
+            document.getElementById('errorModalFilename').textContent = filename;
+            document.getElementById('errorModalSize').textContent = formatBytes(sizeBytes);
+            document.getElementById('errorModalType').textContent = title;
+            document.getElementById('errorModalSummary').textContent = summary;
+            document.getElementById('errorModalTrace').textContent = trace || 'No detailed stack trace available.';
+            document.getElementById('errorModal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeErrorModal() {
+            document.getElementById('errorModal').classList.add('hidden');
+        }
+
+        function copyErrorToClipboard() {
+            const fname = document.getElementById('errorModalFilename').textContent;
+            const title = document.getElementById('errorModalType').textContent;
+            const summary = document.getElementById('errorModalSummary').textContent;
+            const trace = document.getElementById('errorModalTrace').textContent;
+
+            const fullText = `PDF Loading Error:\nFile: ${fname}\nError Type: ${title}\nSummary: ${summary}\nDiagnostic Trace:\n${trace}`;
+            navigator.clipboard.writeText(fullText).then(() => {
+                showToast('Error details copied to clipboard!', false);
+            });
+        }
+
+        function formatBytes(bytes) {
+            if (!bytes || bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Password Modal Handlers
+        function promptPassword(filename) {
+            return new Promise((resolve) => {
+                passwordResolveFunc = resolve;
+                document.getElementById('passwordModalSub').textContent = `"${filename}" is password protected. Please enter its password.`;
+                document.getElementById('pdfPasswordInput').value = '';
+                document.getElementById('passwordModal').classList.remove('hidden');
+                document.getElementById('pdfPasswordInput').focus();
+            });
+        }
+
+        function closePasswordModal(success = false) {
+            document.getElementById('passwordModal').classList.add('hidden');
+            if (passwordResolveFunc) {
+                const pwd = success ? document.getElementById('pdfPasswordInput').value : null;
+                passwordResolveFunc(pwd);
+                passwordResolveFunc = null;
+            }
+        }
+
+        function submitPdfPassword() {
+            closePasswordModal(true);
+        }
+
+        function togglePasswordVisibility() {
+            const pwdInput = document.getElementById('pdfPasswordInput');
+            const icon = document.getElementById('pwdEyeIcon');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                pwdInput.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
+
+        // Decrypt & Unlock Encrypted PDF using pdf.js fallback
+        async function unlockEncryptedPdfWithPdfJs(arrayBuffer, password = '') {
+            const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer, password: password });
+            const pdfJsDoc = await loadingTask.promise;
+            const pageCount = pdfJsDoc.numPages;
+
+            const newUnencryptedPdf = await pdfLib.PDFDocument.create();
+
+            for (let pageNum = 1; pageNum <= pageCount; pageNum++) {
+                const page = await pdfJsDoc.getPage(pageNum);
+                const viewport = page.getViewport({ scale: 2.0 });
+
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                const imgDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+                const base64Data = imgDataUrl.split(',')[1];
+                const binaryString = atob(base64Data);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                const embeddedJpg = await newUnencryptedPdf.embedJpg(bytes);
+
+                const origViewport = page.getViewport({ scale: 1.0 });
+                const newPage = newUnencryptedPdf.addPage([origViewport.width, origViewport.height]);
+                newPage.drawImage(embeddedJpg, {
+                    x: 0,
+                    y: 0,
+                    width: origViewport.width,
+                    height: origViewport.height
+                });
+            }
+
+            return newUnencryptedPdf;
+        }
+
+        // File Handler with Full Diagnostic Error Details
+        async function handleFileSelect(files) {
+            showToast('Loading PDF document(s)...');
+            let successCount = 0;
+
+            for (let file of files) {
+                if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                    showErrorModal(
+                        file.name,
+                        file.size,
+                        'Unsupported File Extension',
+                        'The dropped file does not appear to be a PDF document.',
+                        `Declared MIME Type: ${file.type || 'Unknown'}\nFilename Extension: ${file.name.split('.').pop()}`
+                    );
+                    continue;
+                }
+
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    
+                    // Verify PDF Header magic bytes (%PDF)
+                    const header = new TextDecoder().decode(arrayBuffer.slice(0, 5));
+                    if (!header.startsWith('%PDF')) {
+                        throw new Error(`Invalid PDF header signature "${header}". The file may be corrupt, an HTML error response page, or a non-PDF format.`);
+                    }
+
+                    let pdfDoc = null;
+                    let isEncrypted = false;
+                    let lastError = null;
+
+                    // 1. Try standard pdf-lib load with ignoreEncryption: true
+                    try {
+                        pdfDoc = await pdfLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+                        const testDoc = await pdfLib.PDFDocument.create();
+                        await testDoc.copyPages(pdfDoc, [0]);
+                    } catch (e) {
+                        isEncrypted = true;
+                        lastError = e;
+                    }
+
+                    // 2. If load or copy failed due to encryption, handle password / decrypt
+                    if (isEncrypted) {
+                        showToast(`"${file.name}" is encrypted. Decrypting...`);
+                        let userPassword = '';
+
+                        try {
+                            pdfDoc = await unlockEncryptedPdfWithPdfJs(arrayBuffer, userPassword);
+                        } catch (pdfJsErr) {
+                            if (pdfJsErr.name === 'PasswordException' || pdfJsErr.code === 1) {
+                                userPassword = await promptPassword(file.name);
+                                if (!userPassword) {
+                                    showErrorModal(
+                                        file.name,
+                                        file.size,
+                                        'Password Prompt Cancelled',
+                                        'Decryption was cancelled by user. A valid password is required to open this file.',
+                                        pdfJsErr.stack || pdfJsErr.message || String(pdfJsErr)
+                                    );
+                                    continue;
+                                }
+                                try {
+                                    pdfDoc = await unlockEncryptedPdfWithPdfJs(arrayBuffer, userPassword);
+                                } catch (retryErr) {
+                                    showErrorModal(
+                                        file.name,
+                                        file.size,
+                                        'Incorrect Password Error',
+                                        'The password provided was incorrect for this encrypted PDF file.',
+                                        retryErr.stack || retryErr.message || String(retryErr)
+                                    );
+                                    continue;
+                                }
+                            } else {
+                                showErrorModal(
+                                    file.name,
+                                    file.size,
+                                    'Encrypted Stream Parse Failure',
+                                    pdfJsErr.message || 'Failed to decrypt PDF stream.',
+                                    `PDF.js Error Name: ${pdfJsErr.name}\n${pdfJsErr.stack || String(pdfJsErr)}`
+                                );
+                                continue;
+                            }
+                        }
+                    }
+
+                    const count = pdfDoc.getPageCount();
+                    const pdfId = 'pdf_' + Math.random().toString(36).substr(2, 9);
+                    
+                    // Create a dedicated PDF.js document instance for thumbnail rendering without detaching ArrayBuffer
+                    const pdfJsTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer.slice(0)) });
+                    const pdfJsDoc = await pdfJsTask.promise;
+
+                    loadedPdfs.push({
+                        id: pdfId,
+                        name: file.name + (isEncrypted ? ' (Unlocked)' : ''),
+                        pdfLibDoc: pdfDoc,
+                        pdfJsDoc: pdfJsDoc,
+                        pageCount: count,
+                        bytes: arrayBuffer,
+                        isEncrypted: isEncrypted
+                    });
+
+                    for (let i = 0; i < count; i++) {
+                        pageList.push({
+                            pdfId: pdfId,
+                            originalPageIndex: i,
+                            rotation: 0,
+                            selected: false
+                        });
+                    }
+                    successCount++;
+                } catch (err) {
+                    console.error('File load error for ' + file.name, err);
+                    showErrorModal(
+                        file.name,
+                        file.size,
+                        err.name || 'PDF Document Loading Error',
+                        err.message || 'Failed to parse PDF binary structure.',
+                        err.stack || String(err)
+                    );
+                }
+            }
+
+            if (loadedPdfs.length > 0) {
+                mainUploadZone.classList.add('hidden');
+                workspace.classList.remove('hidden');
+                updateDocHeader();
+                renderCombineList();
+                await renderPagesGrid();
+                showToast(`Loaded ${successCount} PDF file(s) successfully!`, false);
+            } else {
+                hideToast();
+            }
+        }
+
+        function updateDocHeader() {
+            if (loadedPdfs.length === 0) return;
+            const nameEl = document.getElementById('currentDocName');
+            const statsEl = document.getElementById('currentDocStats');
+
+            if (loadedPdfs.length === 1) {
+                nameEl.textContent = loadedPdfs[0].name;
+            } else {
+                nameEl.textContent = `${loadedPdfs.length} Documents Loaded`;
+            }
+            statsEl.textContent = `${pageList.length} total pages`;
+        }
+
+        function resetWorkspace() {
+            loadedPdfs = [];
+            pageList = [];
+            document.getElementById('pagesGrid').innerHTML = '';
+            document.getElementById('combineFileList').innerHTML = '';
+            workspace.classList.add('hidden');
+            mainUploadZone.classList.remove('hidden');
+            pdfFileInput.value = '';
+            showToast('Workspace reset.', false);
+        }
+
+        // Render Page Thumbnails in Organize Tab
+        async function renderPagesGrid() {
+            const grid = document.getElementById('pagesGrid');
+            grid.innerHTML = '';
+
+            for (let idx = 0; idx < pageList.length; idx++) {
+                const item = pageList[idx];
+                const pdfObj = loadedPdfs.find(p => p.id === item.pdfId);
+                if (!pdfObj) continue;
+
+                const pageCard = document.createElement('div');
+                pageCard.className = `page-card bg-white border rounded-xl p-3 shadow-sm flex flex-col items-center gap-2 cursor-pointer relative group border-gray-200 ${item.selected ? 'selected' : ''}`;
+                pageCard.id = `card-page-${idx}`;
+
+                // Top action buttons
+                pageCard.innerHTML = `
+                    <div class="w-full flex items-center justify-between gap-1 text-xs">
+                        <span class="font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded text-[11px]">P. ${idx + 1}</span>
+                        <div class="flex items-center gap-1 opacity-90">
+                            <button onclick="event.stopPropagation(); rotateSinglePage(${idx}, 90)" title="Rotate CW" class="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-brand-600">
+                                <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); deleteSinglePage(${idx})" title="Delete Page" class="p-1 hover:bg-red-50 rounded text-gray-500 hover:text-red-600">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="relative w-full aspect-[1/1.4] bg-gray-100 rounded flex items-center justify-center overflow-hidden border border-gray-100">
+                        <canvas id="canvas-page-${idx}" class="max-w-full max-h-full object-contain transition-transform duration-200" style="transform: rotate(${item.rotation}deg);"></canvas>
+                    </div>
+                    <div class="w-full flex items-center justify-between text-[11px] text-gray-400 truncate px-1">
+                        <span class="truncate max-w-[80px]" title="${pdfObj.name}">${pdfObj.name}</span>
+                        <input type="checkbox" ${item.selected ? 'checked' : ''} onclick="event.stopPropagation(); toggleSelectPage(${idx}, event)" class="rounded text-brand-600 focus:ring-brand-500 h-4 w-4 cursor-pointer">
+                    </div>
+                `;
+
+                pageCard.addEventListener('click', (e) => toggleSelectPage(idx, e));
+                grid.appendChild(pageCard);
+
+                // Render thumbnail using pre-loaded pdfJsDoc instance
+                renderThumbnailCanvas(pdfObj.pdfJsDoc, item.originalPageIndex, `canvas-page-${idx}`);
+            }
+            lucide.createIcons();
+        }
+
+        async function renderThumbnailCanvas(pdfJsDoc, pageIdx, canvasId) {
+            try {
+                if (!pdfJsDoc) return;
+                const page = await pdfJsDoc.getPage(pageIdx + 1);
+
+                const viewport = page.getViewport({ scale: 0.3 });
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) return;
+
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+            } catch (e) {
+                console.error('Thumbnail render error', e);
+            }
+        }
+
+        let lastSelectedIdx = null;
+
+        function updateCardUI(idx) {
+            const card = document.getElementById(`card-page-${idx}`);
+            if (card) {
+                card.classList.toggle('selected', pageList[idx].selected);
+                const chk = card.querySelector('input[type="checkbox"]');
+                if (chk) chk.checked = pageList[idx].selected;
+            }
+        }
+
+        function toggleSelectPage(idx, event = null) {
+            if (event && event.shiftKey && lastSelectedIdx !== null && lastSelectedIdx !== idx) {
+                const start = Math.min(lastSelectedIdx, idx);
+                const end = Math.max(lastSelectedIdx, idx);
+                const targetState = pageList[lastSelectedIdx].selected;
+
+                for (let i = start; i <= end; i++) {
+                    pageList[i].selected = targetState;
+                    updateCardUI(i);
+                }
+            } else {
+                pageList[idx].selected = !pageList[idx].selected;
+                updateCardUI(idx);
+            }
+            lastSelectedIdx = idx;
+            updateExtractSelectedDisplay();
+        }
+
+        function selectAllPages(selectVal) {
+            pageList.forEach((p, idx) => {
+                p.selected = selectVal;
+                const card = document.getElementById(`card-page-${idx}`);
+                if (card) {
+                    card.classList.toggle('selected', selectVal);
+                    const chk = card.querySelector('input[type="checkbox"]');
+                    if (chk) chk.checked = selectVal;
+                }
+            });
+            updateExtractSelectedDisplay();
+        }
+
+        function selectOddPages() {
+            pageList.forEach((p, idx) => {
+                p.selected = (idx % 2 === 0);
+                const card = document.getElementById(`card-page-${idx}`);
+                if (card) {
+                    card.classList.toggle('selected', p.selected);
+                    const chk = card.querySelector('input[type="checkbox"]');
+                    if (chk) chk.checked = p.selected;
+                }
+            });
+            updateExtractSelectedDisplay();
+        }
+
+        function selectEvenPages() {
+            pageList.forEach((p, idx) => {
+                p.selected = (idx % 2 === 1);
+                const card = document.getElementById(`card-page-${idx}`);
+                if (card) {
+                    card.classList.toggle('selected', p.selected);
+                    const chk = card.querySelector('input[type="checkbox"]');
+                    if (chk) chk.checked = p.selected;
+                }
+            });
+            updateExtractSelectedDisplay();
+        }
+
+        function rotateSinglePage(idx, deg) {
+            pageList[idx].rotation = (pageList[idx].rotation + deg) % 360;
+            const canvas = document.getElementById(`canvas-page-${idx}`);
+            if (canvas) canvas.style.transform = `rotate(${pageList[idx].rotation}deg)`;
+        }
+
+        function rotateSelectedPages(deg) {
+            pageList.forEach((p, idx) => {
+                if (p.selected) rotateSinglePage(idx, deg);
+            });
+        }
+
+        function deleteSinglePage(idx) {
+            pageList.splice(idx, 1);
+            renderPagesGrid();
+            updateDocHeader();
+        }
+
+        function deleteSelectedPages() {
+            pageList = pageList.filter(p => !p.selected);
+            renderPagesGrid();
+            updateDocHeader();
+            showToast('Selected pages deleted.', false);
+        }
+
+        // Multi-PDF Merge Tab Handler
+        function renderCombineList() {
+            const list = document.getElementById('combineFileList');
+            list.innerHTML = '';
+
+            loadedPdfs.forEach((pdf, index) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs';
+                row.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="grip-vertical" class="w-4 h-4 text-gray-400 cursor-move"></i>
+                        <i data-lucide="file" class="w-4 h-4 text-brand-600"></i>
+                        <span class="font-semibold text-gray-800">${pdf.name}</span>
+                        <span class="text-gray-400">(${pdf.pageCount} pages)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="moveCombineDoc(${index}, -1)" ${index === 0 ? 'disabled class="opacity-30"' : ''} class="p-1 hover:bg-gray-200 rounded">
+                            <i data-lucide="chevron-up" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="moveCombineDoc(${index}, 1)" ${index === loadedPdfs.length - 1 ? 'disabled class="opacity-30"' : ''} class="p-1 hover:bg-gray-200 rounded">
+                            <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="removeCombineDoc(${index})" class="p-1 hover:bg-red-100 text-red-600 rounded">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                list.appendChild(row);
+            });
+            lucide.createIcons();
+        }
+
+        function moveCombineDoc(index, dir) {
+            const target = index + dir;
+            if (target < 0 || target >= loadedPdfs.length) return;
+            const temp = loadedPdfs[index];
+            loadedPdfs[index] = loadedPdfs[target];
+            loadedPdfs[target] = temp;
+            renderCombineList();
+        }
+
+        function removeCombineDoc(index) {
+            const removed = loadedPdfs.splice(index, 1)[0];
+            if (removed) {
+                pageList = pageList.filter(p => p.pdfId !== removed.id);
+            }
+            renderCombineList();
+            renderPagesGrid();
+            updateDocHeader();
+        }
+
+        async function mergeAllPDFs() {
+            if (loadedPdfs.length === 0) return;
+            showToast('Merging documents...');
+            try {
+                const mergedPdf = await pdfLib.PDFDocument.create();
+                for (let pdfObj of loadedPdfs) {
+                    const copiedPages = await mergedPdf.copyPages(pdfObj.pdfLibDoc, pdfObj.pdfLibDoc.getPageIndices());
+                    copiedPages.forEach(page => mergedPdf.addPage(page));
+                }
+
+                const mergedBytes = await mergedPdf.save();
+                downloadBlob(mergedBytes, 'Combined_Documents.pdf', 'application/pdf');
+                showToast('Merged PDF downloaded successfully!', false);
+            } catch (err) {
+                console.error(err);
+                showToast('Error merging PDFs.', false);
+            }
+        }
+
+        // Extract & Split Handlers
+        async function extractSpecifiedPages() {
+            const textVal = document.getElementById('extractRangeInput').value.trim();
+            let selectedIndices = [];
+
+            if (textVal) {
+                const parts = textVal.split(',');
+                parts.forEach(part => {
+                    if (part.includes('-')) {
+                        const [start, end] = part.split('-').map(n => parseInt(n.trim()));
+                        if (!isNaN(start) && !isNaN(end)) {
+                            for (let i = start; i <= end; i++) selectedIndices.push(i - 1);
+                        }
+                    } else {
+                        const num = parseInt(part.trim());
+                        if (!isNaN(num)) selectedIndices.push(num - 1);
+                    }
+                });
+            } else {
+                pageList.forEach((p, idx) => {
+                    if (p.selected) selectedIndices.push(idx);
+                });
+            }
+
+            if (selectedIndices.length === 0) {
+                showToast('Please select pages visually or enter page numbers.', false);
+                return;
+            }
+
+            showToast('Extracting selected pages...');
+            try {
+                const newPdf = await pdfLib.PDFDocument.create();
+                for (let idx of selectedIndices) {
+                    if (idx < 0 || idx >= pageList.length) continue;
+                    const pageItem = pageList[idx];
+                    const pdfObj = loadedPdfs.find(p => p.id === pageItem.pdfId);
+                    if (pdfObj) {
+                        const [copiedPage] = await newPdf.copyPages(pdfObj.pdfLibDoc, [pageItem.originalPageIndex]);
+                        if (pageItem.rotation) copiedPage.setRotation(pdfLib.degrees(pageItem.rotation));
+                        newPdf.addPage(copiedPage);
+                    }
+                }
+
+                const newBytes = await newPdf.save();
+                downloadBlob(newBytes, 'Extracted_Pages.pdf', 'application/pdf');
+                showToast('Extracted PDF downloaded!', false);
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to extract pages.', false);
+            }
+        }
+
+        async function splitPdfToZip() {
+            if (pageList.length === 0) return;
+            showToast('Splitting PDF into individual pages...');
+
+            try {
+                const zip = new JSZip();
+                for (let i = 0; i < pageList.length; i++) {
+                    const pageItem = pageList[i];
+                    const pdfObj = loadedPdfs.find(p => p.id === pageItem.pdfId);
+                    if (pdfObj) {
+                        const singleDoc = await pdfLib.PDFDocument.create();
+                        const [copiedPage] = await singleDoc.copyPages(pdfObj.pdfLibDoc, [pageItem.originalPageIndex]);
+                        if (pageItem.rotation) copiedPage.setRotation(pdfLib.degrees(pageItem.rotation));
+                        singleDoc.addPage(copiedPage);
+
+                        const singleBytes = await singleDoc.save();
+                        zip.file(`Page_${i + 1}.pdf`, singleBytes);
+                    }
+                }
+
+                const zipContent = await zip.generateAsync({ type: 'blob' });
+                downloadBlob(zipContent, 'Split_PDF_Pages.zip', 'application/zip');
+                showToast('ZIP Archive generated & downloaded!', false);
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to split PDF.', false);
+            }
+        }
+
+        // Stamps & Watermarks Handlers
+        function applyPresetStamp(stampText, colorHex) {
+            document.getElementById('wmText').value = stampText;
+            document.getElementById('wmColor').value = colorHex;
+            document.getElementById('wmSize').value = "42";
+            document.getElementById('wmAngle').value = "-30";
+            document.getElementById('wmOpacity').value = "0.7";
+            document.getElementById('opacityVal').textContent = "0.7";
+            document.getElementById('wmPosition').value = "center";
+            applyWatermark();
+        }
+
+        async function applyWatermark() {
+            if (pageList.length === 0) return;
+            showToast('Applying watermark to pages...');
+
+            const text = document.getElementById('wmText').value;
+            const size = parseInt(document.getElementById('wmSize').value) || 36;
+            const colorHex = document.getElementById('wmColor').value;
+            const opacity = parseFloat(document.getElementById('wmOpacity').value) || 0.3;
+            const angleDeg = parseInt(document.getElementById('wmAngle').value) || 0;
+            const pos = document.getElementById('wmPosition').value;
+            const pageScope = document.getElementById('wmPages').value;
+
+            const { r, g, b } = hexToRgb(colorHex);
+
+            try {
+                const exportDoc = await buildCombinedDocFromPageList();
+                const font = await exportDoc.embedFont(pdfLib.StandardFonts.HelveticaBold);
+                const pages = exportDoc.getPages();
+
+                pages.forEach((page, idx) => {
+                    if (pageScope === 'selected' && !pageList[idx]?.selected) return;
+                    if (pageScope === 'odd' && idx % 2 !== 0) return;
+                    if (pageScope === 'even' && idx % 2 === 0) return;
+
+                    const { width, height } = page.getSize();
+                    const textWidth = font.widthOfTextAtSize(text, size);
+                    const textHeight = font.heightAtSize(size);
+
+                    let x = width / 2 - textWidth / 2;
+                    let y = height / 2 - textHeight / 2;
+
+                    if (pos === 'top-left') { x = 40; y = height - 60; }
+                    else if (pos === 'top-right') { x = width - textWidth - 40; y = height - 60; }
+                    else if (pos === 'bottom-left') { x = 40; y = 40; }
+                    else if (pos === 'bottom-right') { x = width - textWidth - 40; y = 40; }
+
+                    page.drawText(text, {
+                        x: x,
+                        y: y,
+                        size: size,
+                        font: font,
+                        color: pdfLib.rgb(r, g, b),
+                        opacity: opacity,
+                        rotate: pdfLib.degrees(angleDeg)
+                    });
+                });
+
+                const modifiedBytes = await exportDoc.save();
+                downloadBlob(modifiedBytes, 'Watermarked_Document.pdf', 'application/pdf');
+                showToast('Watermark applied & PDF exported!', false);
+            } catch (err) {
+                console.error(err);
+                showToast('Failed to apply watermark.', false);
+            }
+        }
+
+        async function applyImageStamp() {
+            const fileInput = document.getElementById('imgStampInput');
+            if (fileInput.files.length === 0) {
+                showToast('Please choose an image file first.', false);
+                return;
+            }
+
+            showToast('Embedding image stamp...');
+            const imgFile = fileInput.files[0];
+            const imgArrayBuffer = await imgFile.arrayBuffer();
+            const scalePct = parseInt(document.getElementById('imgStampScale').value) || 25;
+            const pos = document.getElementById('imgStampPosition').value;
+
+            try {
+                const exportDoc = await buildCombinedDocFromPageList();
+                let embeddedImg;
+
+                if (imgFile.type.includes('png')) {
+                    embeddedImg = await exportDoc.embedPng(imgArrayBuffer);
+                } else {
+                    embeddedImg = await exportDoc.embedJpg(imgArrayBuffer);
+                }
+
+                const imgDims = embeddedImg.scale(scalePct / 100);
+                const pages = exportDoc.getPages();
+
+                pages.forEach(page => {
+                    const { width, height } = page.getSize();
+                    let x = width / 2 - imgDims.width / 2;
+                    let y = height / 2 - imgDims.height / 2;
+
+                    if (pos === 'top-left') { x = 30; y = height - imgDims.height - 30; }
+                    else if (pos === 'top-right') { x = width - imgDims.width - 30; y = height - imgDims.height - 30; }
+                    else if (pos === 'bottom-left') { x = 30; y = 30; }
+                    else if (pos === 'bottom-right') { x = width - imgDims.width - 30; y = 30; }
+
+                    page.drawImage(embeddedImg, {
+                        x: x,
+                        y: y,
+                        width: imgDims.width,
+                        height: imgDims.height
+                    });
+                });
+
+                const modifiedBytes = await exportDoc.save();
+                downloadBlob(modifiedBytes, 'Stamped_Document.pdf', 'application/pdf');
+                showToast('Image stamp applied successfully!', false);
+            } catch (err) {
+                console.error(err);
+                showToast('Error applying image stamp.', false);
+            }
+        }
+
+        // Page Numbering Handlers
+        async function applyPageNumbers() {
+            if (pageList.length === 0) return;
+            showToast('Applying page numbers...');
+
+            const fmt = document.getElementById('pgNumFormat').value;
+            const pos = document.getElementById('pgNumPos').value;
+            const startIdx = parseInt(document.getElementById('pgNumStart').value) || 1;
+            const fontSize = parseInt(document.getElementById('pgNumSize').value) || 10;
+            const colorHex = document.getElementById('pgNumColor').value;
+            const skipFirst = document.getElementById('skipFirstPage').checked;
+
+            const { r, g, b } = hexToRgb(colorHex);
+
+            try {
+                const exportDoc = await buildCombinedDocFromPageList();
+                const font = await exportDoc.embedFont(pdfLib.StandardFonts.Helvetica);
+                const pages = exportDoc.getPages();
+                const totalPages = pages.length;
+
+                pages.forEach((page, i) => {
+                    if (skipFirst && i === 0) return;
+
+                    const currNum = startIdx + i;
+                    let text = fmt.replace('{n}', currNum).replace('{total}', totalPages);
+
+                    if (fmt.includes('{bates}')) {
+                        const padded = String(currNum).padStart(4, '0');
+                        text = `BATES-${padded}`;
+                    }
+
+                    const { width, height } = page.getSize();
+                    const textWidth = font.widthOfTextAtSize(text, fontSize);
+                    let x = width / 2 - textWidth / 2;
+                    let y = 30;
+
+                    if (pos.includes('header')) y = height - 30;
+                    if (pos.includes('left')) x = 40;
+                    if (pos.includes('right')) x = width - textWidth - 40;
+
+                    page.drawText(text, {
+                        x: x,
+                        y: y,
+                        size: fontSize,
+                        font: font,
+                        color: pdfLib.rgb(r, g, b)
+                    });
+                });
+
+                const modifiedBytes = await exportDoc.save();
+                downloadBlob(modifiedBytes, 'Numbered_Document.pdf', 'application/pdf');
+                showToast('Page numbers applied & exported!', false);
+            } catch (err) {
+                console.error(err);
+                showToast('Error applying page numbers.', false);
+            }
+        }
+
+        // Export active workspace document
+        async function downloadModifiedPdf() {
+            if (pageList.length === 0) return;
+            showToast('Generating PDF document...');
+
+            try {
+                const finalDoc = await buildCombinedDocFromPageList();
+                const bytes = await finalDoc.save();
+                downloadBlob(bytes, 'Edited_Document.pdf', 'application/pdf');
+                showToast('PDF downloaded successfully!', false);
+            } catch (err) {
+                console.error(err);
+                showToast('Error generating PDF download.', false);
+            }
+        }
+
+        // Helper: Construct PDF Document from pageList
+        async function buildCombinedDocFromPageList() {
+            const newDoc = await pdfLib.PDFDocument.create();
+            for (let pageItem of pageList) {
+                const pdfObj = loadedPdfs.find(p => p.id === pageItem.pdfId);
+                if (pdfObj) {
+                    const [copiedPage] = await newDoc.copyPages(pdfObj.pdfLibDoc, [pageItem.originalPageIndex]);
+                    if (pageItem.rotation) {
+                        const currentRot = copiedPage.getRotation().angle;
+                        copiedPage.setRotation(pdfLib.degrees((currentRot + pageItem.rotation) % 360));
+                    }
+                    newDoc.addPage(copiedPage);
+                }
+            }
+            return newDoc;
+        }
+
+        // Helper: Convert Hex Color to RGB
+        function hexToRgb(hex) {
+            const clean = hex.replace('#', '');
+            const num = parseInt(clean, 16);
+            return {
+                r: ((num >> 16) & 255) / 255,
+                g: ((num >> 8) & 255) / 255,
+                b: (num & 255) / 255
+            };
+        }
+
+        // Helper: Download Blob
+        function downloadBlob(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }
+    </script>
+</body>
+
+</html>
