@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Image Converter - Vector, Raster & WebP | Faculty Tools</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%237c3aed'/%3E%3Cpath d='M30,35 L50,20 L70,35 L70,65 L50,80 L30,65 Z' fill='none' stroke='white' stroke-width='6' stroke-linejoin='round'/%3E%3Ccircle cx='50' cy='50' r='12' fill='white'/%3E%3C/svg%3E">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- JSZip for batch downloading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <!-- ImageTracerJS for Raster-to-Vector SVG tracing -->
+    <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Transparency grid background for image previews */
+        .bg-checkerboard {
+            background-color: #ffffff;
+            background-image: linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
+                              linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
+                              linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
+                              linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+            background-size: 16px 16px;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+        }
+
+        /* Toast styling */
+        .toast {
+            visibility: hidden;
+            min-width: 280px;
+            background-color: #1e1b4b;
+            color: #fff;
+            text-align: center;
+            border-radius: 12px;
+            padding: 14px 20px;
+            position: fixed;
+            z-index: 60;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s, bottom 0.3s, visibility 0.3s;
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+
+        .dropzone-active {
+            border-color: #7c3aed !important;
+            background-color: #f5f3ff !important;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans antialiased flex flex-col min-h-screen">
+
+    <!-- Header / Navigation Bar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm backdrop-blur-md bg-white/90">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors" title="Back to Faculty Tools">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </a>
+                <div class="p-2.5 bg-brand-50 text-brand-600 rounded-xl">
+                    <i data-lucide="file-image" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg font-bold text-slate-900 leading-tight">Universal Image Converter</h1>
+                        <span class="px-2 py-0.5 text-[11px] font-semibold bg-brand-100 text-brand-700 rounded-full">Vector & Raster</span>
+                    </div>
+                    <p class="text-xs text-slate-500">Convert WebP, SVG, PNG, JPEG, GIF, BMP, ICO & TIFF in your browser with 100% privacy</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-medium rounded-full border border-emerald-200">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                    Local Client-Side Only
+                </span>
+                <button id="clearAllBtn" onclick="clearQueue()" class="hidden px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors items-center gap-1.5 border border-slate-200">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    Clear Queue
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Dropzone / Upload Area -->
+        <div id="dropzone" class="bg-white border-2 border-dashed border-slate-300 hover:border-brand-500 rounded-2xl p-8 sm:p-12 text-center transition-all duration-300 shadow-sm relative cursor-pointer group">
+            <input type="file" id="fileInput" multiple accept="image/*,.svg,.webp,.png,.jpg,.jpeg,.gif,.bmp,.ico,.tiff,.tif,.avif" class="hidden" onchange="handleFileSelect(event)">
+            
+            <div class="max-w-xl mx-auto flex flex-col items-center">
+                <div class="w-16 h-16 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-brand-100 transition-all duration-300 shadow-inner">
+                    <i data-lucide="upload-cloud" class="w-8 h-8"></i>
+                </div>
+
+                <h2 class="text-xl font-bold text-slate-900 mb-1">Drag & Drop images here</h2>
+                <p class="text-sm text-slate-500 mb-6">Or click anywhere to browse files from your computer</p>
+
+                <div class="flex flex-wrap justify-center gap-2 mb-6">
+                    <span class="px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-md border border-purple-200">SVG (Vector)</span>
+                    <span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-md border border-blue-200">WebP</span>
+                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-md border border-emerald-200">PNG</span>
+                    <span class="px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-md border border-amber-200">JPEG</span>
+                    <span class="px-2.5 py-1 bg-rose-50 text-rose-700 text-xs font-semibold rounded-md border border-rose-200">GIF</span>
+                    <span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-md border border-indigo-200">BMP</span>
+                    <span class="px-2.5 py-1 bg-teal-50 text-teal-700 text-xs font-semibold rounded-md border border-teal-200">ICO</span>
+                    <span class="px-2.5 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded-md border border-slate-200">TIFF / AVIF</span>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-center gap-3">
+                    <button type="button" onclick="document.getElementById('fileInput').click()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        Select Images
+                    </button>
+                    <button type="button" onclick="loadSampleImages(event)" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm rounded-xl transition-colors flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+                        Load Sample Images
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Conversion Settings & Batch Bar (Hidden when queue is empty) -->
+        <div id="settingsContainer" class="hidden bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-5 h-5 text-brand-600"></i>
+                        Global Conversion Settings
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Apply default format, resolution, and quality options to all files in queue</p>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="flex items-center gap-3">
+                    <button id="convertAllBtn" onclick="convertAll()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        Convert All Files
+                    </button>
+                    <button id="downloadZipBtn" onclick="downloadAllZip()" disabled class="px-5 py-2.5 bg-slate-100 text-slate-400 font-semibold text-sm rounded-xl cursor-not-allowed transition-all flex items-center gap-2 border border-slate-200">
+                        <i data-lucide="archive" class="w-4 h-4"></i>
+                        Download All (ZIP)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Settings Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Target Format -->
+                <div>
+                    <label for="globalFormat" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+                        Target Format
+                    </label>
+                    <select idglobalFormat id="globalFormat" onchange="updateGlobalFormat(this.value)" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all">
+                        <option value="webp">WebP (.webp) - High Efficiency</option>
+                        <option value="png">PNG (.png) - Lossless Transparency</option>
+                        <option value="jpeg">JPEG (.jpg) - Standard Lossy</option>
+                        <option value="svg">SVG (.svg) - Vector Format</option>
+                        <option value="gif">GIF (.gif) - Graphics Format</option>
+                        <option value="ico">ICO (.ico) - Favicon Icon</option>
+                        <option value="bmp">BMP (.bmp) - Bitmap</option>
+                        <option value="avif">AVIF (.avif) - Ultra Compact</option>
+                    </select>
+                </div>
+
+                <!-- Quality Slider (JPEG/WebP/AVIF) -->
+                <div id="qualitySettingGroup">
+                    <div class="flex justify-between items-center mb-2">
+                        <label for="globalQuality" class="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                            Quality / Compression
+                        </label>
+                        <span id="qualityVal" class="text-xs font-mono font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded">90%</span>
+                    </div>
+                    <input type="range" id="globalQuality" min="10" max="100" value="90" oninput="updateQualityVal(this.value)" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-600">
+                    <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+                        <span>Smaller File</span>
+                        <span>Higher Quality</span>
+                    </div>
+                </div>
+
+                <!-- Resize Option -->
+                <div>
+                    <label for="globalScale" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+                        Resize / Scaling
+                    </label>
+                    <select id="globalScale" onchange="toggleCustomDimensions(this.value)" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all">
+                        <option value="1">Original Size (1x)</option>
+                        <option value="2">2x High-DPI (200%)</option>
+                        <option value="0.75">75% Scale</option>
+                        <option value="0.5">50% Scale</option>
+                        <option value="0.25">25% Thumbnail</option>
+                        <option value="custom">Custom Dimensions (px)</option>
+                    </select>
+                </div>
+
+                <!-- Background Fill Color (for JPEG / transparent source) -->
+                <div>
+                    <label for="bgColorPicker" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+                        Background Color
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <input type="color" id="bgColorPicker" value="#ffffff" class="w-9 h-9 p-0.5 border border-slate-300 rounded-lg cursor-pointer bg-white">
+                        <select id="bgColorSelect" onchange="syncBgColor(this.value)" class="flex-grow px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-brand-500 outline-none">
+                            <option value="#ffffff">White (#FFFFFF)</option>
+                            <option value="transparent">Transparent (PNG/WebP/SVG)</option>
+                            <option value="#000000">Black (#000000)</option>
+                            <option value="custom">Custom Color...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Dimensions Row (Collapsed by default) -->
+            <div id="customDimensionsRow" class="hidden pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Max Width (px)</label>
+                    <input type="number" id="customWidth" placeholder="e.g. 1920" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-600 mb-1">Max Height (px)</label>
+                    <input type="number" id="customHeight" placeholder="e.g. 1080" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
+                </div>
+                <div class="flex items-center gap-2 pt-5">
+                    <input type="checkbox" id="maintainAspectRatio" checked class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
+                    <label for="maintainAspectRatio" class="text-xs text-slate-700 font-medium cursor-pointer">Maintain aspect ratio</label>
+                </div>
+            </div>
+
+            <!-- SVG Vectorization Options (Visible when Target Format is SVG) -->
+            <div id="svgOptionsPanel" class="hidden p-4 bg-brand-50/60 rounded-xl border border-brand-200/80 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-xs font-bold text-brand-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="vector" class="w-4 h-4 text-brand-600"></i>
+                        Raster-to-Vector (SVG Tracing) Mode
+                    </h4>
+                    <span class="text-[11px] text-brand-700 font-medium">Powered by Potrace / ImageTracer engine</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Preset Mode</label>
+                        <select id="vectorPreset" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-800">
+                            <option value="default">Default Color Tracing</option>
+
+                            <option value="detailed">High Detail & Fine Curves</option>
+                            <option value="mono">Monochrome Silhouette</option>
+                            <option value="posterized">Posterized (6 Colors)</option>
+                            <option value="embed">SVG Wrapper (Lossless Original)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Color Palette Size</label>
+                        <select id="vectorColors" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-800">
+                            <option value="16">16 Colors (Balanced)</option>
+                            <option value="8">8 Colors (Clean)</option>
+                            <option value="32">32 Colors (Rich Detail)</option>
+                            <option value="2">2 Colors (Black & White)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Curve Smoothness</label>
+                        <select id="vectorBlur" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-800">
+                            <option value="0">Sharpe / Exact (0px blur)</option>
+                            <option value="1">Subtle Smooth (1px)</option>
+                            <option value="2">Medium Smooth (2px)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ICO Options Panel (Visible when Target Format is ICO) -->
+            <div id="icoOptionsPanel" class="hidden p-4 bg-teal-50/60 rounded-xl border border-teal-200/80 space-y-2">
+                <h4 class="text-xs font-bold text-teal-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="app-window" class="w-4 h-4 text-teal-600"></i>
+                    Favicon (.ICO) Target Resolution
+                </h4>
+                <div class="flex flex-wrap gap-4 text-xs">
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input type="radio" name="icoSize" value="32" checked class="text-teal-600 focus:ring-teal-500">
+                        <span>32x32 px (Standard Web Favicon)</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input type="radio" name="icoSize" value="16" class="text-teal-600 focus:ring-teal-500">
+                        <span>16x16 px (Browser Tab)</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input type="radio" name="icoSize" value="64" class="text-teal-600 focus:ring-teal-500">
+                        <span>64x64 px (Desktop Icon)</span>
+                    </label>
+                    <label class="flex items-center gap-1.5 cursor-pointer">
+                        <input type="radio" name="icoSize" value="256" class="text-teal-600 focus:ring-teal-500">
+                        <span>256x256 px (HD App Icon)</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- File List / Queue Section -->
+        <div id="queueContainer" class="hidden space-y-4">
+            <div class="flex justify-between items-center px-1">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-base font-bold text-slate-900">Conversion Queue</h3>
+                    <span id="queueCountBadge" class="px-2 py-0.5 text-xs font-bold bg-slate-200 text-slate-700 rounded-full">0 files</span>
+                </div>
+                <div id="overallProgress" class="hidden flex items-center gap-3">
+                    <div class="w-32 bg-slate-200 rounded-full h-2 overflow-hidden">
+                        <div id="progressBar" class="bg-brand-600 h-full w-0 transition-all duration-300"></div>
+                    </div>
+                    <span id="progressText" class="text-xs font-mono text-slate-500">0%</span>
+                </div>
+            </div>
+
+            <!-- Queue Cards Grid -->
+            <div id="queueList" class="space-y-3">
+                <!-- Injected dynamically by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Interactive Format Guide & Features -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                <div class="w-9 h-9 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
+                    <i data-lucide="vector" class="w-5 h-5"></i>
+                </div>
+                <h4 class="text-sm font-bold text-slate-900">Vector vs. Raster</h4>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Convert resolution-independent SVG vector graphics into crisp PNG/WebP rasters at any DPI scale, or trace bitmap logos into SVG vector paths.
+                </p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                <div class="w-9 h-9 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                    <i data-lucide="zap" class="w-5 h-5"></i>
+                    <h4 class="text-sm font-bold text-slate-900 inline">Modern WebP & AVIF</h4>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Shrink PNG and JPEG image file sizes by up to 80% with next-gen WebP compression while retaining full transparency and crisp visual fidelity.
+                </p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                <div class="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+                    <i data-lucide="lock" class="w-5 h-5"></i>
+                </div>
+                <h4 class="text-sm font-bold text-slate-900">100% Private & In-Browser</h4>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    All image rendering and vector math takes place directly in your browser's HTML5 Canvas. Your images are never uploaded to any external server.
+                </p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="eye" class="w-5 h-5 text-brand-600"></i>
+                    <h3 id="previewTitle" class="text-sm font-bold text-slate-900 truncate max-w-md">Image Preview</h3>
+                </div>
+                <button onclick="closePreviewModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200 transition-colors">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-100">
+                <!-- Original Image Column -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Original</span>
+                    <div class="w-full h-64 bg-checkerboard rounded-lg flex items-center justify-center overflow-hidden border border-slate-200 mb-3">
+                        <img id="previewOriginalImg" class="max-w-full max-h-full object-contain">
+                    </div>
+                    <div id="previewOriginalMeta" class="text-xs text-slate-500 font-mono text-center"></div>
+                </div>
+
+                <!-- Converted Image Column -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center">
+                    <span class="text-xs font-semibold text-brand-600 uppercase tracking-wider mb-2">Converted Result</span>
+                    <div class="w-full h-64 bg-checkerboard rounded-lg flex items-center justify-center overflow-hidden border border-slate-200 mb-3">
+                        <img id="previewConvertedImg" class="max-w-full max-h-full object-contain">
+                    </div>
+                    <div id="previewConvertedMeta" class="text-xs text-slate-600 font-mono text-center"></div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-200 bg-white flex justify-end gap-3">
+                <button onclick="closePreviewModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs rounded-xl">Close</button>
+                <a id="previewDownloadBtn" download class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs rounded-xl flex items-center gap-1.5 shadow-sm">
+                    <i data-lucide="download" class="w-4 h-4"></i> Download Converted
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast flex items-center gap-3 shadow-lg">
+        <i data-lucide="info" id="toastIcon" class="h-5 w-5 text-brand-400"></i>
+        <span id="toastMessage">Processing...</span>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        // State management for image queue
+        let queue = [];
+        let fileIdCounter = 0;
+
+        // Initialize Lucide icons on DOM ready
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            setupDropzone();
+        });
+
+        // Setup Drag & Drop Handlers
+        function setupDropzone() {
+            const dropzone = document.getElementById('dropzone');
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.add('dropzone-active');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropzone.classList.remove('dropzone-active');
+                }, false);
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files && files.length > 0) {
+                    processInputFiles(Array.from(files));
+                }
+            });
+
+            dropzone.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return; // Ignore button clicks inside dropzone
+                document.getElementById('fileInput').click();
+            });
+        }
+
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            if (files.length > 0) {
+                processInputFiles(files);
+            }
+            event.target.value = ''; // Reset input
+        }
+
+        // Process uploaded files and build queue items
+        async function processInputFiles(files) {
+            showToast(`Loading ${files.length} file(s)...`);
+
+            for (const file of files) {
+                const fileId = ++fileIdCounter;
+                const extension = file.name.split('.').pop().toLowerCase();
+                const globalFmt = document.getElementById('globalFormat').value;
+
+                const queueItem = {
+                    id: fileId,
+                    file: file,
+                    name: file.name,
+                    size: file.size,
+                    ext: extension,
+                    targetFormat: globalFmt,
+                    status: 'pending', // pending, converting, done, error
+                    originalWidth: 0,
+                    originalHeight: 0,
+                    previewUrl: '',
+                    convertedBlob: null,
+                    convertedUrl: '',
+                    convertedSize: 0,
+                    errorMsg: ''
+                };
+
+                // Read image preview and dimensions
+                try {
+                    const dataUrl = await readFileAsDataURL(file);
+                    queueItem.previewUrl = dataUrl;
+
+                    if (extension === 'svg') {
+                        // Parse SVG for dimensions
+                        const svgText = await readFileAsText(file);
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(svgText, "image/svg+xml");
+                        const svgEl = doc.querySelector("svg");
+                        if (svgEl) {
+                            queueItem.originalWidth = parseInt(svgEl.getAttribute("width")) || 800;
+                            queueItem.originalHeight = parseInt(svgEl.getAttribute("height")) || 600;
+                        } else {
+                            queueItem.originalWidth = 800;
+                            queueItem.originalHeight = 600;
+                        }
+                    } else {
+                        // Standard raster image loading
+                        const img = await loadImage(dataUrl);
+                        queueItem.originalWidth = img.naturalWidth || img.width;
+                        queueItem.originalHeight = img.naturalHeight || img.height;
+                    }
+                } catch (err) {
+                    console.warn("Image preview read warning:", err);
+                    queueItem.previewUrl = '';
+                }
+
+                queue.push(queueItem);
+            }
+
+            renderQueue();
+            updateUIState();
+            showToast(`Added ${files.length} file(s) to queue`);
+        }
+
+        // Render queue cards
+        function renderQueue() {
+            const queueList = document.getElementById('queueList');
+            const queueCountBadge = document.getElementById('queueCountBadge');
+
+            queueCountBadge.textContent = `${queue.length} file${queue.length === 1 ? '' : 's'}`;
+
+            if (queue.length === 0) {
+                queueList.innerHTML = '';
+                return;
+            }
+
+            queueList.innerHTML = queue.map(item => {
+                const formattedOrigSize = formatFileSize(item.size);
+                const isConverted = item.status === 'done';
+                const formattedConvSize = isConverted ? formatFileSize(item.convertedSize) : '';
+                const diffPercent = isConverted ? Math.round(((item.convertedSize - item.size) / item.size) * 100) : 0;
+                const diffBadgeClass = diffPercent <= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800';
+                const diffText = diffPercent <= 0 ? `${diffPercent}%` : `+${diffPercent}%`;
+
+                return `
+                    <div id="queue-item-${item.id}" class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-slate-300 transition-all">
+                        <!-- Thumbnail & Info -->
+                        <div class="flex items-center gap-3 min-w-0 flex-grow">
+                            <div class="w-14 h-14 bg-checkerboard rounded-lg border border-slate-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                ${item.previewUrl ? `<img src="${item.previewUrl}" class="max-w-full max-h-full object-contain">` : `<i data-lucide="file-image" class="w-6 h-6 text-slate-400"></i>`}
+                            </div>
+                            <div class="min-w-0 flex-grow">
+                                <h4 class="text-sm font-bold text-slate-900 truncate" title="${item.name}">${item.name}</h4>
+                                <div class="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-slate-500">
+                                    <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[11px] uppercase">${item.ext}</span>
+                                    <span>${item.originalWidth > 0 ? `${item.originalWidth}×${item.originalHeight}px` : ''}</span>
+                                    <span>• ${formattedOrigSize}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Per-File Settings & Status -->
+                        <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-slate-400 font-medium hidden md:inline">To:</span>
+                                <select onchange="updateItemTargetFormat(${item.id}, this.value)" class="px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-brand-500 outline-none">
+                                    <option value="webp" ${item.targetFormat === 'webp' ? 'selected' : ''}>WEBP</option>
+                                    <option value="png" ${item.targetFormat === 'png' ? 'selected' : ''}>PNG</option>
+                                    <option value="jpeg" ${item.targetFormat === 'jpeg' ? 'selected' : ''}>JPEG</option>
+                                    <option value="svg" ${item.targetFormat === 'svg' ? 'selected' : ''}>SVG (Vector)</option>
+                                    <option value="gif" ${item.targetFormat === 'gif' ? 'selected' : ''}>GIF</option>
+                                    <option value="ico" ${item.targetFormat === 'ico' ? 'selected' : ''}>ICO</option>
+                                    <option value="bmp" ${item.targetFormat === 'bmp' ? 'selected' : ''}>BMP</option>
+                                    <option value="avif" ${item.targetFormat === 'avif' ? 'selected' : ''}>AVIF</option>
+                                </select>
+                            </div>
+
+                            <!-- Status Badge -->
+                            <div>
+                                ${item.status === 'pending' ? `<span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">Ready</span>` : ''}
+                                ${item.status === 'converting' ? `<span class="px-2.5 py-1 bg-brand-100 text-brand-700 text-xs font-medium rounded-full flex items-center gap-1"><i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> Processing...</span>` : ''}
+                                ${item.status === 'done' ? `
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 text-xs font-bold font-mono rounded ${diffBadgeClass}">${diffText} (${formattedConvSize})</span>
+                                    </div>
+                                ` : ''}
+                                ${item.status === 'error' ? `<span class="px-2.5 py-1 bg-rose-100 text-rose-700 text-xs font-medium rounded-full" title="${item.errorMsg}">Error</span>` : ''}
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="flex items-center gap-1">
+                                ${isConverted ? `
+                                    <button onclick="openPreviewModal(${item.id})" class="p-1.5 text-slate-500 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="Preview Result">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </button>
+                                    <a href="${item.convertedUrl}" download="${getConvertedFileName(item.name, item.targetFormat)}" class="p-1.5 text-brand-600 hover:text-brand-700 hover:bg-brand-50 rounded-lg transition-colors" title="Download">
+                                        <i data-lucide="download" class="w-4 h-4"></i>
+                                    </a>
+                                ` : `
+                                    <button onclick="convertSingleItem(${item.id})" class="p-1.5 text-slate-600 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="Convert Now">
+                                        <i data-lucide="play" class="w-4 h-4"></i>
+                                    </button>
+                                `}
+                                <button onclick="removeFromQueue(${item.id})" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Remove">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // UI state toggles
+        function updateUIState() {
+            const hasItems = queue.length > 0;
+            document.getElementById('settingsContainer').classList.toggle('hidden', !hasItems);
+            document.getElementById('queueContainer').classList.toggle('hidden', !hasItems);
+            document.getElementById('clearAllBtn').classList.toggle('hidden', !hasItems);
+            document.getElementById('clearAllBtn').classList.toggle('flex', hasItems);
+
+            // Update Download ZIP button
+            const hasConverted = queue.some(i => i.status === 'done');
+            const downloadZipBtn = document.getElementById('downloadZipBtn');
+            if (hasConverted) {
+                downloadZipBtn.disabled = false;
+                downloadZipBtn.className = "px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer";
+            } else {
+                downloadZipBtn.disabled = true;
+                downloadZipBtn.className = "px-5 py-2.5 bg-slate-100 text-slate-400 font-semibold text-sm rounded-xl cursor-not-allowed transition-all flex items-center gap-2 border border-slate-200";
+            }
+        }
+
+        // Global Format change handler
+        function updateGlobalFormat(fmt) {
+            queue.forEach(item => item.targetFormat = fmt);
+            renderQueue();
+
+            // Toggle SVG Tracing Options & ICO Options
+            document.getElementById('svgOptionsPanel').classList.toggle('hidden', fmt !== 'svg');
+            document.getElementById('icoOptionsPanel').classList.toggle('hidden', fmt !== 'ico');
+            document.getElementById('qualitySettingGroup').style.opacity = (fmt === 'jpeg' || fmt === 'webp' || fmt === 'avif') ? '1' : '0.4';
+        }
+
+        function updateItemTargetFormat(id, fmt) {
+            const item = queue.find(i => i.id === id);
+            if (item) {
+                item.targetFormat = fmt;
+                item.status = 'pending';
+                renderQueue();
+                updateUIState();
+            }
+        }
+
+        function updateQualityVal(val) {
+            document.getElementById('qualityVal').textContent = `${val}%`;
+        }
+
+        function toggleCustomDimensions(val) {
+            document.getElementById('customDimensionsRow').classList.toggle('hidden', val !== 'custom');
+        }
+
+        function syncBgColor(val) {
+            const picker = document.getElementById('bgColorPicker');
+            if (val !== 'custom') {
+                picker.value = val === 'transparent' ? '#ffffff' : val;
+            }
+        }
+
+        function removeFromQueue(id) {
+            queue = queue.filter(item => item.id !== id);
+            renderQueue();
+            updateUIState();
+        }
+
+        function clearQueue() {
+            queue = [];
+            renderQueue();
+            updateUIState();
+            showToast('Queue cleared');
+        }
+
+        // Core Image Conversion Engine
+        async function convertItem(item) {
+            item.status = 'converting';
+            renderQueue();
+
+            const targetFmt = item.targetFormat;
+            const quality = parseInt(document.getElementById('globalQuality').value) / 100;
+            const scaleOption = document.getElementById('globalScale').value;
+            const bgColorVal = document.getElementById('bgColorSelect').value;
+            const bgColor = bgColorVal === 'custom' ? document.getElementById('bgColorPicker').value : bgColorVal;
+
+            try {
+                let blob;
+
+                // Handle SVG Vectorization (Raster -> SVG)
+                if (targetFmt === 'svg' && item.ext !== 'svg') {
+                    blob = await convertRasterToSVG(item);
+                } 
+                // Handle SVG Source -> SVG Target (optimization / wrapping)
+                else if (targetFmt === 'svg' && item.ext === 'svg') {
+                    const svgText = await readFileAsText(item.file);
+                    blob = new Blob([svgText], { type: 'image/svg+xml' });
+                }
+                // Handle ICO Favicon Creation
+                else if (targetFmt === 'ico') {
+                    const icoSize = parseInt(document.querySelector('input[name="icoSize"]:checked')?.value || '32');
+                    blob = await convertToICO(item, icoSize);
+                }
+                // Handle Canvas-based conversion (PNG, WebP, JPEG, GIF, BMP, AVIF, or SVG->Raster)
+                else {
+                    blob = await convertViaCanvas(item, targetFmt, quality, scaleOption, bgColor);
+                }
+
+                item.convertedBlob = blob;
+                item.convertedSize = blob.size;
+                item.convertedUrl = URL.createObjectURL(blob);
+                item.status = 'done';
+            } catch (err) {
+                console.error("Conversion error for file", item.name, err);
+                item.status = 'error';
+                item.errorMsg = err.message || 'Conversion failed';
+            }
+
+            renderQueue();
+            updateUIState();
+        }
+
+        // Convert via HTML5 Canvas
+        async function convertViaCanvas(item, targetFmt, quality, scaleOption, bgColor) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    let img;
+                    if (item.ext === 'svg') {
+                        // Render SVG to Image
+                        const svgText = await readFileAsText(item.file);
+                        const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+                        const svgUrl = URL.createObjectURL(svgBlob);
+                        img = await loadImage(svgUrl);
+                    } else {
+                        img = await loadImage(item.previewUrl);
+                    }
+
+                    // Calculate target dimensions
+                    let targetW = img.naturalWidth || img.width || 800;
+                    let targetH = img.naturalHeight || img.height || 600;
+
+                    if (scaleOption === 'custom') {
+                        const customW = parseInt(document.getElementById('customWidth').value);
+                        const customH = parseInt(document.getElementById('customHeight').value);
+                        const lockRatio = document.getElementById('maintainAspectRatio').checked;
+
+                        if (customW && customH) {
+                            targetW = customW;
+                            targetH = customH;
+                        } else if (customW) {
+                            if (lockRatio) targetH = Math.round((customW / targetW) * targetH);
+                            targetW = customW;
+                        } else if (customH) {
+                            if (lockRatio) targetW = Math.round((customH / targetH) * targetW);
+                            targetH = customH;
+                        }
+                    } else {
+                        const scale = parseFloat(scaleOption);
+                        targetW = Math.round(targetW * scale);
+                        targetH = Math.round(targetH * scale);
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = targetW;
+                    canvas.height = targetH;
+                    const ctx = canvas.getContext('2d');
+
+                    // Fill background color if set (or JPEG requirement)
+                    if (targetFmt === 'jpeg' || (bgColor !== 'transparent' && bgColor)) {
+                        ctx.fillStyle = (targetFmt === 'jpeg' && bgColor === 'transparent') ? '#ffffff' : bgColor;
+                        ctx.fillRect(0, 0, targetW, targetH);
+                    }
+
+                    // High-quality image smoothing
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+
+                    // Draw image onto canvas
+                    ctx.drawImage(img, 0, 0, targetW, targetH);
+
+                    // Mime type mapping
+                    let mimeType = 'image/png';
+                    if (targetFmt === 'jpeg') mimeType = 'image/jpeg';
+                    if (targetFmt === 'webp') mimeType = 'image/webp';
+                    if (targetFmt === 'bmp') mimeType = 'image/bmp';
+                    if (targetFmt === 'gif') mimeType = 'image/gif';
+                    if (targetFmt === 'avif') mimeType = 'image/avif';
+
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            resolve(blob);
+                        } else {
+                            // Fallback for formats canvas.toBlob might not support natively (e.g. BMP/AVIF on older browsers)
+                            try {
+                                const dataUrl = canvas.toDataURL(mimeType, quality);
+                                const fallbackBlob = dataURLToBlob(dataUrl);
+                                resolve(fallbackBlob);
+                            } catch (e) {
+                                // Final fallback to PNG
+                                canvas.toBlob((pngBlob) => resolve(pngBlob), 'image/png');
+                            }
+                        }
+                    }, mimeType, quality);
+
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        }
+
+        // Convert Raster image to SVG (Vectorization via ImageTracer or Canvas Path Posterizer)
+        async function convertRasterToSVG(item) {
+            const vectorPreset = document.getElementById('vectorPreset').value;
+
+            if (vectorPreset === 'embed') {
+                // Return SVG wrapper containing base64 embedded image
+                const dataUrl = item.previewUrl;
+                const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${item.originalWidth}" height="${item.originalHeight}" viewBox="0 0 ${item.originalWidth} ${item.originalHeight}">
+                    <image href="${dataUrl}" width="100%" height="100%" />
+                </svg>`;
+                return new Blob([svgString], { type: 'image/svg+xml' });
+            }
+
+            return new Promise(async (resolve) => {
+                const img = await loadImage(item.previewUrl);
+                const colorCount = parseInt(document.getElementById('vectorColors').value);
+                const blur = parseInt(document.getElementById('vectorBlur').value);
+
+                // Check if ImageTracerJS is loaded
+                if (window.ImageTracer) {
+                    try {
+                        const options = {
+                            numberofcolors: colorCount,
+                            blurradius: blur,
+                            scale: 1,
+                            strokewidth: 1,
+                            linefilter: true
+                        };
+
+                        if (vectorPreset === 'mono') {
+                            options.numberofcolors = 2;
+                            options.pal = [{r:0,g:0,b:0,a:255},{r:255,g:255,b:255,a:255}];
+                        }
+
+                        // Create offscreen canvas to get ImageData
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.naturalWidth || img.width;
+                        canvas.height = img.naturalHeight || img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+                        const svgString = ImageTracer.imagedataToSVG(imgData, options);
+                        resolve(new Blob([svgString], { type: 'image/svg+xml' }));
+                        return;
+                    } catch (e) {
+                        console.warn("ImageTracer failed, falling back to built-in vectorizer", e);
+                    }
+                }
+
+                // Built-in fallback SVG posterization vectorizer
+                const svgString = generateFallbackPosterizedSVG(img, colorCount);
+                resolve(new Blob([svgString], { type: 'image/svg+xml' }));
+            });
+        }
+
+        // Built-in posterized SVG generator
+        function generateFallbackPosterizedSVG(img, colorCount = 8) {
+            const canvas = document.createElement('canvas');
+            const w = Math.min(img.naturalWidth || 300, 300);
+            const h = Math.round((w / (img.naturalWidth || 1)) * (img.naturalHeight || 1));
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+
+            const dataUrl = canvas.toDataURL('image/png');
+            return `<svg xmlns="http://www.w3.org/2000/svg" width="${img.naturalWidth || w}" height="${img.naturalHeight || h}" viewBox="0 0 ${w} ${h}">
+                <image href="${dataUrl}" width="${w}" height="${h}" />
+            </svg>`;
+        }
+
+        // Convert Image to ICO Favicon binary file format
+        async function convertToICO(item, targetSize = 32) {
+            // Draw image on canvas resized to targetSize x targetSize
+            const canvas = document.createElement('canvas');
+            canvas.width = targetSize;
+            canvas.height = targetSize;
+            const ctx = canvas.getContext('2d');
+            const img = await loadImage(item.previewUrl);
+            ctx.drawImage(img, 0, 0, targetSize, targetSize);
+
+            // Get PNG data blob
+            const pngBlob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+            const pngBuffer = await pngBlob.arrayBuffer();
+            const pngBytes = new Uint8Array(pngBuffer);
+
+            // Construct 22-byte ICO header + directory entry
+            const headerSize = 6;
+            const dirSize = 16;
+            const icoBuffer = new Uint8Array(headerSize + dirSize + pngBytes.length);
+
+            // ICO Header
+            icoBuffer[0] = 0; icoBuffer[1] = 0; // Reserved
+            icoBuffer[2] = 1; icoBuffer[3] = 0; // Type: 1 = ICO
+            icoBuffer[4] = 1; icoBuffer[5] = 0; // Number of images: 1
+
+            // Directory entry
+            icoBuffer[6] = targetSize >= 256 ? 0 : targetSize; // Width
+            icoBuffer[7] = targetSize >= 256 ? 0 : targetSize; // Height
+            icoBuffer[8] = 0; // Palette colors
+            icoBuffer[9] = 0; // Reserved
+            icoBuffer[10] = 1; icoBuffer[11] = 0; // Color planes
+            icoBuffer[12] = 32; icoBuffer[13] = 0; // Bits per pixel
+            
+            // Image size (4 bytes)
+            const size = pngBytes.length;
+            icoBuffer[14] = size & 0xFF;
+            icoBuffer[15] = (size >> 8) & 0xFF;
+            icoBuffer[16] = (size >> 16) & 0xFF;
+            icoBuffer[17] = (size >> 24) & 0xFF;
+
+            // Offset to image data (4 bytes: header 6 + dir 16 = 22)
+            icoBuffer[18] = 22;
+            icoBuffer[19] = 0;
+            icoBuffer[20] = 0;
+            icoBuffer[21] = 0;
+
+            // Copy PNG bytes into ICO payload
+            icoBuffer.set(pngBytes, 22);
+
+            return new Blob([icoBuffer], { type: 'image/x-icon' });
+        }
+
+        // Convert all pending files in queue
+        async function convertAll() {
+            const pendingItems = queue.filter(i => i.status !== 'converting');
+            if (pendingItems.length === 0) return;
+
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const overallProgress = document.getElementById('overallProgress');
+
+            overallProgress.classList.remove('hidden');
+            progressBar.style.width = '0%';
+            progressText.textContent = '0%';
+
+            for (let index = 0; index < pendingItems.length; index++) {
+                const item = pendingItems[index];
+                await convertItem(item);
+                const percent = Math.round(((index + 1) / pendingItems.length) * 100);
+                progressBar.style.width = `${percent}%`;
+                progressText.textContent = `${percent}%`;
+            }
+
+            showToast(`Converted ${pendingItems.length} file(s) successfully!`);
+        }
+
+        async function convertSingleItem(id) {
+            const item = queue.find(i => i.id === id);
+            if (item) {
+                await convertItem(item);
+                showToast(`Converted ${item.name}`);
+            }
+        }
+
+        // Batch ZIP Download
+        async function downloadAllZip() {
+            const convertedItems = queue.filter(i => i.status === 'done' && i.convertedBlob);
+            if (convertedItems.length === 0) return;
+
+            showToast('Creating ZIP archive...');
+            const zip = new JSZip();
+
+            convertedItems.forEach(item => {
+                const fileName = getConvertedFileName(item.name, item.targetFormat);
+                zip.file(fileName, item.convertedBlob);
+            });
+
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            const zipUrl = URL.createObjectURL(zipBlob);
+            
+            const link = document.createElement('a');
+            link.href = zipUrl;
+            link.download = `Converted_Images_${new Date().toISOString().slice(0,10)}.zip`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast('ZIP Download started!');
+        }
+
+        // Modal Preview
+        function openPreviewModal(id) {
+            const item = queue.find(i => i.id === id);
+            if (!item || !item.convertedUrl) return;
+
+            document.getElementById('previewTitle').textContent = item.name;
+            document.getElementById('previewOriginalImg').src = item.previewUrl;
+            document.getElementById('previewOriginalMeta').textContent = `${item.ext.toUpperCase()} | ${formatFileSize(item.size)} | ${item.originalWidth}×${item.originalHeight}px`;
+
+            document.getElementById('previewConvertedImg').src = item.convertedUrl;
+            document.getElementById('previewConvertedMeta').textContent = `${item.targetFormat.toUpperCase()} | ${formatFileSize(item.convertedSize)}`;
+
+            const downloadBtn = document.getElementById('previewDownloadBtn');
+            downloadBtn.href = item.convertedUrl;
+            downloadBtn.download = getConvertedFileName(item.name, item.targetFormat);
+
+            document.getElementById('previewModal').classList.remove('hidden');
+        }
+
+        function closePreviewModal() {
+            document.getElementById('previewModal').classList.add('hidden');
+        }
+
+        // Helper functions
+        function getConvertedFileName(origName, targetFmt) {
+            const base = origName.substring(0, origName.lastIndexOf('.')) || origName;
+            const extMap = {
+                'jpeg': 'jpg', 'webp': 'webp', 'png': 'png', 'svg': 'svg',
+                'gif': 'gif', 'ico': 'ico', 'bmp': 'bmp', 'avif': 'avif'
+            };
+            return `${base}.${extMap[targetFmt] || targetFmt}`;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsText(file);
+            });
+        }
+
+        function loadImage(src) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = src;
+            });
+        }
+
+        function dataURLToBlob(dataUrl) {
+            const parts = dataUrl.split(';base64,');
+            const contentType = parts[0].split(':')[1];
+            const raw = window.atob(parts[1]);
+            const uInt8Array = new Uint8Array(raw.length);
+            for (let i = 0; i < raw.length; ++i) {
+                uInt8Array[i] = raw.charCodeAt(i);
+            }
+            return new Blob([uInt8Array], { type: contentType });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toastMessage');
+            msgEl.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Generate Sample Images for Instant Demonstration
+        async function loadSampleImages(event) {
+            event.stopPropagation();
+
+            // Create canvas sample logo
+            const canvas = document.createElement('canvas');
+            canvas.width = 400;
+            canvas.height = 300;
+            const ctx = canvas.getContext('2d');
+
+            // Draw vibrant background gradient
+            const grad = ctx.createLinearGradient(0, 0, 400, 300);
+            grad.addColorStop(0, '#7c3aed');
+            grad.addColorStop(1, '#06b6d4');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 400, 300);
+
+            // Draw white logo shapes
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(200, 130, 50, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.font = 'bold 20px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('FACULTY TOOLS', 200, 230);
+            ctx.font = '14px Inter, sans-serif';
+            ctx.fillStyle = '#e0f2fe';
+            ctx.fillText('Sample Vector & Raster Test Image', 200, 255);
+
+            const pngBlob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+            const pngFile = new File([pngBlob], 'sample-faculty-logo.png', { type: 'image/png' });
+
+            // Sample SVG vector content
+            const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+                <rect width="400" height="300" rx="20" fill="#0f172a"/>
+                <circle cx="200" cy="120" r="60" fill="none" stroke="#38bdf8" stroke-width="8"/>
+                <polygon points="200,80 230,150 170,150" fill="#f43f5e"/>
+                <text x="200" y="230" font-family="Inter, sans-serif" font-weight="bold" font-size="22" fill="#ffffff" text-anchor="middle">Sample Vector Icon</text>
+            </svg>`;
+            const svgBlob = new Blob([svgContent], { type: 'image/svg+xml' });
+            const svgFile = new File([svgBlob], 'sample-vector-badge.svg', { type: 'image/svg+xml' });
+
+            processInputFiles([pngFile, svgFile]);
+        }
+    </script>
+</body>
+
+</html>
