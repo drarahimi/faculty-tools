@@ -117,25 +117,25 @@
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-                <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <select id="selProfile" onchange="switchProfile(this.value)" title="Switch between saved proposal profiles" class="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 border-none rounded px-2 py-1 focus:ring-1 focus:ring-brand-500 max-w-[140px]"></select>
-                    <button onclick="createProfile()" title="Create a new named proposal profile" class="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-white dark:hover:bg-slate-700 px-2 py-1 rounded transition-colors flex items-center gap-1">
+                <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-800 dark:border-slate-700">
+                    <select id="selProfile" onchange="switchProfile(this.value)" title="Switch between saved proposal profiles" class="text-xs font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-300 bg-white dark:bg-slate-900 border-none rounded px-2 py-1 focus:ring-1 focus:ring-brand-500 max-w-[140px]"></select>
+                    <button onclick="createProfile()" title="Create a new named proposal profile" class="text-xs font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-white dark:hover:bg-slate-700 px-2 py-1 rounded transition-colors flex items-center gap-1">
                         <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
                     </button>
-                    <button onclick="deleteProfile()" title="Delete the current profile" class="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-white dark:hover:bg-slate-700 px-2 py-1 rounded transition-colors flex items-center gap-1">
+                    <button onclick="deleteProfile()" title="Delete the current profile" class="text-xs font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-white dark:hover:bg-slate-700 px-2 py-1 rounded transition-colors flex items-center gap-1">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                     </button>
                 </div>
-                <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <button onclick="exportJSON()" class="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-white dark:hover:bg-slate-700 px-2 py-1 rounded transition-colors flex items-center gap-1">
+                <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-800 dark:border-slate-700">
+                    <button onclick="exportJSON()" class="text-xs font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-white dark:hover:bg-slate-700 px-2 py-1 rounded transition-colors flex items-center gap-1">
                         <i data-lucide="download" class="w-3.5 h-3.5"></i>
                         Export Draft
                     </button>
-                    <button onclick="triggerImport()" class="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-white dark:hover:bg-slate-700 px-2 py-1 rounded transition-colors flex items-center gap-1">
+                    <button onclick="triggerImport()" class="text-xs font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-white dark:hover:bg-slate-700 px-2 py-1 rounded transition-colors flex items-center gap-1">
                         <i data-lucide="upload" class="w-3.5 h-3.5"></i>
                         Import Draft
                     </button>
-                    <button onclick="exportFullApplication()" title="Compile checklist, outliner, budget, EDI, referees and risk register" class="text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-white dark:hover:bg-slate-700 px-2 py-1 rounded transition-colors flex items-center gap-1">
+                    <button onclick="exportFullApplication()" title="Compile checklist, outliner, budget, EDI, referees and risk register" class="text-xs font-semibold text-slate-600 dark:text-slate-400 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 hover:bg-white dark:hover:bg-slate-700 px-2 py-1 rounded transition-colors flex items-center gap-1">
                         <i data-lucide="file-stack" class="w-3.5 h-3.5"></i>
                         Export Full Application
                     </button>
@@ -159,32 +159,32 @@
         
         <!-- Left Sidebar / Navigation Tabs -->
         <aside class="w-full lg:w-64 flex-shrink-0">
-            <nav class="flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible bg-white p-2 rounded-xl border border-slate-200 shadow-sm gap-1 scrollbar-none sticky top-20">
-                <button onclick="switchTab('checklist')" id="tab-checklist" class="tab-btn active flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
+            <nav class="flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm gap-1 scrollbar-none sticky top-20">
+                <button onclick="switchTab('checklist')" id="tab-checklist" class="tab-btn active flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
                     <i data-lucide="check-square" class="w-4 h-4"></i>
                     <span>Proposal Checklist</span>
                 </button>
-                <button onclick="switchTab('budget')" id="tab-budget" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
+                <button onclick="switchTab('budget')" id="tab-budget" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
                     <i data-lucide="calculator" class="w-4 h-4"></i>
                     <span>5-Year Budget & HQP</span>
                 </button>
-                <button onclick="switchTab('outliner')" id="tab-outliner" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
+                <button onclick="switchTab('outliner')" id="tab-outliner" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
                     <i data-lucide="book-open" class="w-4 h-4"></i>
                     <span>Proposal Outliner</span>
                 </button>
-                <button onclick="switchTab('limits')" id="tab-limits" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
+                <button onclick="switchTab('limits')" id="tab-limits" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
                     <i data-lucide="text-cursor-input" class="w-4 h-4"></i>
                     <span>Portal Text Limit Checker</span>
                 </button>
-                <button onclick="switchTab('edi')" id="tab-edi" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
+                <button onclick="switchTab('edi')" id="tab-edi" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
                     <i data-lucide="users" class="w-4 h-4"></i>
                     <span>HQP EDI Plan Builder</span>
                 </button>
-                <button onclick="switchTab('merit')" id="tab-merit" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
+                <button onclick="switchTab('merit')" id="tab-merit" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
                     <i data-lucide="grid" class="w-4 h-4"></i>
                     <span>Merit Rubric Assessor</span>
                 </button>
-                <button onclick="switchTab('referees')" id="tab-referees" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
+                <button onclick="switchTab('referees')" id="tab-referees" class="tab-btn flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-950 hover:bg-slate-50 border-l-2 border-transparent transition-all whitespace-nowrap w-full text-left">
                     <i data-lucide="calendar-clock" class="w-4 h-4"></i>
                     <span>Timeline & Referees</span>
                 </button>
@@ -197,29 +197,29 @@
             <!-- TAB 1: CHECKLIST -->
             <section id="content-checklist" class="tab-content flex flex-col gap-6">
                 <!-- Overview & Progress Card -->
-                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900 mb-1">Proposal Completeness Checklist</h2>
-                        <p class="text-sm text-slate-500">Track all components required for a complete NSERC Discovery Grant application package.</p>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Proposal Completeness Checklist</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Track all components required for a complete NSERC Discovery Grant application package.</p>
                     </div>
-                    <div class="flex items-center gap-4 bg-slate-50 px-5 py-3 rounded-lg border border-slate-100 min-w-[240px]">
+                    <div class="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/60 px-5 py-3 rounded-lg border border-slate-100 dark:border-slate-800/60 min-w-[240px]">
                         <div class="relative w-12 h-12 flex-shrink-0 flex items-center justify-center">
                             <!-- Circular Progress SVG -->
                             <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                                 <path class="text-slate-200" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                                 <path id="progressCircle" class="text-brand-600 transition-all duration-500" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <span id="progressText" class="absolute text-xs font-bold text-slate-800">0%</span>
+                            <span id="progressText" class="absolute text-xs font-bold text-slate-800 dark:text-slate-200">0%</span>
                         </div>
                         <div>
-                            <div class="text-sm font-semibold text-slate-800" id="progressTitle">Getting Started</div>
-                            <div class="text-xs text-slate-500" id="progressSubtitle">0 of 8 sections completed</div>
+                            <div class="text-sm font-semibold text-slate-800 dark:text-slate-200" id="progressTitle">Getting Started</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400" id="progressSubtitle">0 of 8 sections completed</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Checklist Table -->
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                     <div class="divide-y divide-slate-100" id="checklistContainer">
                         <!-- Items injected dynamically -->
                     </div>
@@ -239,15 +239,15 @@
                 <!-- Configurations Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <!-- University Baseline Rates -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between">
                         <div>
                             <div class="flex items-center gap-2 mb-1.5">
                                 <i data-lucide="building" class="w-4 h-4 text-brand-600"></i>
-                                <h3 class="text-sm font-bold text-slate-800">Graduate Stipend Baselines</h3>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Graduate Stipend Baselines</h3>
                             </div>
-                            <p class="text-[11px] text-slate-500 mb-3">Load reference student stipends (typical package rates) for Canadian institutions.</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3">Load reference student stipends (typical package rates) for Canadian institutions.</p>
                             <div class="flex gap-2">
-                                <select id="selUniversity" onchange="changeUniversity()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 flex-grow focus:ring-brand-500 focus:border-brand-500 bg-white">
+                                <select id="selUniversity" onchange="changeUniversity()" class="text-xs border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 flex-grow focus:ring-brand-500 focus:border-brand-500 bg-white dark:bg-slate-900">
                                     <option value="custom">-- Select University Baseline --</option>
                                     <option value="uwindsor">University of Windsor</option>
                                     <option value="utoronto">University of Toronto</option>
@@ -261,23 +261,23 @@
                             </div>
                         </div>
                         <!-- Sub panel showing rates -->
-                        <div id="uniRatesPanel" class="hidden mt-3.5 p-3 bg-slate-50 rounded-lg text-xs border border-slate-100 grid grid-cols-2 gap-2 text-slate-600">
-                            <div>PhD: <span id="ratePhD" class="font-bold text-slate-800">$0/yr</span></div>
-                            <div>MSc: <span id="rateMSc" class="font-bold text-slate-800">$0/yr</span></div>
-                            <div>Undergrad: <span id="rateUndergrad" class="font-bold text-slate-800">$0/yr</span></div>
-                            <div>Postdoc: <span id="ratePDF" class="font-bold text-slate-800">$0/yr</span></div>
+                        <div id="uniRatesPanel" class="hidden mt-3.5 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-lg text-xs border border-slate-100 dark:border-slate-800/60 grid grid-cols-2 gap-2 text-slate-600 dark:text-slate-400">
+                            <div>PhD: <span id="ratePhD" class="font-bold text-slate-800 dark:text-slate-200">$0/yr</span></div>
+                            <div>MSc: <span id="rateMSc" class="font-bold text-slate-800 dark:text-slate-200">$0/yr</span></div>
+                            <div>Undergrad: <span id="rateUndergrad" class="font-bold text-slate-800 dark:text-slate-200">$0/yr</span></div>
+                            <div>Postdoc: <span id="ratePDF" class="font-bold text-slate-800 dark:text-slate-200">$0/yr</span></div>
                         </div>
                     </div>
 
                     <!-- Evaluation Group Comparison -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col justify-between">
                         <div>
                             <div class="flex items-center gap-2 mb-1.5">
                                 <i data-lucide="bar-chart-3" class="w-4 h-4 text-brand-600"></i>
-                                <h3 class="text-sm font-bold text-slate-800">Evaluation Group (EG) Guide</h3>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Evaluation Group (EG) Guide</h3>
                             </div>
-                            <p class="text-[11px] text-slate-500 mb-3">Benchmark requested funds against historical average Discovery Grant size for your peer group.</p>
-                            <select id="selEG" onchange="changeEG()" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 w-full focus:ring-brand-500 focus:border-brand-500 bg-white">
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3">Benchmark requested funds against historical average Discovery Grant size for your peer group.</p>
+                            <select id="selEG" onchange="changeEG()" class="text-xs border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 w-full focus:ring-brand-500 focus:border-brand-500 bg-white dark:bg-slate-900">
                                 <option value="none">-- Select Evaluation Group --</option>
                                 <option value="1501">1501 - Genes, Cells and Molecules ($42k/yr)</option>
                                 <option value="1502">1502 - Biological Systems and Functions ($39k/yr)</option>
@@ -293,26 +293,26 @@
                             </select>
                         </div>
                         <!-- Sub panel showing comparison stats -->
-                        <div id="egComparisonPanel" class="hidden mt-3.5 p-3 bg-slate-50 rounded-lg text-xs border border-slate-100 flex items-center justify-between text-slate-600">
-                            <div>EG Average: <span id="egAvgVal" class="font-bold text-slate-800">$0</span></div>
+                        <div id="egComparisonPanel" class="hidden mt-3.5 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-lg text-xs border border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-slate-600 dark:text-slate-400">
+                            <div>EG Average: <span id="egAvgVal" class="font-bold text-slate-800 dark:text-slate-200">$0</span></div>
                             <div class="font-semibold px-2.5 py-0.5 rounded text-[10px]" id="egCompareBadge">0% of average</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Budget Table Container -->
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                            <h2 class="text-lg font-bold text-slate-900">5-Year Financial & HQP Forecast</h2>
-                            <p class="text-xs text-slate-500">Provide direct salaries for HQP alongside operating and dissemination costs</p>
+                            <h2 class="text-lg font-bold text-slate-900 dark:text-white">5-Year Financial & HQP Forecast</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Provide direct salaries for HQP alongside operating and dissemination costs</p>
                         </div>
                         <div class="flex gap-2">
                             <button onclick="addBudgetRow('hqp')" class="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 px-3 py-2 rounded-lg shadow-sm transition-colors">
                                 <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
                                 Add HQP Salary
                             </button>
-                            <button onclick="addBudgetRow('operating')" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 px-3 py-2 rounded-lg shadow-sm transition-colors">
+                            <button onclick="addBudgetRow('operating')" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 border border-slate-300 dark:border-slate-700 px-3 py-2 rounded-lg shadow-sm transition-colors">
                                 <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                                 Add Operating Cost
                             </button>
@@ -323,7 +323,7 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-sm">
                             <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold text-[11px] uppercase tracking-wider">
+                                <tr class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">
                                     <th class="px-6 py-3 min-w-[200px]">Item / Description</th>
                                     <th class="px-6 py-3 w-32">Type</th>
                                     <th class="px-4 py-3 w-28 text-right">Year 1 ($)</th>
@@ -339,7 +339,7 @@
                             </tbody>
                             <tfoot>
                                 <!-- Totals dynamically updated -->
-                                <tr class="bg-slate-50/50 font-bold border-t border-slate-200 text-slate-900">
+                                <tr class="bg-slate-50/50 font-bold border-t border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white">
                                     <td class="px-6 py-4" colspan="2">Yearly Requested Direct Costs</td>
                                     <td class="px-4 py-4 text-right" id="tot-y1">$0</td>
                                     <td class="px-4 py-4 text-right" id="tot-y2">$0</td>
@@ -354,12 +354,12 @@
                 </div>
 
                 <!-- Gantt Pipeline Visualizer -->
-                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-4">
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-4">
                     <div>
-                        <h3 class="text-sm font-bold text-slate-800">HQP Training Pipeline Visualizer</h3>
-                        <p class="text-xs text-slate-500">Visual mapping of student overlap. NSERC reviewers favor pipeline structures with graduation overlap for student peer mentoring.</p>
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">HQP Training Pipeline Visualizer</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Visual mapping of student overlap. NSERC reviewers favor pipeline structures with graduation overlap for student peer mentoring.</p>
                     </div>
-                    <div class="flex flex-col gap-3.5 border-t border-slate-100 pt-4" id="ganttChartContainer">
+                    <div class="flex flex-col gap-3.5 border-t border-slate-100 dark:border-slate-800/60 pt-4" id="ganttChartContainer">
                         <!-- Gantt bars injected dynamically -->
                     </div>
                 </div>
@@ -367,28 +367,28 @@
                 <!-- Budget Summary Card Matrix -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <!-- Grand Stats -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col justify-between">
                         <div>
                             <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Total Requested Amount</span>
-                            <h3 class="text-3xl font-extrabold text-slate-900 leading-tight" id="sum-grand">$0</h3>
+                            <h3 class="text-3xl font-extrabold text-slate-900 dark:text-white leading-tight" id="sum-grand">$0</h3>
                         </div>
-                        <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between text-xs text-slate-500">
+                        <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60 flex justify-between text-xs text-slate-500 dark:text-slate-400">
                             <span>Annual Average:</span>
-                            <span class="font-semibold text-slate-800" id="sum-average">$0 / year</span>
+                            <span class="font-semibold text-slate-800 dark:text-slate-200" id="sum-average">$0 / year</span>
                         </div>
                     </div>
 
                     <!-- HQP Support Meter -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col justify-between">
                         <div>
                             <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">HQP Funding Ratio</span>
                             <div class="flex items-baseline gap-2">
-                                <h3 class="text-3xl font-extrabold text-slate-900" id="hqp-ratio-text">0%</h3>
+                                <h3 class="text-3xl font-extrabold text-slate-900 dark:text-white" id="hqp-ratio-text">0%</h3>
                                 <span class="text-xs px-2 py-0.5 rounded-full font-medium" id="hqp-ratio-badge">Healthy</span>
                             </div>
                         </div>
                         <div class="mt-4">
-                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                            <div class="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                                 <div id="hqp-ratio-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 0%"></div>
                             </div>
                             <p class="text-[11px] text-slate-400 mt-2" id="hqp-ratio-feedback">Adequate budget allocation to student support.</p>
@@ -396,21 +396,21 @@
                     </div>
 
                     <!-- Copy / LaTeX Export utilities -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col justify-between">
                         <div>
                             <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Formatted Table Exporters</span>
-                            <p class="text-xs text-slate-500 leading-relaxed mb-4">Export tables directly into your Word draft, Overleaf LaTeX document, or Google Doc.</p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">Export tables directly into your Word draft, Overleaf LaTeX document, or Google Doc.</p>
                         </div>
                         <div class="flex gap-2 flex-wrap">
-                            <button onclick="exportLaTeX()" class="flex-grow inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 px-3 py-2.5 rounded-lg shadow-sm transition-colors">
+                            <button onclick="exportLaTeX()" class="flex-grow inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 border border-slate-300 dark:border-slate-700 px-3 py-2.5 rounded-lg shadow-sm transition-colors">
                                 <i data-lucide="code-2" class="w-3.5 h-3.5"></i>
                                 LaTeX Code
                             </button>
-                            <button onclick="exportCSV()" class="flex-grow inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 px-3 py-2.5 rounded-lg shadow-sm transition-colors">
+                            <button onclick="exportCSV()" class="flex-grow inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 border border-slate-300 dark:border-slate-700 px-3 py-2.5 rounded-lg shadow-sm transition-colors">
                                 <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
                                 CSV / Excel
                             </button>
-                            <button onclick="exportMarkdown()" class="flex-grow inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 px-3 py-2.5 rounded-lg shadow-sm transition-colors">
+                            <button onclick="exportMarkdown()" class="flex-grow inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 border border-slate-300 dark:border-slate-700 px-3 py-2.5 rounded-lg shadow-sm transition-colors">
                                 <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
                                 Markdown
                             </button>
@@ -419,27 +419,27 @@
                 </div>
 
                 <!-- Prior Competition Comparison -->
-                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-4">
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-4">
                     <div>
-                        <h3 class="text-sm font-bold text-slate-800">Prior Competition Comparison</h3>
-                        <p class="text-xs text-slate-500">Enter your previous Discovery Grant's total requested amount and HQP ratio. Reviewers look closely at trajectory since the last award.</p>
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Prior Competition Comparison</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Enter your previous Discovery Grant's total requested amount and HQP ratio. Reviewers look closely at trajectory since the last award.</p>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1">
-                            <label class="text-xs font-bold text-slate-600">Previous 5-Year Total Requested ($)</label>
-                            <input type="number" min="0" id="inpPrevTotal" onchange="updatePriorComparison()" placeholder="e.g. 150000" class="text-sm border border-slate-300 rounded-lg px-2.5 py-1.5 focus:ring-brand-500 focus:border-brand-500 bg-white">
+                            <label class="text-xs font-bold text-slate-600 dark:text-slate-400">Previous 5-Year Total Requested ($)</label>
+                            <input type="number" min="0" id="inpPrevTotal" onchange="updatePriorComparison()" placeholder="e.g. 150000" class="text-sm border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-brand-500 focus:border-brand-500 bg-white dark:bg-slate-900">
                         </div>
                         <div class="flex flex-col gap-1">
-                            <label class="text-xs font-bold text-slate-600">Previous HQP Funding Ratio (%)</label>
-                            <input type="number" min="0" max="100" id="inpPrevHqpRatio" onchange="updatePriorComparison()" placeholder="e.g. 58" class="text-sm border border-slate-300 rounded-lg px-2.5 py-1.5 focus:ring-brand-500 focus:border-brand-500 bg-white">
+                            <label class="text-xs font-bold text-slate-600 dark:text-slate-400">Previous HQP Funding Ratio (%)</label>
+                            <input type="number" min="0" max="100" id="inpPrevHqpRatio" onchange="updatePriorComparison()" placeholder="e.g. 58" class="text-sm border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-brand-500 focus:border-brand-500 bg-white dark:bg-slate-900">
                         </div>
                     </div>
                     <div id="priorComparisonPanel" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
-                        <div class="p-3 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-lg border border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
                             <span>Total Requested Delta:</span>
                             <span class="font-bold" id="priorTotalDelta">--</span>
                         </div>
-                        <div class="p-3 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-lg border border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
                             <span>HQP Ratio Delta:</span>
                             <span class="font-bold" id="priorHqpDelta">--</span>
                         </div>
@@ -469,23 +469,23 @@
 
             <!-- TAB 3: PROPOSAL OUTLINER -->
             <section id="content-outliner" class="tab-content hidden flex flex-col gap-6">
-                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900 mb-1">5-Page Proposal Structure Outliner</h2>
-                        <p class="text-sm text-slate-500">Draft and gauge the length of your proposal subsections to fit cleanly into the hard NSERC 5-page PDF limit.</p>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-1">5-Page Proposal Structure Outliner</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Draft and gauge the length of your proposal subsections to fit cleanly into the hard NSERC 5-page PDF limit.</p>
                     </div>
                     <!-- Page budget estimator -->
-                    <div class="flex items-center gap-4 bg-slate-50 px-5 py-3 rounded-lg border border-slate-100 min-w-[260px]">
+                    <div class="flex items-center gap-4 bg-slate-50 dark:bg-slate-800/60 px-5 py-3 rounded-lg border border-slate-100 dark:border-slate-800/60 min-w-[260px]">
                         <div class="relative w-12 h-12 flex-shrink-0 flex items-center justify-center">
                             <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                                 <path class="text-slate-200" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                                 <path id="outlinerProgressCircle" class="text-brand-600 transition-all duration-500" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
                             </svg>
-                            <span id="outlinerProgressText" class="absolute text-[10px] font-bold text-slate-800">0.0 p</span>
+                            <span id="outlinerProgressText" class="absolute text-[10px] font-bold text-slate-800 dark:text-slate-200">0.0 p</span>
                         </div>
                         <div>
-                            <div class="text-xs font-bold text-slate-800">Total Page Count Estimate</div>
-                            <div class="text-[11px] text-slate-500" id="outlinerProgressSubtitle">0.0 / 5.0 pages occupied</div>
+                            <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Total Page Count Estimate</div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400" id="outlinerProgressSubtitle">0.0 / 5.0 pages occupied</div>
                         </div>
                     </div>
                     <button onclick="openFormattedPreview()" title="Open a Times New Roman 12pt, 0.75in margin preview in a new tab. Use your browser's Print > Save as PDF to check real pagination." class="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 px-3 py-2 rounded-lg shadow-sm transition-colors flex-shrink-0">
@@ -495,10 +495,10 @@
                 </div>
 
                 <!-- PDF Page simulator -->
-                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-4">
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-4">
                     <div>
-                        <h3 class="text-sm font-bold text-slate-800">Visual PDF Page Sheet Allocation</h3>
-                        <p class="text-xs text-slate-500">Standard formatting (12pt Times, single-space, 0.75" margins) translates to roughly 4,000 characters per page. Ensure combined length fits in 5.0 pages.</p>
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Visual PDF Page Sheet Allocation</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Standard formatting (12pt Times, single-space, 0.75" margins) translates to roughly 4,000 characters per page. Ensure combined length fits in 5.0 pages.</p>
                     </div>
                     <div class="grid grid-cols-2 sm:grid-cols-5 gap-4" id="pdfPagesStack">
                         <!-- Dynamic page cards rendered here -->
@@ -508,82 +508,82 @@
                 <!-- Outline editors list -->
                 <div class="grid grid-cols-1 gap-6">
                     <!-- Section 1 -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-3">
                         <div class="flex items-start justify-between flex-wrap gap-2">
                             <div>
-                                <h3 class="text-sm font-bold text-slate-800">1. Recent Progress (Target: 1.0 Page)</h3>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">1. Recent Progress (Target: 1.0 Page)</h3>
                                 <p class="text-[11px] text-slate-400">Describe research successes, publications, and trainees from the previous NSERC funding cycle.</p>
                             </div>
-                            <span id="cntOutliner-1" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">0 / 4,000 chars</span>
+                            <span id="cntOutliner-1" class="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">0 / 4,000 chars</span>
                         </div>
-                        <textarea id="txtOutliner-1" oninput="checkOutlinerChars(1, 4000)" placeholder="Draft recent progress details... (approx 4,000 characters)" class="w-full h-36 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <textarea id="txtOutliner-1" oninput="checkOutlinerChars(1, 4000)" placeholder="Draft recent progress details... (approx 4,000 characters)" class="w-full h-36 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
                         <!-- Style warnings -->
                         <div id="auditOutliner-1"></div>
                     </div>
                     
                     <!-- Section 2 -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-3">
                         <div class="flex items-start justify-between flex-wrap gap-2">
                             <div>
-                                <h3 class="text-sm font-bold text-slate-800">2. Short-Term & Long-Term Objectives (Target: 0.5 Page)</h3>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">2. Short-Term & Long-Term Objectives (Target: 0.5 Page)</h3>
                                 <p class="text-[11px] text-slate-400">Long-term vision (5-10 yrs) and short-term specific grant milestones (1-5 yrs).</p>
                             </div>
-                            <span id="cntOutliner-2" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">0 / 2,000 chars</span>
+                            <span id="cntOutliner-2" class="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">0 / 2,000 chars</span>
                         </div>
-                        <textarea id="txtOutliner-2" oninput="checkOutlinerChars(2, 2000)" placeholder="Draft research objectives... (approx 2,000 characters)" class="w-full h-32 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <textarea id="txtOutliner-2" oninput="checkOutlinerChars(2, 2000)" placeholder="Draft research objectives... (approx 2,000 characters)" class="w-full h-32 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
                         <!-- Style warnings -->
                         <div id="auditOutliner-2"></div>
                     </div>
 
                     <!-- Section 3 -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-3">
                         <div class="flex items-start justify-between flex-wrap gap-2">
                             <div>
-                                <h3 class="text-sm font-bold text-slate-800">3. Literature Review (Target: 1.0 Page)</h3>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">3. Literature Review (Target: 1.0 Page)</h3>
                                 <p class="text-[11px] text-slate-400">Position your work against current state-of-the-art and identify key gaps in the field.</p>
                             </div>
-                            <span id="cntOutliner-3" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">0 / 4,000 chars</span>
+                            <span id="cntOutliner-3" class="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">0 / 4,000 chars</span>
                         </div>
-                        <textarea id="txtOutliner-3" oninput="checkOutlinerChars(3, 4000)" placeholder="Draft literature review... (approx 4,000 characters)" class="w-full h-36 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <textarea id="txtOutliner-3" oninput="checkOutlinerChars(3, 4000)" placeholder="Draft literature review... (approx 4,000 characters)" class="w-full h-36 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
                         <!-- Style warnings -->
                         <div id="auditOutliner-3"></div>
                     </div>
 
                     <!-- Section 4 -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-3">
                         <div class="flex items-start justify-between flex-wrap gap-2">
                             <div>
-                                <h3 class="text-sm font-bold text-slate-800">4. Methodology & Feasibility (Target: 2.0 Pages)</h3>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">4. Methodology & Feasibility (Target: 2.0 Pages)</h3>
                                 <p class="text-[11px] text-slate-400">Detail experiments, tools, datasets, student responsibilities, and key risks / mitigations.</p>
                             </div>
-                            <span id="cntOutliner-4" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">0 / 8,000 chars</span>
+                            <span id="cntOutliner-4" class="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">0 / 8,000 chars</span>
                         </div>
-                        <textarea id="txtOutliner-4" oninput="checkOutlinerChars(4, 8000)" placeholder="Draft methodology details... (approx 8,000 characters)" class="w-full h-48 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <textarea id="txtOutliner-4" oninput="checkOutlinerChars(4, 8000)" placeholder="Draft methodology details... (approx 8,000 characters)" class="w-full h-48 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
                         <!-- Style warnings -->
                         <div id="auditOutliner-4"></div>
                     </div>
 
                     <!-- Section 5 -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-3">
                         <div class="flex items-start justify-between flex-wrap gap-2">
                             <div>
-                                <h3 class="text-sm font-bold text-slate-800">5. Significance & Impact (Target: 0.5 Page)</h3>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">5. Significance & Impact (Target: 0.5 Page)</h3>
                                 <p class="text-[11px] text-slate-400">Scientific significance, technology transfer potential, and student training benefits.</p>
                             </div>
-                            <span id="cntOutliner-5" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">0 / 2,000 chars</span>
+                            <span id="cntOutliner-5" class="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">0 / 2,000 chars</span>
                         </div>
-                        <textarea id="txtOutliner-5" oninput="checkOutlinerChars(5, 2000)" placeholder="Draft impact statement... (approx 2,000 characters)" class="w-full h-32 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <textarea id="txtOutliner-5" oninput="checkOutlinerChars(5, 2000)" placeholder="Draft impact statement... (approx 2,000 characters)" class="w-full h-32 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
                         <!-- Style warnings -->
                         <div id="auditOutliner-5"></div>
                     </div>
                 </div>
 
                 <!-- Risk Register (supports Methodology & Feasibility section) -->
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                            <h3 class="text-sm font-bold text-slate-800">Methodology Risk Register</h3>
-                            <p class="text-xs text-slate-500">Reviewers explicitly credit named risks and concrete mitigations in the Methodology & Feasibility section.</p>
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Methodology Risk Register</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">Reviewers explicitly credit named risks and concrete mitigations in the Methodology & Feasibility section.</p>
                         </div>
                         <button onclick="addRiskRow()" class="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 px-3 py-2 rounded-lg shadow-sm transition-colors">
                             <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
@@ -593,7 +593,7 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-sm">
                             <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold text-[11px] uppercase tracking-wider">
+                                <tr class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">
                                     <th class="px-4 py-3 min-w-[200px]">Risk</th>
                                     <th class="px-4 py-3 w-28">Likelihood</th>
                                     <th class="px-4 py-3 min-w-[220px]">Mitigation</th>
@@ -611,9 +611,9 @@
             <!-- TAB 4: PORTAL TEXT LIMIT CHECKER -->
             <section id="content-limits" class="tab-content hidden flex flex-col gap-6">
                 <!-- Info Header -->
-                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                    <h2 class="text-lg font-bold text-slate-900 mb-1">Strict Limits Format Checker</h2>
-                    <p class="text-sm text-slate-500 leading-relaxed">
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Strict Limits Format Checker</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                         The NSERC Research Portal enforces hard limits on textboxes. Smart quotes (curly quotes), double spacing, and weird bullet points copied from Word often bloat character lengths or cause submission parsing failures. Use these utilities to sanitize draft paragraphs.
                     </p>
                 </div>
@@ -621,14 +621,14 @@
                 <!-- Textboxes grid -->
                 <div class="grid grid-cols-1 gap-6">
                     <!-- Summary of Proposal -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-3">
                         <div class="flex items-start justify-between flex-wrap gap-2">
                             <div>
-                                <h3 class="text-sm font-bold text-slate-800">1. Summary of Proposal</h3>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">1. Summary of Proposal</h3>
                                 <p class="text-[11px] text-slate-400">Must be written in lay terms suitable for public dissemination</p>
                             </div>
                             <div class="flex items-center gap-3 flex-wrap">
-                                <button onclick="sanitizeTextbox('txtSummary')" class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 hover:text-brand-600 transition-colors border border-slate-200 hover:border-brand-200 px-2 py-1 rounded">
+                                <button onclick="sanitizeTextbox('txtSummary')" class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:text-brand-600 transition-colors border border-slate-200 dark:border-slate-800 hover:border-brand-200 px-2 py-1 rounded">
                                     <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
                                     Sanitize Quotes & Whitespace
                                 </button>
@@ -636,13 +636,13 @@
                                     <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
                                     AI: Simplify to Lay Language
                                 </button>
-                                <span id="cntSummary" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                                <span id="cntSummary" class="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
                                     0 / 2,500 chars
                                 </span>
                                 <span id="wcSummary" class="text-[11px] font-semibold text-slate-400">0 words &middot; ~0s read</span>
                             </div>
                         </div>
-                        <textarea id="txtSummary" oninput="checkChars('txtSummary', 2500, 'cntSummary')" placeholder="Write layout/summary of proposal here... (max 2,500 characters)" class="w-full h-36 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <textarea id="txtSummary" oninput="checkChars('txtSummary', 2500, 'cntSummary')" placeholder="Write layout/summary of proposal here... (max 2,500 characters)" class="w-full h-36 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
                         <span id="aiSimplifyStatus" class="text-[11px] text-slate-400"></span>
                         <!-- AI Simplification Preview (not auto-applied) -->
                         <div id="aiSimplifyPreview" class="hidden bg-indigo-50 border border-indigo-200 rounded-lg p-3 flex flex-col gap-2">
@@ -653,36 +653,36 @@
                                 </span>
                                 <div class="flex gap-2">
                                     <button onclick="acceptAISimplify()" class="text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1 rounded transition-colors">Use This</button>
-                                    <button onclick="dismissAISimplify()" class="text-[11px] font-semibold text-slate-500 hover:text-slate-700 px-2.5 py-1 rounded transition-colors">Discard</button>
+                                    <button onclick="dismissAISimplify()" class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-700 px-2.5 py-1 rounded transition-colors">Discard</button>
                                 </div>
                             </div>
-                            <div id="aiSimplifyText" class="text-xs text-slate-700 whitespace-pre-line"></div>
+                            <div id="aiSimplifyText" class="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-line"></div>
                         </div>
                         <!-- Style warnings -->
                         <div id="auditSummary"></div>
                     </div>
 
                     <!-- Most Significant Contributions -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-3">
                         <div class="flex items-start justify-between flex-wrap gap-2">
                             <div>
-                                <h3 class="text-sm font-bold text-slate-800">2. Most Significant Contributions</h3>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">2. Most Significant Contributions</h3>
                                 <p class="text-[11px] text-slate-400">Explanations of your top 5 scientific achievements, student placements, and venue quality</p>
                             </div>
                             <div class="flex items-center gap-3">
-                                <button onclick="sanitizeTextbox('txtContributions')" class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 hover:text-brand-600 transition-colors border border-slate-200 hover:border-brand-200 px-2 py-1 rounded">
+                                <button onclick="sanitizeTextbox('txtContributions')" class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:text-brand-600 transition-colors border border-slate-200 dark:border-slate-800 hover:border-brand-200 px-2 py-1 rounded">
                                     <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
                                     Sanitize Quotes & Whitespace
                                 </button>
-                                <span id="cntContributions" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                                <span id="cntContributions" class="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
                                     0 / 9,000 chars
                                 </span>
                             </div>
                         </div>
                         
                         <!-- Collapsible MSC Builder Section -->
-                        <details class="border border-slate-200 rounded-lg overflow-hidden bg-slate-50/50">
-                            <summary class="bg-slate-100 hover:bg-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 cursor-pointer list-none flex items-center justify-between">
+                        <details class="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-slate-50/50">
+                            <summary class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer list-none flex items-center justify-between">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="pencil-ruler" class="w-4 h-4 text-brand-600"></i>
                                     Interactive Contribution Builder (Click to Expand)
@@ -692,21 +692,21 @@
                             <div class="p-4 flex flex-col gap-3 text-xs">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Citation / Paper Reference</label>
-                                        <input type="text" id="mscRef" placeholder="e.g. J. Doe et al., IEEE Transactions, 2025" class="w-full border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500">
+                                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Citation / Paper Reference</label>
+                                        <input type="text" id="mscRef" placeholder="e.g. J. Doe et al., IEEE Transactions, 2025" class="w-full border border-slate-300 dark:border-slate-700 rounded p-1.5 bg-white dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-500">
                                     </div>
                                     <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Key Trainees Involved (HQP)</label>
-                                        <input type="text" id="mscHQP" placeholder="e.g. PhD candidate A. Smith, Undergrad J. Lee" class="w-full border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500">
+                                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Key Trainees Involved (HQP)</label>
+                                        <input type="text" id="mscHQP" placeholder="e.g. PhD candidate A. Smith, Undergrad J. Lee" class="w-full border border-slate-300 dark:border-slate-700 rounded p-1.5 bg-white dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-500">
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="block font-bold text-slate-700 mb-1">Scientific Novelty & Key Findings</label>
-                                    <textarea id="mscImpact" placeholder="e.g. Developed the first real-time algorithm that solves X under constraints Y, achieving 40% speedup..." class="w-full h-16 border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 font-sans"></textarea>
+                                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Scientific Novelty & Key Findings</label>
+                                    <textarea id="mscImpact" placeholder="e.g. Developed the first real-time algorithm that solves X under constraints Y, achieving 40% speedup..." class="w-full h-16 border border-slate-300 dark:border-slate-700 rounded p-1.5 bg-white dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-500 font-sans"></textarea>
                                 </div>
                                 <div>
-                                    <label class="block font-bold text-slate-700 mb-1">Applicant's Role & Venue Significance</label>
-                                    <textarea id="mscRole" placeholder="e.g. As corresponding author, I supervised the project. Published in the field's top journal..." class="w-full h-16 border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 font-sans"></textarea>
+                                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Applicant's Role & Venue Significance</label>
+                                    <textarea id="mscRole" placeholder="e.g. As corresponding author, I supervised the project. Published in the field's top journal..." class="w-full h-16 border border-slate-300 dark:border-slate-700 rounded p-1.5 bg-white dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-500 font-sans"></textarea>
                                 </div>
                                 <div class="flex justify-end mt-1 gap-2">
                                     <button onclick="runAITightenMSC()" id="btnAITightenMSC" title="Runs a small AI model entirely in your browser to tighten this paragraph before appending, for review" class="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-3.5 py-1.5 rounded transition-colors">
@@ -727,17 +727,17 @@
                                         </span>
                                         <div class="flex gap-2">
                                             <button onclick="acceptAIMsc()" class="text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1 rounded transition-colors">Append This</button>
-                                            <button onclick="dismissAIMsc()" class="text-[11px] font-semibold text-slate-500 hover:text-slate-700 px-2.5 py-1 rounded transition-colors">Discard</button>
+                                            <button onclick="dismissAIMsc()" class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-700 px-2.5 py-1 rounded transition-colors">Discard</button>
                                         </div>
                                     </div>
-                                    <div id="aiMscText" class="text-xs text-slate-700 whitespace-pre-line"></div>
+                                    <div id="aiMscText" class="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-line"></div>
                                 </div>
                             </div>
                         </details>
 
                         <!-- CCV Coverage Checker -->
-                        <details class="border border-slate-200 rounded-lg overflow-hidden bg-slate-50/50">
-                            <summary class="bg-slate-100 hover:bg-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 cursor-pointer list-none flex items-center justify-between">
+                        <details class="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-slate-50/50">
+                            <summary class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer list-none flex items-center justify-between">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="list-checks" class="w-4 h-4 text-brand-600"></i>
                                     CCV Coverage Checker (Click to Expand)
@@ -745,8 +745,8 @@
                                 <i data-lucide="chevron-down" class="w-4 h-4 transition-transform group-open:rotate-180"></i>
                             </summary>
                             <div class="p-4 flex flex-col gap-3 text-xs">
-                                <p class="text-slate-500">Paste your Canadian Common CV publication list below (one entry per line). We'll flag entries that don't appear to be mentioned in your Most Significant Contributions text, so your Portal narrative and CCV stay consistent.</p>
-                                <textarea id="ccvList" oninput="state.ccvText = this.value; saveState();" placeholder="e.g.&#10;J. Doe, A. Smith. 'Title of Paper.' IEEE Transactions, 2025.&#10;J. Doe, B. Lee. 'Another Paper.' Nature Comms, 2024." class="w-full h-24 border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 font-sans"></textarea>
+                                <p class="text-slate-500 dark:text-slate-400">Paste your Canadian Common CV publication list below (one entry per line). We'll flag entries that don't appear to be mentioned in your Most Significant Contributions text, so your Portal narrative and CCV stay consistent.</p>
+                                <textarea id="ccvList" oninput="state.ccvText = this.value; saveState();" placeholder="e.g.&#10;J. Doe, A. Smith. 'Title of Paper.' IEEE Transactions, 2025.&#10;J. Doe, B. Lee. 'Another Paper.' Nature Comms, 2024." class="w-full h-24 border border-slate-300 dark:border-slate-700 rounded p-1.5 bg-white dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-500 font-sans"></textarea>
                                 <div class="flex justify-end">
                                     <button onclick="checkCCVCoverage()" class="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 px-3.5 py-1.5 rounded transition-colors shadow">
                                         <i data-lucide="search-check" class="w-3.5 h-3.5"></i>
@@ -757,32 +757,32 @@
                             </div>
                         </details>
 
-                        <textarea id="txtContributions" oninput="checkChars('txtContributions', 9000, 'cntContributions')" placeholder="Outline top 5 scientific contributions, publications, and exact role... (max 9,000 characters)" class="w-full h-48 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <textarea id="txtContributions" oninput="checkChars('txtContributions', 9000, 'cntContributions')" placeholder="Outline top 5 scientific contributions, publications, and exact role... (max 9,000 characters)" class="w-full h-48 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
                         <!-- Style warnings -->
                         <div id="auditContributions"></div>
                     </div>
 
                     <!-- Relationship to Other Sources of Support -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-3">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-3">
                         <div class="flex items-start justify-between flex-wrap gap-2">
                             <div>
-                                <h3 class="text-sm font-bold text-slate-800">3. Relationship to Other Sources of Support</h3>
+                                <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">3. Relationship to Other Sources of Support</h3>
                                 <p class="text-[11px] text-slate-400">Explain conceptual/financial differences with CIHR, SSHRC, or other active grants</p>
                             </div>
                             <div class="flex items-center gap-3">
-                                <button onclick="sanitizeTextbox('txtRelationship')" class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 hover:text-brand-600 transition-colors border border-slate-200 hover:border-brand-200 px-2 py-1 rounded">
+                                <button onclick="sanitizeTextbox('txtRelationship')" class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:text-brand-600 transition-colors border border-slate-200 dark:border-slate-800 hover:border-brand-200 px-2 py-1 rounded">
                                     <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
                                     Sanitize Quotes & Whitespace
                                 </button>
-                                <span id="cntRelationship" class="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                                <span id="cntRelationship" class="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
                                     0 / 12,000 chars
                                 </span>
                             </div>
                         </div>
 
                         <!-- Collapsible Support Builder Section -->
-                        <details class="border border-slate-200 rounded-lg overflow-hidden bg-slate-50/50">
-                            <summary class="bg-slate-100 hover:bg-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 cursor-pointer list-none flex items-center justify-between">
+                        <details class="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden bg-slate-50/50">
+                            <summary class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer list-none flex items-center justify-between">
                                 <span class="flex items-center gap-2">
                                     <i data-lucide="split" class="w-4 h-4 text-brand-600"></i>
                                     Interactive Support Overlap Builder (Click to Expand)
@@ -792,17 +792,17 @@
                             <div class="p-4 flex flex-col gap-3 text-xs">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Agency / Source of Other Support</label>
-                                        <input type="text" id="suppAgency" placeholder="e.g. CIHR Project Grant, Mitacs Accelerate" class="w-full border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500">
+                                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Agency / Source of Other Support</label>
+                                        <input type="text" id="suppAgency" placeholder="e.g. CIHR Project Grant, Mitacs Accelerate" class="w-full border border-slate-300 dark:border-slate-700 rounded p-1.5 bg-white dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-500">
                                     </div>
                                     <div>
-                                        <label class="block font-bold text-slate-700 mb-1">Title of Grant</label>
-                                        <input type="text" id="suppTitle" placeholder="e.g. Clinical validation of smartwatch heart monitor" class="w-full border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500">
+                                        <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Title of Grant</label>
+                                        <input type="text" id="suppTitle" placeholder="e.g. Clinical validation of smartwatch heart monitor" class="w-full border border-slate-300 dark:border-slate-700 rounded p-1.5 bg-white dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-500">
                                     </div>
                                 </div>
                                 <div>
-                                    <label class="block font-bold text-slate-700 mb-1">Specific Objectives & Applied Target Focus of Other Support</label>
-                                    <textarea id="suppObjectives" placeholder="e.g. Focuses strictly on recruiting 100 clinical subjects and validating commercial smartwatch sensors against ECG benchmarks." class="w-full h-16 border border-slate-300 rounded p-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 font-sans"></textarea>
+                                    <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Specific Objectives & Applied Target Focus of Other Support</label>
+                                    <textarea id="suppObjectives" placeholder="e.g. Focuses strictly on recruiting 100 clinical subjects and validating commercial smartwatch sensors against ECG benchmarks." class="w-full h-16 border border-slate-300 dark:border-slate-700 rounded p-1.5 bg-white dark:bg-slate-900 focus:outline-none focus:ring-1 focus:ring-brand-500 font-sans"></textarea>
                                 </div>
                                 <div class="flex justify-end mt-1">
                                     <button onclick="generateSupportParagraph()" class="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 px-3.5 py-1.5 rounded transition-colors shadow">
@@ -813,7 +813,7 @@
                             </div>
                         </details>
 
-                        <textarea id="txtRelationship" oninput="checkChars('txtRelationship', 12000, 'cntRelationship')" placeholder="Specify zero overlap with any active CIHR/SSHRC/industry awards... (max 12,000 characters)" class="w-full h-40 border border-slate-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
+                        <textarea id="txtRelationship" oninput="checkChars('txtRelationship', 12000, 'cntRelationship')" placeholder="Specify zero overlap with any active CIHR/SSHRC/industry awards... (max 12,000 characters)" class="w-full h-40 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-inner font-sans leading-relaxed"></textarea>
                         <!-- Style warnings -->
                         <div id="auditRelationship"></div>
                     </div>
@@ -823,9 +823,9 @@
             <!-- TAB 5: HQP EDI PLAN BUILDER -->
             <section id="content-edi" class="tab-content hidden flex flex-col gap-6">
                 <!-- Title Header -->
-                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-                    <h2 class="text-lg font-bold text-slate-900 mb-1">EDI Integration Plan Builder (HQP Philosophy)</h2>
-                    <p class="text-sm text-slate-500 leading-relaxed">
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-1">EDI Integration Plan Builder (HQP Philosophy)</h2>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                         Under the NSERC evaluation criteria, applicants must demonstrate concrete, active measures to address equity, diversity, and inclusion in recruitment, mentoring, and lab dynamics. Complete this questionnaire to scaffold structural bullet points for your HQP Philosophy document.
                     </p>
                 </div>
@@ -833,23 +833,23 @@
                 <!-- Split layout -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                     <!-- Form options -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-6">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-6">
                         <!-- Recruitment practices -->
                         <div>
-                            <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
                                 <span class="flex items-center justify-center w-5 h-5 bg-brand-50 text-brand-600 rounded-full text-xs">1</span>
                                 Recruitment Practices & Outreach
                             </h3>
                             <div class="space-y-2.5">
-                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
                                     <input type="checkbox" id="edi-rec-1" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
                                     <span>Advertise roles widely on specialized diverse outlets and network mailing lists (e.g., Women in Science, NSBE).</span>
                                 </label>
-                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
                                     <input type="checkbox" id="edi-rec-2" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
                                     <span>Run all job posts through a gender-bias decoder to ensure neutral, encouraging language.</span>
                                 </label>
-                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
                                     <input type="checkbox" id="edi-rec-3" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
                                     <span>Formulate structured, standardized interview questions and evaluation rubrics for all applications.</span>
                                 </label>
@@ -858,20 +858,20 @@
 
                         <!-- Mentorship philosophy -->
                         <div>
-                            <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
                                 <span class="flex items-center justify-center w-5 h-5 bg-brand-50 text-brand-600 rounded-full text-xs">2</span>
                                 Mentoring & Development
                             </h3>
                             <div class="space-y-2.5">
-                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
                                     <input type="checkbox" id="edi-men-1" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
                                     <span>Co-design customized Individual Development Plans (IDPs) setting annual career/technical milestones.</span>
                                 </label>
-                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
                                     <input type="checkbox" id="edi-men-2" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
                                     <span>Fund students to attend professional training workshops (e.g., academic writing, grant application, presentation).</span>
                                 </label>
-                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
                                     <input type="checkbox" id="edi-men-3" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
                                     <span>Conduct regular formal reviews alongside informal weekly 1-on-1 feedback sessions to track welfare.</span>
                                 </label>
@@ -880,20 +880,20 @@
 
                         <!-- Laboratory dynamics -->
                         <div>
-                            <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
                                 <span class="flex items-center justify-center w-5 h-5 bg-brand-50 text-brand-600 rounded-full text-xs">3</span>
                                 Inclusive Lab Environment
                             </h3>
                             <div class="space-y-2.5">
-                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
                                     <input type="checkbox" id="edi-env-1" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
                                     <span>Implement collaborative guidelines via a student-drafted Laboratory Code of Conduct agreement.</span>
                                 </label>
-                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
                                     <input type="checkbox" id="edi-env-2" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
                                     <span>Offer flexible work configurations to support religious observances, caregiving duties, and accessibility needs.</span>
                                 </label>
-                                <label class="flex items-start gap-2.5 text-xs text-slate-600 cursor-pointer">
+                                <label class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
                                     <input type="checkbox" id="edi-env-3" onchange="generateEDIDraft()" class="mt-0.5 rounded text-brand-600 focus:ring-brand-500">
                                     <span>All laboratory participants will commit to participating in structural institutional equity seminars and unconscious bias workshops annually.</span>
                                 </label>
@@ -902,9 +902,9 @@
                     </div>
 
                     <!-- Draft generation output -->
-                    <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-4 sticky top-20">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-4 sticky top-20">
                         <div class="flex items-center justify-between flex-wrap gap-2">
-                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Generated Draft Blueprints</span>
+                            <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Generated Draft Blueprints</span>
                             <div class="flex items-center gap-3">
                                 <button onclick="runAISmoothEDI()" id="btnAISmoothEDI" title="Runs a small AI model entirely in your browser to turn these bullets into flowing prose, for review" class="text-xs text-indigo-600 hover:text-indigo-700 font-semibold flex items-center gap-1">
                                     <i data-lucide="wand-2" class="w-3.5 h-3.5"></i>
@@ -916,7 +916,7 @@
                                 </button>
                             </div>
                         </div>
-                        <div id="ediDraftContainer" class="bg-slate-50 border border-slate-200 p-5 rounded-lg text-xs leading-relaxed text-slate-600 min-h-[300px] whitespace-pre-line font-sans">
+                        <div id="ediDraftContainer" class="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 p-5 rounded-lg text-xs leading-relaxed text-slate-600 dark:text-slate-400 min-h-[300px] whitespace-pre-line font-sans">
                             Select one or more items on the left to begin compiling custom structural components for your EDI section.
                         </div>
                         <span id="aiEdiStatus" class="text-[11px] text-slate-400"></span>
@@ -928,10 +928,10 @@
                                 </span>
                                 <div class="flex gap-2">
                                     <button onclick="acceptAIEdi()" class="text-[11px] font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-2.5 py-1 rounded transition-colors">Use This</button>
-                                    <button onclick="dismissAIEdi()" class="text-[11px] font-semibold text-slate-500 hover:text-slate-700 px-2.5 py-1 rounded transition-colors">Discard</button>
+                                    <button onclick="dismissAIEdi()" class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-700 px-2.5 py-1 rounded transition-colors">Discard</button>
                                 </div>
                             </div>
-                            <div id="aiEdiText" class="text-xs text-slate-700 whitespace-pre-line"></div>
+                            <div id="aiEdiText" class="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-line"></div>
                         </div>
                     </div>
                 </div>
@@ -940,40 +940,40 @@
             <!-- TAB 6: MERIT RUBRIC ASSESSOR -->
             <section id="content-merit" class="tab-content hidden flex flex-col gap-6">
                 <!-- Info Header -->
-                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900 mb-1">NSERC Merit Indicators Reference</h2>
-                        <p class="text-sm text-slate-500">Benchmark your track record and proposal structure against official scoring definitions.</p>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-1">NSERC Merit Indicators Reference</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Benchmark your track record and proposal structure against official scoring definitions.</p>
                     </div>
                     <!-- Self score tracking -->
-                    <div class="flex items-center gap-5 border-l border-slate-200 pl-6 flex-shrink-0">
+                    <div class="flex items-center gap-5 border-l border-slate-200 dark:border-slate-800 pl-6 flex-shrink-0">
                         <div class="text-right">
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Researcher Excellence</span>
-                            <span id="score-res" class="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">Not Evaluated</span>
+                            <span id="score-res" class="text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">Not Evaluated</span>
                         </div>
                         <div class="text-right">
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Proposal Merit</span>
-                            <span id="score-prop" class="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">Not Evaluated</span>
+                            <span id="score-prop" class="text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">Not Evaluated</span>
                         </div>
                         <div class="text-right">
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">HQP Mentorship</span>
-                            <span id="score-hqp" class="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">Not Evaluated</span>
+                            <span id="score-hqp" class="text-xs font-bold text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">Not Evaluated</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Merit matrix grid tabs/table -->
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="border-b border-slate-200 bg-slate-50 px-6 py-4">
-                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-3">Filter by Evaluation Section</span>
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 px-6 py-4">
+                        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-3">Filter by Evaluation Section</span>
                         <div class="flex flex-wrap gap-2">
                             <button onclick="switchMeritFilter('res')" id="mfilter-res" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-brand-600 text-white shadow-sm border border-brand-700 transition-colors">
                                 Excellence of the Researcher
                             </button>
-                            <button onclick="switchMeritFilter('prop')" id="mfilter-prop" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-600 hover:text-slate-800 border border-slate-300 transition-colors">
+                            <button onclick="switchMeritFilter('prop')" id="mfilter-prop" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-800 border border-slate-300 dark:border-slate-700 transition-colors">
                                 Merit of the Proposal
                             </button>
-                            <button onclick="switchMeritFilter('hqp')" id="mfilter-hqp" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-600 hover:text-slate-800 border border-slate-300 transition-colors">
+                            <button onclick="switchMeritFilter('hqp')" id="mfilter-hqp" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-800 border border-slate-300 dark:border-slate-700 transition-colors">
                                 Contribution to HQP Training
                             </button>
                         </div>
@@ -986,10 +986,10 @@
                 </div>
 
                 <!-- Actionable Merit Advice Panel -->
-                <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm mt-6 flex flex-col gap-4">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm mt-6 flex flex-col gap-4">
                     <div>
-                        <h3 class="text-sm font-bold text-slate-800">Actionable Merit Score Recommendations</h3>
-                        <p class="text-xs text-slate-500">Targeted strategic tips to elevate your scores based on your self-assessments.</p>
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-200">Actionable Merit Score Recommendations</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Targeted strategic tips to elevate your scores based on your self-assessments.</p>
                     </div>
                     <div id="meritAdviceContainer" class="flex flex-col gap-3">
                         <!-- Dynamic recommendation bullets rendered here -->
@@ -1000,19 +1000,19 @@
             <!-- TAB 7: TIMELINE & REFEREES -->
             <section id="content-referees" class="tab-content hidden flex flex-col gap-6">
                 <!-- Deadline Tracker -->
-                <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm flex flex-col gap-4">
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-4">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-900 mb-1">Deadline Tracker</h2>
-                        <p class="text-sm text-slate-500">Track the NSERC portal deadline and your institution's earlier internal submission deadline.</p>
+                        <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-1">Deadline Tracker</h2>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Track the NSERC portal deadline and your institution's earlier internal submission deadline.</p>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1">
-                            <label class="text-xs font-bold text-slate-600">Institutional Internal Deadline</label>
-                            <input type="date" id="inpInstDeadline" onchange="updateDeadlines()" class="text-sm border border-slate-300 rounded-lg px-2.5 py-1.5 focus:ring-brand-500 focus:border-brand-500 bg-white">
+                            <label class="text-xs font-bold text-slate-600 dark:text-slate-400">Institutional Internal Deadline</label>
+                            <input type="date" id="inpInstDeadline" onchange="updateDeadlines()" class="text-sm border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-brand-500 focus:border-brand-500 bg-white dark:bg-slate-900">
                         </div>
                         <div class="flex flex-col gap-1">
-                            <label class="text-xs font-bold text-slate-600">NSERC Portal Deadline</label>
-                            <input type="date" id="inpNsercDeadline" onchange="updateDeadlines()" class="text-sm border border-slate-300 rounded-lg px-2.5 py-1.5 focus:ring-brand-500 focus:border-brand-500 bg-white">
+                            <label class="text-xs font-bold text-slate-600 dark:text-slate-400">NSERC Portal Deadline</label>
+                            <input type="date" id="inpNsercDeadline" onchange="updateDeadlines()" class="text-sm border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1.5 focus:ring-brand-500 focus:border-brand-500 bg-white dark:bg-slate-900">
                         </div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="deadlineCardsContainer">
@@ -1021,11 +1021,11 @@
                 </div>
 
                 <!-- Referee Tracker -->
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                            <h2 class="text-lg font-bold text-slate-900">Suggested Referees (5 Required)</h2>
-                            <p class="text-xs text-slate-500">NSERC requires referees with no recent co-authorship or supervisory relationship (past 6 years). Conflicts are flagged automatically.</p>
+                            <h2 class="text-lg font-bold text-slate-900 dark:text-white">Suggested Referees (5 Required)</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">NSERC requires referees with no recent co-authorship or supervisory relationship (past 6 years). Conflicts are flagged automatically.</p>
                         </div>
                         <button onclick="addReferee()" class="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 px-3 py-2 rounded-lg shadow-sm transition-colors">
                             <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
@@ -1035,7 +1035,7 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-sm">
                             <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold text-[11px] uppercase tracking-wider">
+                                <tr class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">
                                     <th class="px-4 py-3 min-w-[160px]">Name</th>
                                     <th class="px-4 py-3 min-w-[160px]">Institution</th>
                                     <th class="px-4 py-3 min-w-[140px]">Relationship</th>
@@ -1056,7 +1056,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-4 mt-auto">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-400">
             &copy; 2026 Faculty Tools. Client-side storage and data encryption compliance.
         </div>
@@ -1457,34 +1457,34 @@
             container.innerHTML = state.checklist.map((item, idx) => {
                 const isCompleted = item.status === 'completed';
                 const isInProgress = item.status === 'in-progress';
-                const badgeColor = isCompleted ? 'bg-emerald-100 text-emerald-800' : (isInProgress ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-500');
+                const badgeColor = isCompleted ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300' : (isInProgress ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400');
                 const badgeLabel = isCompleted ? 'Completed' : (isInProgress ? 'In Progress' : 'Not Started');
                 
                 return `
-                    <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4 transition-all duration-200">
+                    <div class="px-6 py-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4 transition-all duration-200 border-b border-slate-100 dark:border-slate-800">
                         <div class="flex-grow flex gap-3">
-                            <button onclick="toggleChecklistItem('${item.id}')" class="mt-1 flex-shrink-0 w-5 h-5 rounded border ${isCompleted ? 'bg-brand-600 border-brand-600 text-white' : 'border-slate-300 bg-white hover:border-brand-500'} flex items-center justify-center transition-all">
+                            <button onclick="toggleChecklistItem('${item.id}')" class="mt-1 flex-shrink-0 w-5 h-5 rounded border ${isCompleted ? 'bg-brand-600 border-brand-600 text-white' : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-brand-500'} flex items-center justify-center transition-all">
                                 ${isCompleted ? '<i data-lucide="check" class="w-3.5 h-3.5"></i>' : ''}
                             </button>
                             <div>
-                                <h4 class="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                                <h4 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                                     ${item.title}
                                     <span class="text-[10px] px-2 py-0.5 rounded-full font-medium ${badgeColor}">${badgeLabel}</span>
                                 </h4>
-                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">${item.desc}</p>
+                                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">${item.desc}</p>
                                 <details class="group mt-2">
-                                    <summary class="text-xs font-semibold text-brand-600 hover:text-brand-700 cursor-pointer list-none flex items-center gap-1">
+                                    <summary class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:text-brand-700 cursor-pointer list-none flex items-center gap-1">
                                         <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
                                         <span>Pro Tips & Requirements</span>
                                     </summary>
-                                    <div class="mt-1.5 p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 leading-relaxed">
+                                    <div class="mt-1.5 p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                                         ${item.tips}
                                     </div>
                                 </details>
                             </div>
                         </div>
                         <div class="flex-shrink-0 flex items-center gap-2 self-end sm:self-start">
-                            <select onchange="updateChecklistItemStatus('${item.id}', this.value)" class="text-xs border border-slate-300 rounded px-2.5 py-1 focus:ring-brand-500 focus:border-brand-500">
+                            <select onchange="updateChecklistItemStatus('${item.id}', this.value)" class="text-xs border border-slate-300 dark:border-slate-700 rounded px-2.5 py-1 focus:ring-brand-500 focus:border-brand-500 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
                                 <option value="not-started" ${item.status === 'not-started' ? 'selected' : ''}>Not Started</option>
                                 <option value="in-progress" ${item.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
                                 <option value="completed" ${item.status === 'completed' ? 'selected' : ''}>Completed</option>
@@ -1542,17 +1542,16 @@
             }
         }
 
-        // --- 7. BUDGET & BASELINES MODULE LOGIC ---
         function renderBudget() {
             const tbody = document.getElementById('budgetTableBody');
             tbody.innerHTML = state.budget.map((row, idx) => {
-                const labelColor = row.type === 'hqp' ? 'bg-rose-50 text-rose-700 border-rose-100' : 'bg-slate-100 text-slate-600 border-slate-200';
+                const labelColor = row.type === 'hqp' ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-100 dark:border-rose-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700';
                 const labelText = row.type === 'hqp' ? 'HQP' : 'Direct';
                 
                 return `
-                    <tr class="hover:bg-slate-50/50">
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 transition-colors">
                         <td class="px-6 py-3.5">
-                            <input type="text" value="${row.desc}" onchange="updateBudgetRowDesc('${row.id}', this.value)" class="w-full bg-transparent font-medium border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5">
+                            <input type="text" value="${row.desc}" onchange="updateBudgetRowDesc('${row.id}', this.value)" class="w-full bg-transparent text-slate-800 dark:text-slate-200 font-medium border-b border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-brand-500 focus:outline-none py-0.5">
                         </td>
                         <td class="px-6 py-3.5">
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase border ${labelColor}">
@@ -1560,22 +1559,22 @@
                             </span>
                         </td>
                         <td class="px-4 py-3.5 text-right">
-                            <input type="number" min="0" value="${row.y1}" onchange="updateBudgetRowVal('${row.id}', 'y1', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
+                            <input type="number" min="0" value="${row.y1}" onchange="updateBudgetRowVal('${row.id}', 'y1', this.value)" class="w-24 text-right bg-transparent text-slate-800 dark:text-slate-200 border-b border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
                         </td>
                         <td class="px-4 py-3.5 text-right">
-                            <input type="number" min="0" value="${row.y2}" onchange="updateBudgetRowVal('${row.id}', 'y2', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
+                            <input type="number" min="0" value="${row.y2}" onchange="updateBudgetRowVal('${row.id}', 'y2', this.value)" class="w-24 text-right bg-transparent text-slate-800 dark:text-slate-200 border-b border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
                         </td>
                         <td class="px-4 py-3.5 text-right">
-                            <input type="number" min="0" value="${row.y3}" onchange="updateBudgetRowVal('${row.id}', 'y3', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
+                            <input type="number" min="0" value="${row.y3}" onchange="updateBudgetRowVal('${row.id}', 'y3', this.value)" class="w-24 text-right bg-transparent text-slate-800 dark:text-slate-200 border-b border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
                         </td>
                         <td class="px-4 py-3.5 text-right">
-                            <input type="number" min="0" value="${row.y4}" onchange="updateBudgetRowVal('${row.id}', 'y4', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
+                            <input type="number" min="0" value="${row.y4}" onchange="updateBudgetRowVal('${row.id}', 'y4', this.value)" class="w-24 text-right bg-transparent text-slate-800 dark:text-slate-200 border-b border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
                         </td>
                         <td class="px-4 py-3.5 text-right">
-                            <input type="number" min="0" value="${row.y5}" onchange="updateBudgetRowVal('${row.id}', 'y5', this.value)" class="w-24 text-right bg-transparent border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
+                            <input type="number" min="0" value="${row.y5}" onchange="updateBudgetRowVal('${row.id}', 'y5', this.value)" class="w-24 text-right bg-transparent text-slate-800 dark:text-slate-200 border-b border-transparent hover:border-slate-200 dark:hover:border-slate-700 focus:border-brand-500 focus:outline-none py-0.5 font-mono">
                         </td>
                         <td class="px-6 py-3.5 text-center">
-                            <button onclick="deleteBudgetRow('${row.id}')" class="text-slate-400 hover:text-brand-600 transition-colors">
+                            <button onclick="deleteBudgetRow('${row.id}')" class="text-slate-400 dark:text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                         </td>
