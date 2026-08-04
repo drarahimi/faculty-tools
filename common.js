@@ -233,4 +233,6 @@ window.initGlobalNavigation = function() {
 
 window.addEventListener('DOMContentLoaded', () => {
     window.initGlobalNavigation();
+    if (window.lucide) lucide.createIcons();
 });
+
