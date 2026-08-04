@@ -10,6 +10,9 @@
     <link rel="icon" type="image/svg+xml"
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%23be123c'/%3E%3Cpath d='M30,75 L30,25 L45,45 L45,25 L55,25 L55,75 L40,55 L40,75 Z M70,55 C70,66 62,68 62,68 L62,75 L70,75 Z' fill='white'/%3E%3C/svg%3E">
 
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -20,6 +23,9 @@
 
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Common Library -->
+    <script src="common.js"></script>
 
     <script>
         tailwind.config = {
@@ -139,6 +145,7 @@
                     <i data-lucide="cloud-lightning" class="w-3.5 h-3.5 text-emerald-500"></i>
                     Autosaved
                 </span>
+                <div id="header-quick-nav"></div>
                 <a href="index.html" class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-brand-600 transition-colors bg-slate-100 hover:bg-brand-50 px-3.5 py-1.5 rounded-lg border border-slate-200">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i>
                     Back
@@ -394,14 +401,18 @@
                             <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Formatted Table Exporters</span>
                             <p class="text-xs text-slate-500 leading-relaxed mb-4">Export tables directly into your Word draft, Overleaf LaTeX document, or Google Doc.</p>
                         </div>
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 flex-wrap">
                             <button onclick="exportLaTeX()" class="flex-grow inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 px-3 py-2.5 rounded-lg shadow-sm transition-colors">
                                 <i data-lucide="code-2" class="w-3.5 h-3.5"></i>
                                 LaTeX Code
                             </button>
+                            <button onclick="exportCSV()" class="flex-grow inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 px-3 py-2.5 rounded-lg shadow-sm transition-colors">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                CSV / Excel
+                            </button>
                             <button onclick="exportMarkdown()" class="flex-grow inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 px-3 py-2.5 rounded-lg shadow-sm transition-colors">
                                 <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-                                Markdown Table
+                                Markdown
                             </button>
                         </div>
                     </div>
@@ -1846,6 +1857,25 @@
             openDrawer(title, code);
         }
 
+        function exportCSV() {
+            let csv = "Item Description,Type,Year 1 ($),Year 2 ($),Year 3 ($),Year 4 ($),Year 5 ($)\n";
+            let y1Tot = 0, y2Tot = 0, y3Tot = 0, y4Tot = 0, y5Tot = 0;
+            
+            state.budget.forEach(row => {
+                const desc = `"${row.desc.replace(/"/g, '""')}"`;
+                csv += `${desc},${row.type},${row.y1},${row.y2},${row.y3},${row.y4},${row.y5}\n`;
+                y1Tot += row.y1; y2Tot += row.y2; y3Tot += row.y3; y4Tot += row.y4; y5Tot += row.y5;
+            });
+            csv += `"Total Requested Direct Costs",Total,${y1Tot},${y2Tot},${y3Tot},${y4Tot},${y5Tot}\n`;
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'nserc_discovery_budget_5year.csv';
+            link.click();
+            if (window.showToast) window.showToast("Downloaded 5-Year Budget CSV file!");
+        }
+
         function openDrawer(title, content) {
             const drawer = document.getElementById('exportDrawer');
             const titleEl = document.getElementById('drawerTitle');
@@ -2854,40 +2884,31 @@
         // --- 20. FORMATTED PRINT PREVIEW ---
         function openFormattedPreview() {
             const sections = [
-                { title: '1. Recent Progress', text: document.getElementById('txtOutliner-1').value },
-                { title: '2. Short-Term & Long-Term Objectives', text: document.getElementById('txtOutliner-2').value },
-                { title: '3. Literature Review', text: document.getElementById('txtOutliner-3').value },
-                { title: '4. Methodology & Feasibility', text: document.getElementById('txtOutliner-4').value },
-                { title: '5. Significance & Impact', text: document.getElementById('txtOutliner-5').value }
+                { title: '1. Recent Progress', text: document.getElementById('txtOutliner-1') ? document.getElementById('txtOutliner-1').value : '' },
+                { title: '2. Short-Term & Long-Term Objectives', text: document.getElementById('txtOutliner-2') ? document.getElementById('txtOutliner-2').value : '' },
+                { title: '3. Literature Review', text: document.getElementById('txtOutliner-3') ? document.getElementById('txtOutliner-3').value : '' },
+                { title: '4. Methodology & Feasibility', text: document.getElementById('txtOutliner-4') ? document.getElementById('txtOutliner-4').value : '' },
+                { title: '5. Significance & Impact', text: document.getElementById('txtOutliner-5') ? document.getElementById('txtOutliner-5').value : '' }
             ];
 
-            const bodyHtml = sections.map(s => {
-                if (!s.text.trim()) return '';
-                return `<h2>${s.title}</h2><p>${s.text.replace(/\n/g, '<br>')}</p>`;
-            }).join('');
-
             const win = window.open('', '_blank');
-            win.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Formatted Proposal Preview</title>
-                    <style>
-                        @page { margin: 0.75in; }
-                        body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.15; color: #000; max-width: 7in; margin: 0.75in auto; }
-                        h2 { font-size: 12pt; font-weight: bold; margin-top: 1.2em; margin-bottom: 0.4em; }
-                        p { margin: 0 0 0.8em 0; white-space: pre-wrap; }
-                        .notice { font-family: Arial, sans-serif; font-size: 10pt; color: #666; background: #f8f8f8; border: 1px solid #ddd; padding: 8px 12px; margin-bottom: 1.5em; }
-                        @media print { .notice { display: none; } }
-                    </style>
-                </head>
-                <body>
-                    <div class="notice">Preview only &mdash; use your browser's Print &rarr; Save as PDF to check real pagination against the NSERC 5-page limit.</div>
-                    ${bodyHtml || '<p><em>No outliner content drafted yet.</em></p>'}
-                </body>
-                </html>
-            `);
-            win.document.close();
+            if (!win) return;
+            const doc = win.document;
+            doc.open();
+            
+            let html = '';
+            sections.forEach(s => {
+                if (s.text && s.text.trim()) {
+                    html += '<h2>' + s.title + '</h2><p>' + s.text.replace(/\n/g, '<br>') + '</p>';
+                }
+            });
+
+            if (!html) {
+                html = '<p><em>No proposal outliner content drafted yet.</em></p>';
+            }
+
+            doc.write('<!DOCTYPE html><html><head><title>Proposal Preview</title><style>body{font-family:serif;margin:40px;line-height:1.4;}h2{margin-top:20px;}</style></head><body>' + html + '</body></html>');
+            doc.close();
         }
 
         // --- 21. COMBINED FULL APPLICATION EXPORT ---
@@ -2896,43 +2917,50 @@
             md += `_Compiled ${new Date().toLocaleDateString('en-CA')}_\n\n`;
 
             md += `## Checklist Status\n\n`;
-            state.checklist.forEach(item => {
-                md += `- [${item.status === 'completed' ? 'x' : ' '}] ${item.title} (${item.status})\n`;
-            });
+            if (state.checklist) {
+                state.checklist.forEach(item => {
+                    md += `- [${item.status === 'completed' ? 'x' : ' '}] ${item.title} (${item.status})\n`;
+                });
+            }
 
-            md += `\n## Portal Text: Summary of Proposal\n\n${state.texts.txtSummary || '_Not drafted_'}\n`;
-            md += `\n## Portal Text: Most Significant Contributions\n\n${state.texts.txtContributions || '_Not drafted_'}\n`;
-            md += `\n## Portal Text: Relationship to Other Sources of Support\n\n${state.texts.txtRelationship || '_Not drafted_'}\n`;
+            md += `\n## Portal Text: Summary of Proposal\n\n${(state.texts && state.texts.txtSummary) || '_Not drafted_'}\n`;
+            md += `\n## Portal Text: Most Significant Contributions\n\n${(state.texts && state.texts.txtContributions) || '_Not drafted_'}\n`;
+            md += `\n## Portal Text: Relationship to Other Sources of Support\n\n${(state.texts && state.texts.txtRelationship) || '_Not drafted_'}\n`;
 
             md += `\n## Research Proposal Outline\n`;
             const outlineTitles = { 1: 'Recent Progress', 2: 'Short-Term & Long-Term Objectives', 3: 'Literature Review', 4: 'Methodology & Feasibility', 5: 'Significance & Impact' };
             for (let i = 1; i <= 5; i++) {
-                md += `\n### ${outlineTitles[i]}\n\n${state.outlinerDrafts[i] || '_Not drafted_'}\n`;
+                md += `\n### ${outlineTitles[i]}\n\n${(state.outlinerDrafts && state.outlinerDrafts[i]) || '_Not drafted_'}\n`;
             }
 
-            if (state.riskRegister.length > 0) {
+            if (state.riskRegister && state.riskRegister.length > 0) {
                 md += `\n## Methodology Risk Register\n\n| Risk | Likelihood | Mitigation |\n| --- | --- | --- |\n`;
                 state.riskRegister.forEach(r => {
                     md += `| ${r.desc} | ${r.likelihood} | ${r.mitigation} |\n`;
                 });
             }
 
-            md += `\n## 5-Year Budget\n\n| Item | Type | Year 1 | Year 2 | Year 3 | Year 4 | Year 5 |\n| --- | --- | --- | --- | --- | --- | --- |\n`;
-            state.budget.forEach(row => {
-                const desc = row.desc.replace(/\|/g, '\\|');
-                md += `| ${desc} | ${row.type} | ${formatCurrency(row.y1)} | ${formatCurrency(row.y2)} | ${formatCurrency(row.y3)} | ${formatCurrency(row.y4)} | ${formatCurrency(row.y5)} |\n`;
-            });
+            if (state.budget) {
+                md += `\n## 5-Year Budget\n\n| Item | Type | Year 1 | Year 2 | Year 3 | Year 4 | Year 5 |\n| --- | --- | --- | --- | --- | --- | --- |\n`;
+                state.budget.forEach(row => {
+                    const desc = (row.desc || '').replace(/\|/g, '\\|');
+                    const fCurrency = typeof formatCurrency === 'function' ? formatCurrency : (v => '$' + v);
+                    md += `| ${desc} | ${row.type} | ${fCurrency(row.y1)} | ${fCurrency(row.y2)} | ${fCurrency(row.y3)} | ${fCurrency(row.y4)} | ${fCurrency(row.y5)} |\n`;
+                });
+            }
 
-            md += `\n## EDI / HQP Training Philosophy Draft\n\n${document.getElementById('ediDraftContainer').textContent}\n`;
+            const ediEl = document.getElementById('ediDraftContainer');
+            const ediText = ediEl ? ediEl.textContent : '_Not drafted_';
+            md += `\n## EDI / HQP Training Philosophy Draft\n\n${ediText}\n`;
 
-            if (state.referees.length > 0) {
+            if (state.referees && state.referees.length > 0) {
                 md += `\n## Suggested Referees\n\n| Name | Institution | Relationship | Last Collaboration Year | Contacted |\n| --- | --- | --- | --- | --- |\n`;
                 state.referees.forEach(r => {
                     md += `| ${r.name} | ${r.institution} | ${r.relationship} | ${r.lastYear} | ${r.contacted ? 'Yes' : 'No'} |\n`;
                 });
             }
 
-            if (state.deadlines.instDate || state.deadlines.nsercDate) {
+            if (state.deadlines && (state.deadlines.instDate || state.deadlines.nsercDate)) {
                 md += `\n## Deadlines\n\n- Institutional Internal Deadline: ${state.deadlines.instDate || 'Not set'}\n- NSERC Portal Deadline: ${state.deadlines.nsercDate || 'Not set'}\n`;
             }
 
@@ -2944,81 +2972,110 @@
             anchor.click();
             anchor.remove();
 
-            openDrawer("Full Application Export (Markdown)", md);
-            showToast("Full application compiled and downloaded!");
+            if (typeof openDrawer === 'function') openDrawer("Full Application Export (Markdown)", md);
+            if (typeof showToast === 'function') showToast("Full application compiled and downloaded!");
         }
 
         // --- 15. INITIAL APP BOOTSTRAP ---
         function init() {
-            ensureProfilesInitialized();
-            renderProfileSelector();
-            loadState();
+            try {
+                if (typeof ensureProfilesInitialized === 'function') ensureProfilesInitialized();
+                if (typeof renderProfileSelector === 'function') renderProfileSelector();
+                if (typeof loadState === 'function') loadState();
 
-            // Populate text inputs
-            document.getElementById('txtSummary').value = state.texts.txtSummary || '';
-            document.getElementById('txtContributions').value = state.texts.txtContributions || '';
-            document.getElementById('txtRelationship').value = state.texts.txtRelationship || '';
+                // Safe populate text inputs
+                const elSummary = document.getElementById('txtSummary');
+                if (elSummary && state.texts) elSummary.value = state.texts.txtSummary || '';
 
-            // Run counters once to set state
-            checkChars('txtSummary', 2500, 'cntSummary');
-            checkChars('txtContributions', 9000, 'cntContributions');
-            checkChars('txtRelationship', 12000, 'cntRelationship');
+                const elContrib = document.getElementById('txtContributions');
+                if (elContrib && state.texts) elContrib.value = state.texts.txtContributions || '';
 
-            // Restore EDI checklists
-            const recCheckboxes = ['edi-rec-1', 'edi-rec-2', 'edi-rec-3'];
-            const menCheckboxes = ['edi-men-1', 'edi-men-2', 'edi-men-3'];
-            const envCheckboxes = ['edi-env-1', 'edi-env-2', 'edi-env-3'];
+                const elRel = document.getElementById('txtRelationship');
+                if (elRel && state.texts) elRel.value = state.texts.txtRelationship || '';
 
-            [...recCheckboxes, ...menCheckboxes, ...envCheckboxes].forEach(id => {
-                if (state.edi.checkboxes[id] !== undefined) {
-                    document.getElementById(id).checked = state.edi.checkboxes[id];
+                // Safe character counters
+                if (typeof checkChars === 'function') {
+                    checkChars('txtSummary', 2500, 'cntSummary');
+                    checkChars('txtContributions', 9000, 'cntContributions');
+                    checkChars('txtRelationship', 12000, 'cntRelationship');
                 }
-            });
 
-            // Make sure outlinerDrafts is structured
-            if (!state.outlinerDrafts) {
-                state.outlinerDrafts = { 1: '', 2: '', 3: '', 4: '', 5: '' };
-            }
+                // Restore EDI checkboxes safely
+                const ediIds = ['edi-rec-1', 'edi-rec-2', 'edi-rec-3', 'edi-men-1', 'edi-men-2', 'edi-men-3', 'edi-env-1', 'edi-env-2', 'edi-env-3'];
+                ediIds.forEach(id => {
+                    const chk = document.getElementById(id);
+                    if (chk && state.edi && state.edi.checkboxes && state.edi.checkboxes[id] !== undefined) {
+                        chk.checked = state.edi.checkboxes[id];
+                    }
+                });
 
-            // Restore outliner drafts
-            for (let i = 1; i <= 5; i++) {
-                if (state.outlinerDrafts[i] !== undefined) {
-                    document.getElementById(`txtOutliner-${i}`).value = state.outlinerDrafts[i];
+                // Make sure outlinerDrafts is structured
+                if (!state.outlinerDrafts) {
+                    state.outlinerDrafts = { 1: '', 2: '', 3: '', 4: '', 5: '' };
                 }
-                checkOutlinerChars(i, i === 1 ? 4000 : (i === 2 ? 2000 : (i === 3 ? 4000 : (i === 4 ? 8000 : 2000))));
-            }
 
-            // Set up views
-            renderChecklist();
-            renderBudget();
-            generateEDIDraft();
-            switchMeritFilter('res');
-            updateWordCountReadTime(state.texts.txtSummary || '');
+                // Restore outliner drafts safely
+                for (let i = 1; i <= 5; i++) {
+                    const elOutliner = document.getElementById(`txtOutliner-${i}`);
+                    if (elOutliner && state.outlinerDrafts[i] !== undefined) {
+                        elOutliner.value = state.outlinerDrafts[i];
+                    }
+                    if (typeof checkOutlinerChars === 'function') {
+                        checkOutlinerChars(i, i === 1 ? 4000 : (i === 2 ? 2000 : (i === 3 ? 4000 : (i === 4 ? 8000 : 2000))));
+                    }
+                }
 
-            // Restore configurations selectors
-            if (state.uniSelection) {
-                document.getElementById('selUniversity').value = state.uniSelection;
-                changeUniversity();
-            }
-            if (state.egSelection) {
-                document.getElementById('selEG').value = state.egSelection;
-                changeEG();
-            }
+                // Safe view renders
+                if (typeof renderChecklist === 'function') renderChecklist();
+                if (typeof renderBudget === 'function') renderBudget();
+                if (typeof generateEDIDraft === 'function') generateEDIDraft();
+                if (typeof switchMeritFilter === 'function') switchMeritFilter('res');
+                if (typeof updateWordCountReadTime === 'function' && state.texts) updateWordCountReadTime(state.texts.txtSummary || '');
 
-            // Restore new modules
-            document.getElementById('inpInstDeadline').value = state.deadlines.instDate || '';
-            document.getElementById('inpNsercDeadline').value = state.deadlines.nsercDate || '';
-            document.getElementById('inpPrevTotal').value = state.priorCompetition.prevTotal || '';
-            document.getElementById('inpPrevHqpRatio').value = state.priorCompetition.prevHqpRatio || '';
-            document.getElementById('ccvList').value = state.ccvText || '';
-            renderDeadlines();
-            renderReferees();
-            renderRiskRegister();
-            updatePriorComparison();
+                // Restore configuration selectors safely
+                const selUni = document.getElementById('selUniversity');
+                if (selUni && state.uniSelection) {
+                    selUni.value = state.uniSelection;
+                    if (typeof changeUniversity === 'function') changeUniversity();
+                }
+
+                const selEG = document.getElementById('selEG');
+                if (selEG && state.egSelection) {
+                    selEG.value = state.egSelection;
+                    if (typeof changeEG === 'function') changeEG();
+                }
+
+                // Restore new modules safely
+                const inpInst = document.getElementById('inpInstDeadline');
+                if (inpInst && state.deadlines) inpInst.value = state.deadlines.instDate || '';
+
+                const inpNserc = document.getElementById('inpNsercDeadline');
+                if (inpNserc && state.deadlines) inpNserc.value = state.deadlines.nsercDate || '';
+
+                const inpPrevT = document.getElementById('inpPrevTotal');
+                if (inpPrevT && state.priorCompetition) inpPrevT.value = state.priorCompetition.prevTotal || '';
+
+                const inpPrevH = document.getElementById('inpPrevHqpRatio');
+                if (inpPrevH && state.priorCompetition) inpPrevH.value = state.priorCompetition.prevHqpRatio || '';
+
+                const ccv = document.getElementById('ccvList');
+                if (ccv) ccv.value = state.ccvText || '';
+
+                if (typeof renderDeadlines === 'function') renderDeadlines();
+                if (typeof renderReferees === 'function') renderReferees();
+                if (typeof renderRiskRegister === 'function') renderRiskRegister();
+                if (typeof updatePriorComparison === 'function') updatePriorComparison();
+            } catch (err) {
+                console.warn("NSERC Discovery Helper bootstrap notice:", err);
+            }
         }
 
-        // Run application setup
-        init();
+        // Run application setup on DOM ready
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
     </script>
 </body>
 

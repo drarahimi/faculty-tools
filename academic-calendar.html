@@ -9,6 +9,9 @@
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%230d9488'/%3E%3Cpath d='M50,18 A22,22 0 0,0 30.5,54.5 C34.5,58.8 37,63.2 37,69 L63,69 C63,63.2 65.5,58.8 69.5,54.5 A22,22 0 0,0 50,18 Z M42,74 L58,74 A2,2 0 0,1 56,79 L44,79 A2,2 0 0,1 42,74 Z' fill='white'/%3E%3C/svg%3E">
 
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
@@ -18,8 +21,12 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- Common Library -->
+    <script src="common.js"></script>
+
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -98,6 +105,7 @@
 
             <!-- Header Actions -->
             <div class="flex items-center gap-2">
+                <div id="header-quick-nav"></div>
                 <button id="syncBtn" onclick="openSyncModal()" class="flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 hover:border-brand-500 text-gray-700 hover:text-brand-600 rounded-lg text-sm font-medium bg-white shadow-sm transition-all">
                     <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                     <span class="hidden sm:inline">Sync Live</span>
@@ -3204,15 +3212,27 @@
             lucide.createIcons();
         }
 
-        // Fetch helper through proxy
+        // Fetch helper through proxy with multi-proxy fallback
         async function fetchThroughProxy(targetUrl) {
-            // Using allorigins.win as CORS proxy. It has a raw endpoint.
-            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-            const response = await fetch(proxyUrl);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch from proxy. Status: ${response.status}`);
+            const proxies = [
+                url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+                url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+                url => `https://thingproxy.freeboard.io/fetch/${url}`
+            ];
+
+            for (let i = 0; i < proxies.length; i++) {
+                try {
+                    const proxyUrl = proxies[i](targetUrl);
+                    const response = await fetch(proxyUrl);
+                    if (response.ok) {
+                        const text = await response.text();
+                        if (text && text.trim().length > 0) return text;
+                    }
+                } catch (e) {
+                    console.warn(`Proxy ${i + 1} failed, trying fallback...`, e);
+                }
             }
-            return await response.text();
+            throw new Error(`Failed to fetch live data from UWindsor Registrar. Check internet connection.`);
         }
 
         // Live scraping coordinator

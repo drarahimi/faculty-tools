@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAME Curriculum Map - UWindsor</title>
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Common Library -->
+    <script src="common.js"></script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Base transitions */
@@ -119,7 +128,8 @@
                 </div>
                 
                 <!-- Level + Track Selector -->
-                <div class="w-full lg:w-auto flex flex-col items-start lg:items-end gap-2">
+                <div class="w-full lg:w-auto flex flex-col sm:flex-row items-start lg:items-end gap-3">
+                    <div id="header-quick-nav"></div>
                     <div class="flex items-center bg-slate-900 p-1 rounded-lg" id="level-selector">
                         <button onclick="setLevel('undergrad')" data-level="undergrad" class="level-btn px-3.5 py-1.5 text-xs font-bold rounded-md transition-all">
                             Undergraduate

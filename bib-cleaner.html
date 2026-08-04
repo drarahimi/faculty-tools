@@ -13,8 +13,18 @@
     <!-- Chart.js for Statistics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Common Library -->
+    <script src="common.js"></script>
+
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -24,6 +34,18 @@
                 }
             }
         }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const pending = sessionStorage.getItem('pending_bibtex');
+            if (pending) {
+                sessionStorage.removeItem('pending_bibtex');
+                const textarea = document.getElementById('input-bib');
+                if (textarea) {
+                    textarea.value = pending;
+                    if (window.showToast) window.showToast('Imported BibTeX from Citation Generator! Click "Clean & Standardize" to process.');
+                }
+            }
+        });
     </script>
     <style>
         /* Custom scrollbar for textareas and pre */

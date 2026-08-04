@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Quadcopter Dynamics & Control Simulator - Faculty Tools</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome & Lucide Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Three.js & OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <!-- Common Library -->
+    <script src="common.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        #canvas-container { position: absolute; inset: 0; z-index: 1; }
+        #ui-layer { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
+        .interactive-panel { pointer-events: auto; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-900 antialiased">
+
+    <!-- 3D WebGL Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay Layer -->
+    <div id="ui-layer" class="flex flex-col justify-between p-4">
+
+        <!-- Top Header Bar -->
+        <header class="flex items-center justify-between bg-white/95 backdrop-blur-md border border-slate-200 p-3 rounded-2xl shadow-md interactive-panel max-w-full">
+            <div class="flex items-center space-x-3">
+                <div class="bg-teal-50 text-teal-600 p-2 rounded-xl border border-teal-200">
+                    <i class="fa-solid fa-helicopter text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm font-bold text-slate-900 leading-tight flex items-center gap-2">
+                        3D Quadcopter Flight Simulator & Avionics Lab
+                        <span class="px-2 py-0.5 text-[10px] font-mono bg-teal-100 text-teal-800 rounded-full border border-teal-200">6-DOF Physics</span>
+                    </h1>
+                    <p class="text-[11px] text-slate-500">Cascaded PID Control, Artificial Horizon, Crosswind & Keyboard RC Control</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div id="header-quick-nav"></div>
+                <a href="index.html" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-teal-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-xl border border-slate-200 transition-all">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Left Controls Sidebar -->
+        <div class="absolute left-4 top-20 bottom-4 w-80 flex flex-col gap-3 interactive-panel overflow-y-auto pr-1">
+            
+            <!-- Flight Mode Selector -->
+            <div class="bg-white/95 backdrop-blur-md border border-slate-200 p-4 rounded-2xl shadow-md space-y-3">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Flight Control Mode</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="setFlightMode('hover')" id="btnModeHover" class="px-3 py-2 rounded-xl text-xs font-bold bg-teal-600 text-white border border-teal-500 transition-all shadow-sm">Auto-Hover</button>
+                    <button onclick="setFlightMode('waypoint')" id="btnModeWaypoint" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-all">Waypoint</button>
+                    <button onclick="setFlightMode('circle')" id="btnModeCircle" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-all">Orbit Circle</button>
+                    <button onclick="setFlightMode('manual')" id="btnModeManual" class="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-all">RC Keyboard</button>
+                </div>
+                <div class="pt-1">
+                    <button onclick="resetSimulation()" class="w-full py-1.5 rounded-xl text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition-all">Reset Sim & Battery</button>
+                </div>
+            </div>
+
+            <!-- Position Setpoints -->
+            <div class="bg-white/95 backdrop-blur-md border border-slate-200 p-4 rounded-2xl shadow-md space-y-3 text-xs">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Target Position Setpoints</span>
+                
+                <div class="space-y-2">
+                    <div>
+                        <div class="flex justify-between text-slate-700 font-mono mb-1">
+                            <span>Target Altitude (Z):</span>
+                            <span id="valTargetZ" class="text-teal-600 font-bold">2.5 m</span>
+                        </div>
+                        <input type="range" id="sliderZ" min="0.5" max="8.0" step="0.1" value="2.5" oninput="updateSetpoints()" class="w-full accent-teal-600 bg-slate-200 rounded-lg">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-slate-700 font-mono mb-1">
+                            <span>Target Position (X):</span>
+                            <span id="valTargetX" class="text-teal-600 font-bold">0.0 m</span>
+                        </div>
+                        <input type="range" id="sliderX" min="-5.0" max="5.0" step="0.1" value="0.0" oninput="updateSetpoints()" class="w-full accent-teal-600 bg-slate-200 rounded-lg">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-slate-700 font-mono mb-1">
+                            <span>Target Position (Y):</span>
+                            <span id="valTargetY" class="text-teal-600 font-bold">0.0 m</span>
+                        </div>
+                        <input type="range" id="sliderY" min="-5.0" max="5.0" step="0.1" value="0.0" oninput="updateSetpoints()" class="w-full accent-teal-600 bg-slate-200 rounded-lg">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Environmental Disturbances & Gravity -->
+            <div class="bg-white/95 backdrop-blur-md border border-slate-200 p-4 rounded-2xl shadow-md space-y-3 text-xs">
+                <span class="text-[10px] font-bold text-amber-600 uppercase tracking-wider block flex items-center gap-1.5">
+                    <i data-lucide="wind" class="w-3.5 h-3.5"></i> Physics & Environment
+                </span>
+                
+                <div class="space-y-2">
+                    <div>
+                        <div class="flex justify-between text-slate-700 font-mono mb-1">
+                            <span>Cross Wind Speed:</span>
+                            <span id="valWind" class="text-amber-600 font-bold">0.0 m/s</span>
+                        </div>
+                        <input type="range" id="sliderWind" min="0.0" max="8.0" step="0.5" value="0.0" oninput="updateEnv()" class="w-full accent-amber-500 bg-slate-200 rounded-lg">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-slate-700 font-mono mb-1">
+                            <span>Payload Mass Addon:</span>
+                            <span id="valPayload" class="text-amber-600 font-bold">0.0 kg</span>
+                        </div>
+                        <input type="range" id="sliderPayload" min="0.0" max="1.5" step="0.1" value="0.0" oninput="updateEnv()" class="w-full accent-amber-500 bg-slate-200 rounded-lg">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-slate-700 font-mono mb-1">
+                            <span>Planetary Gravity:</span>
+                            <span id="valGravity" class="text-indigo-600 font-bold">9.81 m/s² (Earth)</span>
+                        </div>
+                        <select id="selGravity" onchange="updateEnv()" class="w-full px-2 py-1 bg-slate-100 border border-slate-200 rounded text-slate-700 font-semibold">
+                            <option value="9.81">Earth (9.81 m/s²)</option>
+                            <option value="1.62">Moon (1.62 m/s²)</option>
+                            <option value="3.72">Mars (3.72 m/s²)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PID Gains Controls -->
+            <div class="bg-white/95 backdrop-blur-md border border-slate-200 p-4 rounded-2xl shadow-md space-y-3 text-xs">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Cascaded PID Tuning</span>
+                
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-slate-700">
+                        <span class="font-semibold">Attitude Kp (Roll/Pitch):</span>
+                        <input type="number" id="gainAttKp" value="6.0" step="0.5" oninput="updateGains()" class="w-16 px-2 py-1 bg-slate-100 border border-slate-300 rounded text-right font-mono text-teal-700">
+                    </div>
+                    <div class="flex justify-between items-center text-slate-700">
+                        <span class="font-semibold">Attitude Kd (Damping):</span>
+                        <input type="number" id="gainAttKd" value="2.5" step="0.1" oninput="updateGains()" class="w-16 px-2 py-1 bg-slate-100 border border-slate-300 rounded text-right font-mono text-teal-700">
+                    </div>
+                    <div class="flex justify-between items-center text-slate-700">
+                        <span class="font-semibold">Altitude Kp (Thrust):</span>
+                        <input type="number" id="gainAltKp" value="12.0" step="1.0" oninput="updateGains()" class="w-16 px-2 py-1 bg-slate-100 border border-slate-300 rounded text-right font-mono text-teal-700">
+                    </div>
+                    <div class="flex justify-between items-center text-slate-700">
+                        <span class="font-semibold">Altitude Kd (Thrust Damping):</span>
+                        <input type="number" id="gainAltKd" value="8.0" step="0.5" oninput="updateGains()" class="w-16 px-2 py-1 bg-slate-100 border border-slate-300 rounded text-right font-mono text-teal-700">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Telemetry & Avionics Panel -->
+        <div class="absolute right-4 top-20 bottom-4 w-80 flex flex-col gap-3 interactive-panel overflow-y-auto pl-1">
+            
+            <!-- Artificial Horizon Instrument -->
+            <div class="bg-white/95 backdrop-blur-md border border-slate-200 p-4 rounded-2xl shadow-md flex flex-col items-center">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block w-full mb-2">Artificial Horizon (Attitude Indicator)</span>
+                <canvas id="horizonCanvas" width="200" height="150" class="rounded-xl border border-slate-200 shadow-inner"></canvas>
+            </div>
+
+            <!-- Full State Telemetry -->
+            <div class="bg-white/95 backdrop-blur-md border border-slate-200 p-4 rounded-2xl shadow-md space-y-3">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Avionics Telemetry</span>
+                
+                <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+                    <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        <span class="text-[9px] text-slate-500 block">Altitude Z</span>
+                        <span id="hudZ" class="text-sm font-extrabold text-teal-600">0.00 m</span>
+                    </div>
+                    <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        <span class="text-[9px] text-slate-500 block">Vertical Vel.</span>
+                        <span id="hudVz" class="text-sm font-extrabold text-teal-600">0.00 m/s</span>
+                    </div>
+                    <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        <span class="text-[9px] text-slate-500 block">Position X / Y</span>
+                        <span id="hudXY" class="text-xs font-bold text-slate-700">0.0, 0.0 m</span>
+                    </div>
+                    <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        <span class="text-[9px] text-slate-500 block">Linear Speed</span>
+                        <span id="hudSpeed" class="text-xs font-bold text-slate-700">0.00 m/s</span>
+                    </div>
+                    <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        <span class="text-[9px] text-slate-500 block">Roll (Phi)</span>
+                        <span id="hudRoll" class="text-xs font-extrabold text-indigo-600">0.0°</span>
+                    </div>
+                    <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        <span class="text-[9px] text-slate-500 block">Pitch (Theta)</span>
+                        <span id="hudPitch" class="text-xs font-extrabold text-indigo-600">0.0°</span>
+                    </div>
+                    <div class="bg-slate-50 p-2 rounded-xl border border-slate-200 col-span-2 flex justify-between items-center">
+                        <span class="text-[10px] text-slate-500">Battery (3S LiPo):</span>
+                        <span id="hudBatt" class="text-xs font-extrabold text-emerald-600">12.4 V (98%)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Motor Thrust Bars -->
+            <div class="bg-white/95 backdrop-blur-md border border-slate-200 p-4 rounded-2xl shadow-md space-y-3 text-xs">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Motor Thrust Speeds (%)</span>
+                
+                <div class="space-y-1.5 font-mono text-[11px]">
+                    <div>
+                        <div class="flex justify-between mb-0.5 text-slate-700">
+                            <span>M1 (Front Right)</span>
+                            <span id="m1Text">50%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                            <div id="m1Bar" class="h-full bg-teal-600 transition-all duration-75" style="width: 50%;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-0.5 text-slate-700">
+                            <span>M2 (Rear Right)</span>
+                            <span id="m2Text">50%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                            <div id="m2Bar" class="h-full bg-teal-600 transition-all duration-75" style="width: 50%;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-0.5 text-slate-700">
+                            <span>M3 (Rear Left)</span>
+                            <span id="m3Text">50%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                            <div id="m3Bar" class="h-full bg-teal-600 transition-all duration-75" style="width: 50%;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between mb-0.5 text-slate-700">
+                            <span>M4 (Front Left)</span>
+                            <span id="m4Text">50%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                            <div id="m4Bar" class="h-full bg-teal-600 transition-all duration-75" style="width: 50%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Altitude Canvas Plot -->
+            <div class="bg-white/95 backdrop-blur-md border border-slate-200 p-4 rounded-2xl shadow-md flex-grow flex flex-col justify-between">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Altitude Tracking History</span>
+                <canvas id="plotCanvas" class="w-full h-28 bg-slate-50 rounded-xl border border-slate-200"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Simulation Script -->
+    <script>
+        // ----------------------------------------------------
+        // 1. Simulation & Physics Parameters
+        // ----------------------------------------------------
+        const state = {
+            x: 0.0, y: 0.0, z: 0.5,
+            vx: 0.0, vy: 0.0, vz: 0.0,
+            roll: 0.0, pitch: 0.0, yaw: 0.0,
+            p: 0.0, q: 0.0, r: 0.0,
+            
+            targetX: 0.0, targetY: 0.0, targetZ: 2.5,
+            flightMode: 'hover',
+            time: 0.0,
+
+            windSpeed: 0.0,
+            payloadMass: 0.0,
+            gravity: 9.81,
+            batteryVolts: 12.6
+        };
+
+        const gains = {
+            attKp: 6.0, attKd: 2.5,
+            altKp: 12.0, altKd: 8.0,
+            posKp: 0.8, posKd: 0.6
+        };
+
+        const quadParams = {
+            baseMass: 1.2,
+            armLength: 0.25,
+            motors: [0.5, 0.5, 0.5, 0.5]
+        };
+
+        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
+
+        let scene, camera, renderer, controls;
+        let quadGroup, propMeshes = [], waypointMesh;
+        let historyZ = [];
+
+        // ----------------------------------------------------
+        // 2. Three.js Scene Setup (Light Theme Viewport)
+        // ----------------------------------------------------
+        function initThree() {
+            const container = document.getElementById('canvas-container');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf1f5f9);
+            scene.fog = new THREE.FogExp2(0xf1f5f9, 0.02);
+
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(4, 3, 5);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.target.set(0, 1.5, 0);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+            dirLight.position.set(10, 20, 10);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
+            scene.add(dirLight);
+
+            // Ground Grid & Floor
+            const gridHelper = new THREE.GridHelper(30, 30, 0x0d9488, 0xcbd5e1);
+            gridHelper.position.y = 0;
+            scene.add(gridHelper);
+
+            const floorGeo = new THREE.PlaneGeometry(50, 50);
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.8 });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            scene.add(floor);
+
+            // Target Waypoint Mesh
+            const wpGeo = new THREE.SphereGeometry(0.15, 16, 16);
+            const wpMat = new THREE.MeshBasicMaterial({ color: 0x0d9488, wireframe: true });
+            waypointMesh = new THREE.Mesh(wpGeo, wpMat);
+            scene.add(waypointMesh);
+
+            // Build Procedural Quadcopter Model
+            buildQuadcopter();
+
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('keydown', (e) => { if (keys.hasOwnProperty(e.key)) keys[e.key] = true; });
+            window.addEventListener('keyup', (e) => { if (keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+        }
+
+        function buildQuadcopter() {
+            quadGroup = new THREE.Group();
+
+            const bodyGeo = new THREE.BoxGeometry(0.3, 0.06, 0.3);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.5, roughness: 0.2 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.castShadow = true;
+            quadGroup.add(body);
+
+            const ledGeo = new THREE.SphereGeometry(0.04, 8, 8);
+            const ledMat = new THREE.MeshBasicMaterial({ color: 0x16a34a });
+            const led = new THREE.Mesh(ledGeo, ledMat);
+            led.position.set(0, 0.04, 0);
+            quadGroup.add(led);
+
+            const armMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.8 });
+            const motorMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.9 });
+            const propMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, transparent: true, opacity: 0.7 });
+
+            const armAngles = [Math.PI / 4, 3 * Math.PI / 4, 5 * Math.PI / 4, 7 * Math.PI / 4];
+
+            armAngles.forEach((angle) => {
+                const armGroup = new THREE.Group();
+                armGroup.rotation.y = angle;
+
+                const armGeo = new THREE.CylinderGeometry(0.02, 0.02, quadParams.armLength, 8);
+                const arm = new THREE.Mesh(armGeo, armMat);
+                arm.rotation.z = Math.PI / 2;
+                arm.position.x = quadParams.armLength / 2;
+                arm.castShadow = true;
+                armGroup.add(arm);
+
+                const motorGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.06, 12);
+                const motor = new THREE.Mesh(motorGeo, motorMat);
+                motor.position.x = quadParams.armLength;
+                motor.position.y = 0.03;
+                armGroup.add(motor);
+
+                const propGeo = new THREE.BoxGeometry(0.3, 0.005, 0.03);
+                const prop = new THREE.Mesh(propGeo, propMat);
+                prop.position.x = quadParams.armLength;
+                prop.position.y = 0.06;
+                armGroup.add(prop);
+                propMeshes.push(prop);
+
+                quadGroup.add(armGroup);
+            });
+
+            scene.add(quadGroup);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // ----------------------------------------------------
+        // 3. Physics & Cascaded PID Controller Loop
+        // ----------------------------------------------------
+        function updatePhysics(dt) {
+            state.time += dt;
+
+            if (state.batteryVolts > 10.5) {
+                state.batteryVolts -= 0.0005 * dt;
+            }
+
+            const totalMass = quadParams.baseMass + state.payloadMass;
+
+            if (state.flightMode === 'circle') {
+                state.targetX = 2.0 * Math.cos(state.time * 0.8);
+                state.targetY = 2.0 * Math.sin(state.time * 0.8);
+            } else if (state.flightMode === 'manual') {
+                if (keys.w) state.targetX += 1.5 * dt;
+                if (keys.s) state.targetX -= 1.5 * dt;
+                if (keys.a) state.targetY += 1.5 * dt;
+                if (keys.d) state.targetY -= 1.5 * dt;
+                if (keys.ArrowUp) state.targetZ = Math.min(8.0, state.targetZ + 1.5 * dt);
+                if (keys.ArrowDown) state.targetZ = Math.max(0.5, state.targetZ - 1.5 * dt);
+            }
+
+            waypointMesh.position.set(state.targetX, state.targetZ, -state.targetY);
+
+            // Outer Loop: Position PID
+            const errX = state.targetX - state.x;
+            const errY = state.targetY - state.y;
+            const errZ = state.targetZ - state.z;
+
+            const desiredPitch = gains.posKp * errX - gains.posKd * state.vx;
+            const desiredRoll = -(gains.posKp * errY - gains.posKd * state.vy);
+
+            const targetPitch = Math.max(-0.35, Math.min(0.35, desiredPitch));
+            const targetRoll = Math.max(-0.35, Math.min(0.35, desiredRoll));
+
+            // Altitude Control
+            const hoverThrust = totalMass * state.gravity;
+            const thrustCmd = hoverThrust + gains.altKp * errZ - gains.altKd * state.vz;
+
+            // Inner Loop: Attitude PID
+            const errRoll = targetRoll - state.roll;
+            const errPitch = targetPitch - state.pitch;
+            const errYaw = 0.0 - state.yaw;
+
+            const tauRoll = gains.attKp * errRoll - gains.attKd * state.p;
+            const tauPitch = gains.attKp * errPitch - gains.attKd * state.q;
+            const tauYaw = 2.0 * errYaw - 1.0 * state.r;
+
+            // Motor Mixer Matrix
+            const m1 = thrustCmd / 4 + tauRoll / 2 - tauPitch / 2 - tauYaw / 4;
+            const m2 = thrustCmd / 4 + tauRoll / 2 + tauPitch / 2 + tauYaw / 4;
+            const m3 = thrustCmd / 4 - tauRoll / 2 + tauPitch / 2 - tauYaw / 4;
+            const m4 = thrustCmd / 4 - tauRoll / 2 - tauPitch / 2 + tauYaw / 4;
+
+            quadParams.motors = [
+                Math.max(0.1, Math.min(1.0, m1 / (hoverThrust / 2))),
+                Math.max(0.1, Math.min(1.0, m2 / (hoverThrust / 2))),
+                Math.max(0.1, Math.min(1.0, m3 / (hoverThrust / 2))),
+                Math.max(0.1, Math.min(1.0, m4 / (hoverThrust / 2)))
+            ];
+
+            const windForceX = state.windSpeed * 0.4;
+
+            // 6-DOF Linear Dynamics Integration
+            const totalThrust = Math.max(0, thrustCmd);
+            const ax = (totalThrust * Math.sin(state.pitch) + windForceX) / totalMass - 0.2 * state.vx;
+            const ay = -(totalThrust * Math.sin(state.roll)) / totalMass - 0.2 * state.vy;
+            const az = (totalThrust * Math.cos(state.roll) * Math.cos(state.pitch) - totalMass * state.gravity) / totalMass - 0.2 * state.vz;
+
+            state.vx += ax * dt;
+            state.vy += ay * dt;
+            state.vz += az * dt;
+
+            state.x += state.vx * dt;
+            state.y += state.vy * dt;
+            state.z += state.vz * dt;
+
+            if (state.z < 0.15) {
+                state.z = 0.15;
+                state.vz = 0;
+                state.roll = 0;
+                state.pitch = 0;
+            }
+
+            // Angular Dynamics
+            state.p += (tauRoll * 10.0) * dt;
+            state.q += (tauPitch * 10.0) * dt;
+            state.r += (tauYaw * 5.0) * dt;
+
+            state.roll += state.p * dt;
+            state.pitch += state.q * dt;
+            state.yaw += state.r * dt;
+
+            state.p *= 0.95;
+            state.q *= 0.95;
+            state.r *= 0.95;
+
+            quadGroup.position.set(state.x, state.z, -state.y);
+            quadGroup.rotation.set(state.pitch, state.yaw, -state.roll, 'YXZ');
+
+            propMeshes.forEach((prop, i) => {
+                prop.rotation.y += quadParams.motors[i] * 0.8;
+            });
+        }
+
+        // ----------------------------------------------------
+        // 4. Artificial Horizon & Telemetry UI Loop
+        // ----------------------------------------------------
+        function drawArtificialHorizon() {
+            const canvas = document.getElementById('horizonCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            const cx = w / 2;
+            const cy = h / 2;
+
+            ctx.clearRect(0, 0, w, h);
+            ctx.save();
+
+            // Rotate horizon according to roll angle
+            ctx.translate(cx, cy);
+            ctx.rotate(-state.roll);
+
+            // Pitch offset
+            const pitchOffset = state.pitch * 60; // 60px per rad
+
+            // Sky
+            ctx.fillStyle = '#0284c7'; // Blue sky
+            ctx.beginPath();
+            ctx.rect(-w, -h * 2 + pitchOffset, w * 2, h * 2);
+            ctx.fill();
+
+            // Ground
+            ctx.fillStyle = '#b45309'; // Amber/brown ground
+            ctx.beginPath();
+            ctx.rect(-w, pitchOffset, w * 2, h * 2);
+            ctx.fill();
+
+            // Horizon line
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-w, pitchOffset);
+            ctx.lineTo(w, pitchOffset);
+            ctx.stroke();
+
+            ctx.restore();
+
+            // Fixed aircraft reticle
+            ctx.strokeStyle = '#eab308'; // Yellow reticle
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(cx - 30, cy);
+            ctx.lineTo(cx - 10, cy);
+            ctx.lineTo(cx - 5, cy + 8);
+            ctx.moveTo(cx + 10, cy);
+            ctx.lineTo(cx + 30, cy);
+            ctx.lineTo(cx + 5, cy + 8);
+            ctx.stroke();
+        }
+
+        function updateUI() {
+            drawArtificialHorizon();
+
+            document.getElementById('hudZ').textContent = state.z.toFixed(2) + ' m';
+            document.getElementById('hudVz').textContent = state.vz.toFixed(2) + ' m/s';
+            document.getElementById('hudXY').textContent = `${state.x.toFixed(1)}, ${state.y.toFixed(1)} m`;
+
+            const speed = Math.sqrt(state.vx * state.vx + state.vy * state.vy + state.vz * state.vz);
+            document.getElementById('hudSpeed').textContent = speed.toFixed(2) + ' m/s';
+
+            document.getElementById('hudRoll').textContent = (state.roll * (180 / Math.PI)).toFixed(1) + '°';
+            document.getElementById('hudPitch').textContent = (state.pitch * (180 / Math.PI)).toFixed(1) + '°';
+
+            const battPct = Math.round(((state.batteryVolts - 10.5) / 2.1) * 100);
+            document.getElementById('hudBatt').textContent = `${state.batteryVolts.toFixed(1)} V (${battPct}%)`;
+
+            const mPerc = quadParams.motors.map(m => Math.round(m * 100));
+            document.getElementById('m1Text').textContent = mPerc[0] + '%';
+            document.getElementById('m1Bar').style.width = mPerc[0] + '%';
+            document.getElementById('m2Text').textContent = mPerc[1] + '%';
+            document.getElementById('m2Bar').style.width = mPerc[1] + '%';
+            document.getElementById('m3Text').textContent = mPerc[3] + '%';
+            document.getElementById('m3Bar').style.width = mPerc[3] + '%';
+            document.getElementById('m4Text').textContent = mPerc[2] + '%';
+            document.getElementById('m4Bar').style.width = mPerc[2] + '%';
+
+            // Canvas Chart Plotting
+            historyZ.push(state.z);
+            if (historyZ.length > 100) historyZ.shift();
+
+            const canvas = document.getElementById('plotCanvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width = canvas.clientWidth;
+            const h = canvas.height = canvas.clientHeight;
+
+            ctx.clearRect(0, 0, w, h);
+
+            const targetPixelY = h - (state.targetZ / 8.0) * h;
+            ctx.strokeStyle = '#0d9488';
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(0, targetPixelY);
+            ctx.lineTo(w, targetPixelY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            ctx.strokeStyle = '#0284c7';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            historyZ.forEach((val, i) => {
+                const px = (i / 100) * w;
+                const py = h - (val / 8.0) * h;
+                if (i === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            });
+            ctx.stroke();
+        }
+
+        // ----------------------------------------------------
+        // 5. Control Handlers & Event Listeners
+        // ----------------------------------------------------
+        function updateSetpoints() {
+            state.targetZ = parseFloat(document.getElementById('sliderZ').value);
+            state.targetX = parseFloat(document.getElementById('sliderX').value);
+            state.targetY = parseFloat(document.getElementById('sliderY').value);
+
+            document.getElementById('valTargetZ').textContent = state.targetZ.toFixed(1) + ' m';
+            document.getElementById('valTargetX').textContent = state.targetX.toFixed(1) + ' m';
+            document.getElementById('valTargetY').textContent = state.targetY.toFixed(1) + ' m';
+        }
+
+        function updateEnv() {
+            state.windSpeed = parseFloat(document.getElementById('sliderWind').value) || 0;
+            state.payloadMass = parseFloat(document.getElementById('sliderPayload').value) || 0;
+            state.gravity = parseFloat(document.getElementById('selGravity').value) || 9.81;
+
+            document.getElementById('valWind').textContent = state.windSpeed.toFixed(1) + ' m/s';
+            document.getElementById('valPayload').textContent = state.payloadMass.toFixed(1) + ' kg';
+            
+            const gText = state.gravity === 1.62 ? '1.62 m/s² (Moon)' : state.gravity === 3.72 ? '3.72 m/s² (Mars)' : '9.81 m/s² (Earth)';
+            document.getElementById('valGravity').textContent = gText;
+        }
+
+        function updateGains() {
+            gains.attKp = parseFloat(document.getElementById('gainAttKp').value) || 6.0;
+            gains.attKd = parseFloat(document.getElementById('gainAttKd').value) || 2.5;
+            gains.altKp = parseFloat(document.getElementById('gainAltKp').value) || 12.0;
+            gains.altKd = parseFloat(document.getElementById('gainAltKd').value) || 8.0;
+        }
+
+        function setFlightMode(mode) {
+            state.flightMode = mode;
+            document.getElementById('btnModeHover').className = mode === 'hover' ? "px-3 py-2 rounded-xl text-xs font-bold bg-teal-600 text-white border border-teal-500 transition-all shadow-sm" : "px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-all";
+            document.getElementById('btnModeWaypoint').className = mode === 'waypoint' ? "px-3 py-2 rounded-xl text-xs font-bold bg-teal-600 text-white border border-teal-500 transition-all shadow-sm" : "px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-all";
+            document.getElementById('btnModeCircle').className = mode === 'circle' ? "px-3 py-2 rounded-xl text-xs font-bold bg-teal-600 text-white border border-teal-500 transition-all shadow-sm" : "px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-all";
+            document.getElementById('btnModeManual').className = mode === 'manual' ? "px-3 py-2 rounded-xl text-xs font-bold bg-teal-600 text-white border border-teal-500 transition-all shadow-sm" : "px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 transition-all";
+
+            if (window.showToast) {
+                if (mode === 'manual') window.showToast("RC Mode Activated! Use WASD to steer & Arrow Keys for Throttle/Yaw.");
+                else window.showToast(`Flight Mode changed to ${mode.toUpperCase()}`);
+            }
+        }
+
+        function resetSimulation() {
+            state.x = 0; state.y = 0; state.z = 0.5;
+            state.vx = 0; state.vy = 0; state.vz = 0;
+            state.roll = 0; state.pitch = 0; state.yaw = 0;
+            state.p = 0; state.q = 0; state.r = 0;
+            state.batteryVolts = 12.6;
+            historyZ = [];
+            if (window.showToast) window.showToast("Simulation state & battery reset!");
+        }
+
+        // ----------------------------------------------------
+        // 6. Main Animation Loop
+        // ----------------------------------------------------
+        let lastTime = performance.now();
+
+        function animate(now) {
+            requestAnimationFrame(animate);
+            const dt = Math.min((now - lastTime) / 1000, 0.05);
+            lastTime = now;
+
+            updatePhysics(dt);
+            updateUI();
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initThree();
+            animate(performance.now());
+        });
+    </script>
+</body>
+</html>
