@@ -390,7 +390,11 @@
                 { label: "Total Count", type: 'total' }
             ];
 
-            const ITEM_SPAN = 4;
+            // Only merge/paint the label across leading metadata columns - never into
+            // an actual grade or percent column, or the stats get hidden behind it.
+            let firstStatColIdx = colInfo.findIndex(info => !info.isOriginal);
+            if (firstStatColIdx === -1) firstStatColIdx = colInfo.length;
+            const ITEM_SPAN = Math.max(1, firstStatColIdx);
 
             stats.forEach(stat => {
                 const statRow = worksheet.addRow([]);
@@ -398,7 +402,9 @@
                 labelCell.value = stat.label;
                 labelCell.fill = headerFill;
                 labelCell.font = headerFont;
-                worksheet.mergeCells(statRow.number, 1, statRow.number, ITEM_SPAN);
+                if (ITEM_SPAN > 1) {
+                    worksheet.mergeCells(statRow.number, 1, statRow.number, ITEM_SPAN);
+                }
 
                 colInfo.forEach((info, idx) => {
                     const colNumber = idx + 1;
@@ -426,7 +432,84 @@
                 });
             });
 
-            // 4. Improved Auto-size columns logic
+            // 4. Build "Copy to CAS" sheet - one row per selected assignment, laid out at the
+            // same row/column coordinates as the CAS template's Learning Outcome table
+            // (data starts row 9, stats in columns G-L) so the block can be pasted straight in.
+            const casStats = [];
+            headers.forEach((h, i) => {
+                if (!selectedColumns.has(h)) return;
+                const max = headersMax[h];
+                let avgSum = 0, total = 0, didNotSubmit = 0, dnm = 0, marginal = 0, me = 0, ee = 0;
+                dataRows.forEach(rowData => {
+                    const val = rowData[i];
+                    if (val === null || val === undefined || isNaN(parseFloat(val))) {
+                        didNotSubmit++;
+                        return;
+                    }
+                    const percent = Math.ceil((parseFloat(val) / max) * 100);
+                    total++;
+                    avgSum += percent;
+                    if (percent < 50) dnm++;
+                    else if (percent < 60) marginal++;
+                    else if (percent < 80) me++;
+                    else ee++;
+                });
+                casStats.push({
+                    name: getCleanName(h),
+                    avg: total > 0 ? Math.ceil(avgSum / total) : 0,
+                    didNotSubmit, dnm, marginal, me, ee
+                });
+            });
+
+            const casSheet = excelWorkbook.addWorksheet('Copy to CAS', {
+                views: [{ state: 'frozen', ySplit: 8 }]
+            });
+
+            casSheet.mergeCells('A1:L1');
+            const noteCell = casSheet.getCell('A1');
+            noteCell.value = 'Select the G:L cells below (one row per assessment) and paste into the matching rows of the CAS sheet. Column A is a reference label only - do not copy it. Columns B-F (Learning Outcome, GA Indicator, Level, Assessment Method, Justification) must be filled in manually in the CAS file.';
+            noteCell.font = { italic: true, size: 10, color: { argb: 'FF64748B' } };
+            noteCell.alignment = { wrapText: true, vertical: 'middle' };
+            casSheet.getRow(1).height = 45;
+
+            const CAS_HEADER_ROW = 8;
+            const casHeaderLabels = {
+                A: 'Assignment (reference only)',
+                G: 'Average Grade for Assessments of Learning Outcome (%)',
+                H: 'Did not Submit Assessment',
+                I: 'Does not Meet Expectations (DNM < 50%)',
+                J: 'Marginal (50%<= Marginal <60%)',
+                K: 'Meets Expectation (60%<= ME <80%)',
+                L: 'Exceeds Expectation (EE >= 80%)'
+            };
+            Object.entries(casHeaderLabels).forEach(([col, label]) => {
+                const cell = casSheet.getCell(`${col}${CAS_HEADER_ROW}`);
+                cell.value = label;
+                cell.fill = headerFill;
+                cell.font = headerFont;
+                cell.alignment = { wrapText: true, vertical: 'middle' };
+            });
+            casSheet.getRow(CAS_HEADER_ROW).height = 60;
+
+            casStats.forEach((stat, idx) => {
+                const r = CAS_HEADER_ROW + 1 + idx;
+                casSheet.getCell(`A${r}`).value = stat.name;
+                casSheet.getCell(`G${r}`).value = stat.avg;
+                casSheet.getCell(`H${r}`).value = stat.didNotSubmit;
+                casSheet.getCell(`I${r}`).value = stat.dnm;
+                casSheet.getCell(`J${r}`).value = stat.marginal;
+                casSheet.getCell(`K${r}`).value = stat.me;
+                casSheet.getCell(`L${r}`).value = stat.ee;
+                ['G', 'H', 'I', 'J', 'K', 'L'].forEach(col => {
+                    casSheet.getCell(`${col}${r}`).fill = highlightFill;
+                });
+            });
+
+            casSheet.getColumn('A').width = 32;
+            ['B', 'C', 'D', 'E', 'F'].forEach(c => casSheet.getColumn(c).width = 12);
+            ['G', 'H', 'I', 'J', 'K', 'L'].forEach(c => casSheet.getColumn(c).width = 16);
+
+            // 5. Improved Auto-size columns logic
             worksheet.columns.forEach((column, colIdx) => {
                 let maxCharLength = 0;
                 column.eachCell({ includeEmpty: true }, (cell) => {
@@ -446,7 +529,7 @@
                 column.width = Math.min(Math.max(baseWidth, 5), 50);
             });
 
-            // 5. Finalize and Download
+            // 6. Finalize and Download
             const buffer = await excelWorkbook.xlsx.writeBuffer();
             const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
             const url = window.URL.createObjectURL(blob);
