@@ -26,7 +26,7 @@ const FACULTY_TOOLS = [
     { id: 'pdf-fill-sign', title: 'PDF Fill & Sign', description: 'Fill out PDF forms, add checkmarks, and sign documents securely in-browser.', category: 'PDF & Document Suite', icon: 'signature', path: 'pdf-fill-sign.html' },
 
     // Data & Utilities
-    { id: 'uwindsor-academic-calendar', title: 'UWindsor Academic Calendar', description: 'Interactive calendar of registrar dates with categories, search, and ICS export.', category: 'Data & Utilities', icon: 'calendar', path: 'academic-calendar.html' },
+    { id: 'uwindsor-academic-calendar', title: 'Academic Calendar & Deadlines', description: 'Semester deadlines cheat-sheet, syllabus blurbs, Google/Outlook calendar sync, and registrar dates.', category: 'Data & Utilities', icon: 'calendar', path: 'academic-calendar.html' },
     { id: 'image-converter', title: 'Universal Image Converter', description: 'Batch convert images between SVG, WebP, PNG, JPEG, GIF, BMP, ICO, AVIF.', category: 'Data & Utilities', icon: 'file-image', path: 'image-converter.html' },
     { id: 'case-converter', title: 'Case Converter', description: 'Convert text to sentence case, title case, camelCase, snake_case, UPPERCASE, and more.', category: 'Data & Utilities', icon: 'case-sensitive', path: 'case-converter.html' },
     { id: 'json-deduplicator-tool', title: 'JSON Deduplicator', description: 'Remove duplicate entries from JSON arrays.', category: 'Data & Utilities', icon: 'file-code', path: 'json-deduplicator.html' },

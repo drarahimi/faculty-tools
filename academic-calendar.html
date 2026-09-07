@@ -4,7 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UWindsor Academic Calendar | Faculty Tools</title>
+    <title>UWindsor Academic Calendar &amp; Deadlines Studio | Faculty Tools</title>
+
+    <!-- Theme Initialization to prevent white flash -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%230d9488'/%3E%3Cpath d='M50,18 A22,22 0 0,0 30.5,54.5 C34.5,58.8 37,63.2 37,69 L63,69 C63,63.2 65.5,58.8 69.5,54.5 A22,22 0 0,0 50,18 Z M42,74 L58,74 A2,2 0 0,1 56,79 L44,79 A2,2 0 0,1 42,74 Z' fill='white'/%3E%3C/svg%3E">
@@ -16,7 +25,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
 
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -37,9 +46,20 @@
                         brand: {
                             50: '#f0fdfa',
                             100: '#ccfbf1',
+                            200: '#99f6e4',
+                            300: '#5eead4',
+                            400: '#2dd4bf',
                             500: '#14b8a6',
                             600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
                             900: '#134e4a',
+                            950: '#042f2e',
+                        },
+                        uwindsor: {
+                            blue: '#005596',
+                            darkblue: '#00355e',
+                            gold: '#ffce00',
                         }
                     }
                 }
@@ -47,48 +67,101 @@
         }
     </script>
     <style>
-        /* Custom scrollbar for a polished look */
+        /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
         }
 
         ::-webkit-scrollbar-track {
-            background: #f1f1f1;
+            background: #f1f5f9;
+        }
+        .dark ::-webkit-scrollbar-track {
+            background: #0f172a;
         }
 
         ::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 4px;
         }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
 
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
 
         /* Calendar transitions */
         .calendar-cell {
-            transition: all 0.2s ease-in-out;
-        }
-
-        .calendar-cell:hover {
-            background-color: #f8fafc;
+            transition: background-color 0.15s ease-in-out;
         }
 
         .calendar-day-event {
-            transition: transform 0.15s ease;
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
         }
 
         .calendar-day-event:hover {
             transform: translateY(-1px);
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+                padding: 0 !important;
+            }
+            .no-print, header, aside, #calendarNav, #viewSelectorTabs, #header-actions, #semesterChipsBar, #dayPopoverOverlay {
+                display: none !important;
+            }
+            main {
+                border: none !important;
+                box-shadow: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+            .print-header {
+                display: block !important;
+                margin-bottom: 1.5rem;
+                padding-bottom: 0.75rem;
+                border-bottom: 2px solid #005596;
+            }
+            .calendar-cell {
+                min-height: 80px !important;
+                border: 1px solid #e2e8f0 !important;
+                page-break-inside: avoid;
+            }
+            .page-break {
+                page-break-before: always;
+            }
         }
     </style>
 </head>
 
 <body class="bg-gray-50 dark:bg-slate-950 text-gray-800 dark:text-slate-100 font-sans antialiased flex flex-col min-h-screen transition-colors duration-200">
 
+    <!-- Print-Only Header Banner -->
+    <div class="hidden print-header p-4">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-gray-900">University of Windsor — Academic Dates &amp; Deadlines</h1>
+                <p class="text-xs text-gray-600">Faculty Tools Academic Planning Reference</p>
+            </div>
+            <div class="text-right text-xs text-gray-500">
+                <span>Printed on: </span>
+                <span id="printDateLabel"></span>
+            </div>
+        </div>
+    </div>
+
     <!-- Header / Navigation Bar -->
-    <header class="bg-white/90 dark:bg-slate-900/90 border-b border-gray-200 dark:border-slate-800 sticky top-0 z-50 shadow-sm backdrop-blur-md">
+    <header class="bg-white/90 dark:bg-slate-900/90 border-b border-gray-200 dark:border-slate-800 sticky top-0 z-50 shadow-sm backdrop-blur-md no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center space-x-3">
                 <div class="bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 p-2 rounded-lg">
@@ -96,21 +169,79 @@
                 </div>
                 <div>
                     <h1 class="text-lg font-bold text-gray-900 dark:text-white leading-tight">UWindsor Academic Calendar</h1>
-                    <p class="text-xs text-gray-500 dark:text-slate-400">Interactive viewer &amp; exporter for registrar dates &amp; events</p>
+                    <p class="text-xs text-gray-500 dark:text-slate-400">Interactive planner, deadlines cheat-sheet &amp; calendar export</p>
                 </div>
             </div>
 
             <!-- Header Actions -->
-            <div class="flex items-center gap-3">
-                <button id="syncBtn" onclick="openSyncModal()" class="flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 dark:border-slate-700 hover:border-brand-500 text-gray-700 dark:text-slate-200 hover:text-brand-600 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 shadow-sm transition-all">
+            <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+                
+                <!-- Dark / Light Theme Toggle -->
+                <button id="themeToggleBtn" onclick="toggleTheme()" class="p-2 border border-gray-300 dark:border-slate-700 hover:border-brand-500 text-gray-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 shadow-sm transition-all" title="Toggle Theme (Dark/Light)">
+                    <i id="themeIcon" data-lucide="moon" class="w-4 h-4"></i>
+                </button>
+
+                <!-- Print View Button -->
+                <button onclick="triggerPrintView()" class="flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 dark:border-slate-700 hover:border-brand-500 text-gray-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 shadow-sm transition-all" title="Print View or Save as PDF (Ctrl+P)">
+                    <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                    <span class="hidden sm:inline">Print / PDF</span>
+                </button>
+
+                <!-- Multi-Option Export Dropdown -->
+                <div class="relative inline-block text-left">
+                    <button id="exportMenuBtn" onclick="toggleExportDropdown()" class="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>Export</span>
+                        <i data-lucide="chevron-down" class="w-3 h-3 ml-0.5"></i>
+                    </button>
+                    <div id="exportDropdownMenu" class="hidden absolute right-0 mt-1.5 w-56 rounded-xl shadow-xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 py-1.5 z-50 text-xs text-gray-700 dark:text-slate-200 animate-[fadeIn_0.1s_ease-out]">
+                        <button onclick="exportAllFilteredEventsToICS()" class="w-full text-left px-3.5 py-2 hover:bg-gray-50 dark:hover:bg-slate-700/60 flex items-center gap-2 transition-colors">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-brand-600 dark:text-brand-400"></i>
+                            <div>
+                                <div class="font-semibold">Export Filtered Events (.ics)</div>
+                                <div class="text-[10px] text-gray-400">Current search and filters</div>
+                            </div>
+                        </button>
+                        <button onclick="exportActiveSemesterICS()" class="w-full text-left px-3.5 py-2 hover:bg-gray-50 dark:hover:bg-slate-700/60 flex items-center gap-2 transition-colors">
+                            <i data-lucide="calendar-range" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400"></i>
+                            <div>
+                                <div class="font-semibold">Export Active Term (.ics)</div>
+                                <div class="text-[10px] text-gray-400">All dates for selected semester</div>
+                            </div>
+                        </button>
+                        <button onclick="exportBreaksOnlyICS()" class="w-full text-left px-3.5 py-2 hover:bg-gray-50 dark:hover:bg-slate-700/60 flex items-center gap-2 transition-colors">
+                            <i data-lucide="palmtree" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
+                            <div>
+                                <div class="font-semibold">Breaks &amp; Holidays (.ics)</div>
+                                <div class="text-[10px] text-gray-400">Teaching recesses and closures</div>
+                            </div>
+                        </button>
+                        <button onclick="exportFacultyMilestonesICS()" class="w-full text-left px-3.5 py-2 hover:bg-gray-50 dark:hover:bg-slate-700/60 flex items-center gap-2 transition-colors">
+                            <i data-lucide="check-square" class="w-3.5 h-3.5 text-rose-600 dark:text-rose-400"></i>
+                            <div>
+                                <div class="font-semibold">Faculty Milestones (.ics)</div>
+                                <div class="text-[10px] text-gray-400">Add/drop, VW, exams, grades</div>
+                            </div>
+                        </button>
+                        <div class="border-t border-gray-100 dark:border-slate-700 my-1"></div>
+                        <button onclick="exportFilteredEventsToCSV()" class="w-full text-left px-3.5 py-2 hover:bg-gray-50 dark:hover:bg-slate-700/60 flex items-center gap-2 transition-colors">
+                            <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400"></i>
+                            <div>
+                                <div class="font-semibold">Export as CSV (.csv)</div>
+                                <div class="text-[10px] text-gray-400">Excel / Spreadsheet format</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Sync / Import Live -->
+                <button id="syncBtn" onclick="openSyncModal()" class="flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 dark:border-slate-700 hover:border-brand-500 text-gray-700 dark:text-slate-200 hover:text-brand-600 dark:hover:text-brand-400 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 shadow-sm transition-all">
                     <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                    <span class="hidden sm:inline">Sync Live</span>
+                    <span class="hidden sm:inline">Sync / Import</span>
                 </button>
-                <button id="exportIcsBtn" onclick="exportFilteredEventsToICS()" class="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all">
-                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                    <span>Export ICS</span>
-                </button>
+
                 <div id="header-quick-nav"></div>
+
                 <a href="index.html" class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors bg-gray-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700">
                     <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
                     <span>Dashboard</span>
@@ -123,72 +254,87 @@
     <div class="flex-grow max-w-none w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col lg:flex-row gap-6">
         
         <!-- Left Sidebar: Controls & Filters -->
-        <aside class="w-full lg:w-80 flex flex-col gap-5 flex-shrink-0">
+        <aside class="w-full lg:w-80 flex flex-col gap-5 flex-shrink-0 no-print">
             
+            <!-- Audience & Focus Card -->
+            <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-gray-200 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+                <div class="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-2">
+                    <h3 class="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Audience &amp; Focus</h3>
+                </div>
+                <div class="grid grid-cols-2 gap-1.5" id="audiencePills">
+                    <button type="button" onclick="setAudienceFilter('all')" id="aud-all" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-center border transition-all bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-300 border-brand-300 dark:border-brand-800 shadow-sm">All Events</button>
+                    <button type="button" onclick="setAudienceFilter('faculty')" id="aud-faculty" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-center border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all">Faculty Milestones</button>
+                    <button type="button" onclick="setAudienceFilter('graduate')" id="aud-graduate" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-center border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all">Graduate Studies</button>
+                    <button type="button" onclick="setAudienceFilter('holidays')" id="aud-holidays" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-center border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all">Closures &amp; Breaks</button>
+                </div>
+            </div>
+
             <!-- Search Widget -->
-            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col gap-3">
-                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Search Events</h3>
+            <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-gray-200 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+                <h3 class="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Search Events</h3>
                 <div class="relative group">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i data-lucide="search" class="h-4 w-4 text-gray-400 group-focus-within:text-brand-500 transition-colors"></i>
                     </div>
                     <input type="text" id="eventSearch" oninput="handleFilterChange()"
-                        class="block w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-sm transition-all"
+                        class="block w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-slate-700 rounded-lg text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 shadow-sm transition-all"
                         placeholder="Type to filter titles...">
                 </div>
             </div>
 
             <!-- Categories Filters -->
-            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col gap-4">
-                <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-                    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Categories</h3>
-                    <button onclick="toggleAllCategories(true)" class="text-[10px] text-brand-600 hover:underline">Select All</button>
+            <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-gray-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+                <div class="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-2">
+                    <h3 class="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Categories</h3>
+                    <button onclick="toggleAllCategories(true)" class="text-[10px] text-brand-600 dark:text-brand-400 hover:underline">Select All</button>
                 </div>
                 
-                <div class="flex flex-col gap-3" id="categoryFiltersList">
+                <div class="flex flex-col gap-2" id="categoryFiltersList">
                     <!-- Dynamic categories checkboxes with color dots and counts will be injected here -->
                 </div>
             </div>
 
             <!-- Date Range Filter -->
-            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col gap-4">
-                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Date Filters</h3>
+            <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-gray-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+                <h3 class="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Date Filters</h3>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="text-[11px] text-gray-400 font-medium">Start Year</label>
-                        <select id="startYearFilter" onchange="handleFilterChange()" class="w-full mt-1 border border-gray-300 rounded-lg p-1.5 text-xs focus:ring-brand-500 focus:border-brand-500 bg-white">
+                        <label class="text-[11px] text-gray-400 dark:text-slate-400 font-medium">Start Year</label>
+                        <select id="startYearFilter" onchange="handleFilterChange()" class="w-full mt-1 border border-gray-300 dark:border-slate-700 rounded-lg p-1.5 text-xs focus:ring-brand-500 focus:border-brand-500 bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-200">
                             <!-- Populated dynamically -->
                         </select>
                     </div>
                     <div>
-                        <label class="text-[11px] text-gray-400 font-medium">End Year</label>
-                        <select id="endYearFilter" onchange="handleFilterChange()" class="w-full mt-1 border border-gray-300 rounded-lg p-1.5 text-xs focus:ring-brand-500 focus:border-brand-500 bg-white">
+                        <label class="text-[11px] text-gray-400 dark:text-slate-400 font-medium">End Year</label>
+                        <select id="endYearFilter" onchange="handleFilterChange()" class="w-full mt-1 border border-gray-300 dark:border-slate-700 rounded-lg p-1.5 text-xs focus:ring-brand-500 focus:border-brand-500 bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-200">
                             <!-- Populated dynamically -->
                         </select>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <input type="checkbox" id="hidePastEvents" onchange="handleFilterChange()" class="rounded text-brand-600 focus:ring-brand-500 h-4 w-4">
-                    <label for="hidePastEvents" class="text-xs text-gray-600 font-medium select-none cursor-pointer">Hide past events</label>
+                    <input type="checkbox" id="hidePastEvents" onchange="handleFilterChange()" class="rounded text-brand-600 focus:ring-brand-500 h-4 w-4 bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700">
+                    <label for="hidePastEvents" class="text-xs text-gray-600 dark:text-slate-300 font-medium select-none cursor-pointer">Hide past events</label>
                 </div>
-
             </div>
 
-            <!-- Sync Stats Card -->
-            <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm flex flex-col gap-2.5">
-                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Database Status</h3>
-                <div class="text-xs flex flex-col gap-1.5 text-gray-600">
+            <!-- Database Status Card -->
+            <div class="bg-white dark:bg-slate-900 rounded-xl p-5 border border-gray-200 dark:border-slate-800 shadow-sm flex flex-col gap-2.5">
+                <div class="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-1.5">
+                    <h3 class="text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Database Status</h3>
+                    <button onclick="resetToOfficialDefaults()" class="text-[10px] text-amber-600 dark:text-amber-400 hover:underline font-medium" title="Clear local cache and restore pre-loaded dates">Reset Defaults</button>
+                </div>
+                <div class="text-xs flex flex-col gap-1.5 text-gray-600 dark:text-slate-300">
                     <div class="flex justify-between">
                         <span>Total Events:</span>
-                        <span id="statTotal" class="font-bold text-gray-900">-</span>
+                        <span id="statTotal" class="font-bold text-gray-900 dark:text-white">-</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Matching Filters:</span>
-                        <span id="statFiltered" class="font-bold text-brand-600">-</span>
+                        <span id="statFiltered" class="font-bold text-brand-600 dark:text-brand-400">-</span>
                     </div>
                     <div class="flex justify-between">
                         <span>Last Updated:</span>
-                        <span id="statUpdated" class="font-medium text-gray-900">-</span>
+                        <span id="statUpdated" class="font-medium text-gray-900 dark:text-white">-</span>
                     </div>
                 </div>
             </div>
@@ -196,46 +342,61 @@
         </aside>
 
         <!-- Right Content Panel -->
-        <main class="flex-grow bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+        <main class="flex-grow bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden flex flex-col">
             
-            <!-- Navigation Tabs / Calendar Bar -->
-            <div class="border-b border-gray-200 bg-gray-50 px-5 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <!-- Top Control Bar (Semester Chips & View Tabs) -->
+            <div class="border-b border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-slate-900/60 px-5 py-3.5 flex flex-col gap-3.5 no-print">
                 
-                <!-- View Selector -->
-                <div class="flex p-0.5 bg-gray-200/80 rounded-lg self-start sm:self-auto">
-                    <button id="viewTabCalendar" onclick="switchView('calendar')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-700 bg-white shadow-sm">
-                        <i data-lucide="calendar-days" class="w-3.5 h-3.5"></i>
-                        <span>Calendar Grid</span>
-                    </button>
-                    <button id="viewTabList" onclick="switchView('list')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-500 hover:text-gray-900">
-                        <i data-lucide="list" class="w-3.5 h-3.5"></i>
-                        <span>List Timeline</span>
-                    </button>
-                    <button id="viewTabBreaks" onclick="switchView('breaks')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-500 hover:text-gray-900">
-                        <i data-lucide="palmtree" class="w-3.5 h-3.5"></i>
-                        <span>Semester Breaks</span>
-                    </button>
+                <!-- 1-Click Semester Jump Chips -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs text-gray-600 dark:text-slate-300" id="semesterChipsBar">
+                    <span class="text-[11px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap mr-1">Semester:</span>
+                    <!-- Dynamic semester jump chips injected here -->
                 </div>
 
-                <!-- Calendar Navigation (Only visible in Calendar mode) -->
-                <div id="calendarNav" class="flex items-center gap-3">
-                    <button onclick="navigateMonth(-1)" class="p-1.5 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors border border-gray-300 bg-white">
-                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
-                    </button>
-                    <h2 id="calendarTitle" class="text-sm sm:text-base font-bold text-gray-800 w-36 text-center select-none">
-                        July 2026
-                    </h2>
-                    <button onclick="navigateMonth(1)" class="p-1.5 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors border border-gray-300 bg-white">
-                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                    </button>
-                    <button onclick="navigateToday()" class="px-2.5 py-1 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors border border-gray-300 bg-white text-xs font-medium">
-                        Today
-                    </button>
-                </div>
+                <!-- Navigation Tabs / Calendar Bar -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-1">
+                    
+                    <!-- View Selector Tabs -->
+                    <div class="flex p-0.5 bg-gray-200/80 dark:bg-slate-800 rounded-lg self-start sm:self-auto flex-wrap">
+                        <button id="viewTabCalendar" onclick="switchView('calendar')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-700 dark:text-white bg-white dark:bg-slate-700 shadow-sm">
+                            <i data-lucide="calendar-days" class="w-3.5 h-3.5"></i>
+                            <span>Calendar Grid</span>
+                        </button>
+                        <button id="viewTabList" onclick="switchView('list')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
+                            <i data-lucide="list" class="w-3.5 h-3.5"></i>
+                            <span>List Timeline</span>
+                        </button>
+                        <button id="viewTabBreaks" onclick="switchView('breaks')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
+                            <i data-lucide="palmtree" class="w-3.5 h-3.5"></i>
+                            <span>Semester Breaks</span>
+                        </button>
+                        <button id="viewTabCheatSheet" onclick="switchView('cheatsheet')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white">
+                            <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-500"></i>
+                            <span>Deadlines Cheat-Sheet</span>
+                        </button>
+                    </div>
 
-                <!-- List Info (Only visible in List mode) -->
-                <div id="listInfo" class="hidden text-xs text-gray-500 font-medium">
-                    Showing events chronologically
+                    <!-- Calendar Navigation (Only visible in Calendar mode) -->
+                    <div id="calendarNav" class="flex items-center gap-2 sm:gap-3">
+                        <button onclick="navigateMonth(-1)" class="p-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-600 dark:text-slate-300 rounded-lg transition-colors border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                        </button>
+                        <h2 id="calendarTitle" class="text-sm sm:text-base font-bold text-gray-800 dark:text-white w-36 text-center select-none">
+                            July 2026
+                        </h2>
+                        <button onclick="navigateMonth(1)" class="p-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-600 dark:text-slate-300 rounded-lg transition-colors border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800">
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="navigateToday()" class="px-2.5 py-1 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-600 dark:text-slate-300 rounded-lg transition-colors border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-medium">
+                            Today
+                        </button>
+                    </div>
+
+                    <!-- List Info (Only visible in List or Breaks mode) -->
+                    <div id="listInfo" class="hidden text-xs text-gray-500 dark:text-slate-400 font-medium">
+                        Showing events chronologically
+                    </div>
+
                 </div>
 
             </div>
@@ -247,7 +408,7 @@
                 <div id="calendarView">
                     
                     <!-- Week Days Headers -->
-                    <div class="grid grid-cols-7 border-b border-gray-200 pb-2 text-center text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    <div class="grid grid-cols-7 border-b border-gray-200 dark:border-slate-800 pb-2 text-center text-xs font-semibold text-gray-400 dark:text-slate-400 uppercase tracking-wider">
                         <div>Sun</div>
                         <div>Mon</div>
                         <div>Tue</div>
@@ -258,7 +419,7 @@
                     </div>
 
                     <!-- Month Days Grid -->
-                    <div id="calendarGrid" class="grid grid-cols-7 border-t border-l border-gray-100 mt-2 bg-gray-100 gap-[1px]">
+                    <div id="calendarGrid" class="grid grid-cols-7 border-t border-l border-gray-200 dark:border-slate-800 mt-2 bg-gray-200 dark:bg-slate-800 gap-[1px]">
                         <!-- Dynamic cells injected here -->
                     </div>
 
@@ -269,9 +430,9 @@
                     <!-- Events grouped by Month-Year will be injected here -->
                     <div id="listContainer" class="flex flex-col gap-6"></div>
                     <div id="listEmptyState" class="hidden text-center py-16">
-                        <i data-lucide="calendar-range" class="w-12 h-12 text-gray-300 mx-auto mb-3"></i>
-                        <h3 class="text-sm font-medium text-gray-900">No events match your criteria</h3>
-                        <p class="text-xs text-gray-500 mt-1">Try relaxing your search terms or enabling more categories.</p>
+                        <i data-lucide="calendar-range" class="w-12 h-12 text-gray-300 dark:text-slate-600 mx-auto mb-3"></i>
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white">No events match your criteria</h3>
+                        <p class="text-xs text-gray-500 dark:text-slate-400 mt-1">Try relaxing your search terms or enabling more categories.</p>
                     </div>
                 </div>
 
@@ -279,10 +440,69 @@
                 <div id="breaksView" class="hidden flex flex-col gap-6">
                     <div id="breaksContainer" class="flex flex-col gap-6"></div>
                     <div id="breaksEmptyState" class="hidden text-center py-16">
-                        <i data-lucide="palmtree" class="w-12 h-12 text-gray-300 mx-auto mb-3"></i>
-                        <h3 class="text-sm font-medium text-gray-900">No upcoming breaks or holidays found</h3>
-                        <p class="text-xs text-gray-500 mt-1">Try adjusting your search query.</p>
+                        <i data-lucide="palmtree" class="w-12 h-12 text-gray-300 dark:text-slate-600 mx-auto mb-3"></i>
+                        <h3 class="text-sm font-medium text-gray-900 dark:text-white">No upcoming breaks or holidays found</h3>
+                        <p class="text-xs text-gray-500 dark:text-slate-400 mt-1">Try adjusting your search query.</p>
                     </div>
+                </div>
+
+                <!-- View 4: ⚡ Deadlines Cheat-Sheet View -->
+                <div id="cheatSheetView" class="hidden flex flex-col gap-6">
+                    
+                    <!-- Cheat-Sheet Header Bar -->
+                    <div class="bg-gradient-to-r from-teal-50 to-blue-50 dark:from-slate-800/90 dark:to-slate-800/40 p-5 rounded-xl border border-teal-200/60 dark:border-slate-700 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="p-1.5 rounded-lg bg-teal-600 text-white shadow-sm">
+                                    <i data-lucide="zap" class="w-4 h-4"></i>
+                                </span>
+                                <h2 class="text-base font-bold text-gray-900 dark:text-white">
+                                    Semester Deadlines Cheat-Sheet
+                                </h2>
+                            </div>
+                            <p class="text-xs text-gray-600 dark:text-slate-300 mt-1">
+                                Essential academic dates, course drop deadlines, exam windows, and grade submission targets.
+                            </p>
+                        </div>
+                        
+                        <div class="flex items-center gap-2 flex-wrap self-stretch sm:self-auto">
+                            <select id="cheatSheetTermSelect" onchange="handleCheatSheetTermChange()" class="border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 rounded-lg px-3 py-1.5 text-xs font-semibold focus:ring-brand-500 focus:border-brand-500 shadow-sm">
+                                <!-- Populated dynamically with available terms -->
+                            </select>
+                            <button onclick="copyCheatSheetMarkdown()" id="copySyllabusBtn" class="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all">
+                                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                <span>Copy Syllabus Blurb</span>
+                            </button>
+                            <button onclick="window.print()" class="flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 shadow-sm transition-all">
+                                <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                                <span>Print Summary</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Cards Grid -->
+                    <div id="cheatSheetCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Populated dynamically with cards -->
+                    </div>
+
+                    <!-- Course Outline Markdown Preview Box -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-5 shadow-sm flex flex-col gap-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="file-text" class="w-4 h-4 text-brand-500"></i>
+                                <span>Syllabus Policy Snippet (Markdown Format)</span>
+                            </h3>
+                            <button onclick="copyCheatSheetMarkdown()" class="text-xs text-brand-600 dark:text-brand-400 hover:underline font-semibold flex items-center gap-1">
+                                <i data-lucide="copy" class="w-3 h-3"></i>
+                                <span>Copy Markdown</span>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 dark:text-slate-400">
+                            Ready to paste directly into course outlines, Word documents, or Brightspace course announcements:
+                        </p>
+                        <pre id="syllabusMarkdownSnippet" class="bg-gray-50 dark:bg-slate-950 p-4 rounded-lg border border-gray-200 dark:border-slate-800 text-xs font-mono text-gray-800 dark:text-slate-200 overflow-x-auto whitespace-pre leading-relaxed"></pre>
+                    </div>
+
                 </div>
 
             </div>
@@ -291,41 +511,58 @@
     </div>
 
     <!-- Event Detail Modal -->
-    <div id="eventModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
-        <div class="bg-white rounded-xl max-w-lg w-full shadow-2xl overflow-hidden border border-gray-200 animate-[fadeIn_0.2s_ease-out]">
-            <div id="modalHeader" class="px-6 py-4 flex items-start justify-between border-b border-gray-100">
+    <div id="eventModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 dark:bg-black/70 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 rounded-xl max-w-lg w-full shadow-2xl overflow-hidden border border-gray-200 dark:border-slate-800 animate-[fadeIn_0.2s_ease-out]">
+            <div id="modalHeader" class="px-6 py-4 flex items-start justify-between border-b border-gray-100 dark:border-slate-800">
                 <span id="modalCategoryBadge" class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border">
                     Category
                 </span>
-                <button onclick="closeEventModal()" class="p-1 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-600 transition-colors">
+                <button onclick="closeEventModal()" class="p-1 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
             <div class="p-6 flex flex-col gap-4">
-                <h2 id="modalTitle" class="text-lg font-bold text-gray-900 leading-snug">
+                <h2 id="modalTitle" class="text-lg font-bold text-gray-900 dark:text-white leading-snug">
                     Event Title
                 </h2>
                 
-                <div class="flex flex-col gap-2.5 text-sm text-gray-600 mt-2">
+                <div class="flex flex-col gap-2.5 text-sm text-gray-600 dark:text-slate-300 mt-2">
                     <div class="flex items-center gap-2.5">
-                        <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
-                        <span id="modalDateRange" class="font-medium text-gray-800">Date Range</span>
+                        <i data-lucide="calendar" class="w-4 h-4 text-gray-400 dark:text-slate-500"></i>
+                        <span id="modalDateRange" class="font-medium text-gray-800 dark:text-slate-100">Date Range</span>
                     </div>
                     <div class="flex items-center gap-2.5">
-                        <i data-lucide="clock" class="w-4 h-4 text-gray-400"></i>
-                        <span id="modalDuration" class="text-xs">Duration: 1 day</span>
+                        <i data-lucide="clock" class="w-4 h-4 text-gray-400 dark:text-slate-500"></i>
+                        <span id="modalDuration" class="text-xs text-gray-500 dark:text-slate-400">Duration: 1 day</span>
+                    </div>
+                </div>
+
+                <!-- 1-Click Direct Calendar Links -->
+                <div class="mt-3 p-3.5 bg-gray-50 dark:bg-slate-800/60 rounded-xl border border-gray-200 dark:border-slate-700/80 flex flex-col gap-2">
+                    <div class="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">Add to Personal Calendar:</div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <a id="modalGoogleCalLink" href="#" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-700 hover:bg-blue-50 dark:hover:bg-slate-600 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900 rounded-lg text-xs font-semibold transition-colors shadow-sm">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400"></i>
+                            <span>Google Calendar</span>
+                            <i data-lucide="external-link" class="w-3 h-3 ml-0.5 opacity-70"></i>
+                        </a>
+                        <a id="modalOutlookCalLink" href="#" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-700 hover:bg-sky-50 dark:hover:bg-slate-600 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-900 rounded-lg text-xs font-semibold transition-colors shadow-sm">
+                            <i data-lucide="calendar-plus" class="w-3.5 h-3.5 text-sky-600 dark:text-sky-400"></i>
+                            <span>Outlook 365</span>
+                            <i data-lucide="external-link" class="w-3 h-3 ml-0.5 opacity-70"></i>
+                        </a>
                     </div>
                 </div>
             </div>
-            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row items-center gap-2.5 justify-between">
-                <button id="modalSingleExportIcs" class="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3.5 py-2 border border-gray-300 hover:border-brand-500 text-gray-700 hover:text-brand-600 rounded-lg text-xs font-semibold bg-white shadow-sm transition-all">
-                    <i data-lucide="calendar-plus" class="w-4 h-4"></i>
-                    <span>Add to Calendar</span>
+            <div class="px-6 py-4 bg-gray-50 dark:bg-slate-900/80 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row items-center gap-2.5 justify-between">
+                <button id="modalSingleExportIcs" class="w-full sm:w-auto flex items-center justify-center gap-1.5 px-3.5 py-2 border border-gray-300 dark:border-slate-700 hover:border-brand-500 text-gray-700 dark:text-slate-200 hover:text-brand-600 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 shadow-sm transition-all">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>Download .ICS</span>
                 </button>
                 <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <button id="modalCopyDetails" class="flex-grow sm:flex-grow-0 flex items-center justify-center gap-1 px-3 py-2 text-gray-500 hover:text-gray-700 text-xs font-medium transition-colors">
+                    <button id="modalCopyDetails" class="flex-grow sm:flex-grow-0 flex items-center justify-center gap-1 px-3 py-2 text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200 text-xs font-medium transition-colors">
                         <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                        <span>Copy</span>
+                        <span>Copy Details</span>
                     </button>
                     <a id="modalLink" href="#" target="_blank" class="flex-grow sm:flex-grow-0 flex items-center justify-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all text-center">
                         <span>Registrar Link</span>
@@ -336,15 +573,15 @@
         </div>
     </div>
 
-    <!-- Sync Modal / Live Scraper Panel -->
-    <div id="syncModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
-        <div class="bg-white rounded-xl max-w-xl w-full shadow-2xl overflow-hidden border border-gray-200">
-            <div class="px-6 py-4 flex items-center justify-between border-b border-gray-100">
-                <h2 class="font-bold text-gray-900 flex items-center gap-2">
-                    <i data-lucide="refresh-cw" class="w-5 h-5 text-brand-600"></i>
-                    <span>Sync Registrar Data</span>
+    <!-- Sync Modal / Live Scraper & Enhanced Manual Importer -->
+    <div id="syncModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 dark:bg-black/70 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 rounded-xl max-w-xl w-full shadow-2xl overflow-hidden border border-gray-200 dark:border-slate-800">
+            <div class="px-6 py-4 flex items-center justify-between border-b border-gray-100 dark:border-slate-800">
+                <h2 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-5 h-5 text-brand-600 dark:text-brand-400"></i>
+                    <span>Sync &amp; Import Registrar Data</span>
                 </h2>
-                <button onclick="closeSyncModal()" id="syncCloseX" class="p-1 hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-600 transition-colors">
+                <button onclick="closeSyncModal()" id="syncCloseX" class="p-1 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -353,47 +590,56 @@
                 
                 <!-- Initial State Details -->
                 <div id="syncInfoArea">
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        This tool pre-loads a database of UWindsor academic dates. You can sync the calendar directly with the live website. This will iterate through all registrar pagination pages via a CORS proxy.
+                    <p class="text-sm text-gray-600 dark:text-slate-300 leading-relaxed">
+                        This tool pre-loads a database of official UWindsor academic dates for 2026–2029. You can re-sync directly via live web scraping or paste updated registrar listings.
                     </p>
-                    <div class="mt-4 p-3.5 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-800 flex items-start gap-2.5">
-                        <i data-lucide="alert-triangle" class="w-4 h-4 mt-0.5 flex-shrink-0"></i>
-                        <span>Scraping pages in-browser depends on public CORS proxy servers. If the process hangs or fails, you can copy-paste the HTML markup manually.</span>
+                    <div class="mt-4 p-3.5 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-900/50 rounded-lg text-xs text-yellow-800 dark:text-yellow-200 flex items-start gap-2.5">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 mt-0.5 flex-shrink-0 text-yellow-600 dark:text-yellow-400"></i>
+                        <span>Client-side scraping relies on public CORS proxies. If a proxy is slow or restricted by network firewalls, use the <strong>Import HTML / Text</strong> tab below.</span>
                     </div>
                 </div>
 
                 <!-- Progress State -->
                 <div id="syncProgressArea" class="hidden flex flex-col gap-3 py-4">
-                    <div class="flex items-center justify-between text-xs font-semibold text-gray-500">
+                    <div class="flex items-center justify-between text-xs font-semibold text-gray-500 dark:text-slate-400">
                         <span id="syncProgressStatus">Initializing scrape...</span>
                         <span id="syncProgressPercent">0%</span>
                     </div>
                     <!-- Progress Bar -->
-                    <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div class="w-full bg-gray-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
                         <div id="syncProgressBar" class="bg-brand-600 h-full w-0 transition-all duration-300"></div>
                     </div>
-                    <div class="text-[11px] text-gray-400 flex items-center gap-1.5">
+                    <div class="text-[11px] text-gray-400 dark:text-slate-500 flex items-center gap-1.5">
                         <i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i>
                         <span id="syncProgressSubtext">Please do not close this window.</span>
                     </div>
                 </div>
 
-                <!-- Manual Paste Fallback Area -->
+                <!-- Enhanced Manual Import Area (HTML or Plain Text / Tabular) -->
                 <div id="syncManualArea" class="hidden flex flex-col gap-2.5">
-                    <label class="text-xs font-semibold text-gray-500">Paste registrar list page HTML source:</label>
-                    <textarea id="manualHtmlInput" class="w-full h-36 border border-gray-300 rounded-lg p-2.5 text-xs font-mono focus:ring-brand-500 focus:border-brand-500 bg-gray-50" placeholder="Paste HTML of events-listing page here (e.g. view-content element or whole page)..."></textarea>
-                    <p class="text-[10px] text-gray-400">You can paste the HTML of any events-listing page. The system will extract events instantly and merge them into the local database.</p>
+                    <label class="text-xs font-semibold text-gray-700 dark:text-slate-300">Paste registrar HTML table source OR plain-text dates:</label>
+                    <textarea id="manualHtmlInput" class="w-full h-40 border border-gray-300 dark:border-slate-700 rounded-lg p-2.5 text-xs font-mono focus:ring-brand-500 focus:border-brand-500 bg-gray-50 dark:bg-slate-800 text-gray-800 dark:text-slate-200" placeholder="Paste HTML &lt;tr&gt; elements OR plain text lines, e.g.:
+Sept 3, 2026 - First day of classes
+Dec 7-18, 2026 - Final Examination Period"></textarea>
+                    <p class="text-[10px] text-gray-500 dark:text-slate-400">
+                        Smart parser automatically extracts dates, titles, and ranges. Newly discovered events will be merged into the existing database.
+                    </p>
                 </div>
 
             </div>
 
             <!-- Sync Footer -->
-            <div id="syncFooter" class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3">
-                <button id="syncManualModeToggle" onclick="toggleSyncManualMode()" class="text-xs text-gray-500 hover:text-brand-600 font-medium">
-                    Import HTML Manually
-                </button>
+            <div id="syncFooter" class="px-6 py-4 bg-gray-50 dark:bg-slate-800/80 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <button id="syncManualModeToggle" onclick="toggleSyncManualMode()" class="text-xs text-gray-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 font-medium">
+                        Import HTML / Text
+                    </button>
+                    <button onclick="resetToOfficialDefaults()" class="text-xs text-amber-600 dark:text-amber-400 hover:underline">
+                        Restore Defaults
+                    </button>
+                </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="closeSyncModal()" id="syncCancelBtn" class="px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold bg-white shadow-sm transition-colors">
+                    <button onclick="closeSyncModal()" id="syncCancelBtn" class="px-4 py-2 border border-gray-300 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-700 dark:text-slate-200 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 shadow-sm transition-colors">
                         Cancel
                     </button>
                     <button onclick="startScrapingLive()" id="syncActionBtn" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors flex items-center gap-1.5">
@@ -406,7 +652,7 @@
     </div>
 
     <!-- Toast Notice -->
-    <div id="toast" class="invisible fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white text-xs font-semibold px-4 py-3 rounded-lg flex items-center gap-2.5 shadow-xl transition-all duration-300 opacity-0 transform translate-y-2">
+    <div id="toast" class="invisible fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-gray-900 dark:bg-slate-800 text-white text-xs font-semibold px-4 py-3 rounded-lg flex items-center gap-2.5 shadow-xl transition-all duration-300 opacity-0 transform translate-y-2 border border-gray-700 dark:border-slate-700">
         <i id="toastIcon" data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
         <span id="toastMsg">Action complete</span>
     </div>
@@ -417,8 +663,7 @@
         // DATABASE & STATE MANAGEMENT
         // -------------------------------------------------------------
 
-        // This variable is populated with pre-scraped events by the build script
-        window.SCRAPED_EVENTS = [
+window.SCRAPED_EVENTS = [
   {
     "title": "GRAD: Academic Add/Drop for Full Summer 2026 (12 week)",
     "url": "https://www.uwindsor.ca/graduate-studies/356/important-dates",
@@ -2071,34 +2316,84 @@
     "endDate": "2029-12-20",
     "dateText": "Dec 20th, 2029"
   }
-]
+];
 
         // Application State
-        const state = {
+        var state = {
             events: [],
             filteredEvents: [],
-            currentView: 'calendar', // 'calendar' or 'list'
+            currentView: 'calendar', // 'calendar', 'list', 'breaks', or 'cheatsheet'
             currentDate: new Date(), // Selected month/year for calendar view
             selectedCategories: new Set(),
+            audienceFilter: 'all', // 'all', 'faculty', 'graduate', 'holidays'
             searchQuery: '',
             startYear: 2026,
-            endYear: 2026,
+            endYear: 2029,
             hidePast: false,
+            activeSemester: 'Fall 2026', // Selected semester for cheat-sheet and chips
             lastUpdated: null,
             categories: [
-                { id: 'deadlines', name: 'Deadlines & Fees', keywords: ['drop', 'refund', 'withdrawal', 'vw', 'deadline', 'apply', 'fee', 'coop', 'co-op'], color: 'rose', borderClass: 'border-rose-200 bg-rose-50 text-rose-700', badgeClass: 'bg-rose-500 text-white', dotClass: 'bg-rose-500' },
-                { id: 'classes', name: 'Classes & Recesses', keywords: ['class', 'classes', 'make-up', 'makeup', 'study day', 'reading week', 'recess', 'holiday', 'closed', 'labour day', 'thanksgiving', 'christmas', 'new year', 'easter', 're-examination', 'pre-examination'], color: 'emerald', borderClass: 'border-emerald-200 bg-emerald-50 text-emerald-700', badgeClass: 'bg-emerald-500 text-white', dotClass: 'bg-emerald-500' },
-                { id: 'special', name: 'Orientations & Special Programs', keywords: ['orientation', 'law', 'nursing', 'jd', 'transitions'], color: 'blue', borderClass: 'border-blue-200 bg-blue-50 text-blue-700', badgeClass: 'bg-blue-500 text-white', dotClass: 'bg-blue-500' },
-                { id: 'graduate', name: 'Graduate Studies', keywords: ['grad:', 'phd', 'thesis', 'defense', 'dissertation', 'external examiner'], color: 'purple', borderClass: 'border-purple-300 bg-purple-100/95 text-purple-800 font-semibold', badgeClass: 'bg-purple-600 text-white', dotClass: 'bg-purple-600' },
-                { id: 'general', name: 'General Academic', keywords: [], color: 'slate', borderClass: 'border-slate-200 bg-slate-50 text-slate-700', badgeClass: 'bg-slate-500 text-white', dotClass: 'bg-slate-500' }
+                { id: 'deadlines', name: 'Deadlines & Fees', keywords: ['drop', 'refund', 'withdrawal', 'vw', 'deadline', 'apply', 'fee', 'coop', 'co-op'], color: 'rose', borderClass: 'border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300', badgeClass: 'bg-rose-500 text-white', dotClass: 'bg-rose-500' },
+                { id: 'classes', name: 'Classes & Recesses', keywords: ['class', 'classes', 'make-up', 'makeup', 'study day', 'reading week', 'recess', 'holiday', 'closed', 'labour day', 'thanksgiving', 'christmas', 'new year', 'easter', 're-examination', 'pre-examination'], color: 'emerald', borderClass: 'border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300', badgeClass: 'bg-emerald-500 text-white', dotClass: 'bg-emerald-500' },
+                { id: 'special', name: 'Orientations & Special Programs', keywords: ['orientation', 'law', 'nursing', 'jd', 'transitions'], color: 'blue', borderClass: 'border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300', badgeClass: 'bg-blue-500 text-white', dotClass: 'bg-blue-500' },
+                { id: 'graduate', name: 'Graduate Studies', keywords: ['grad:', 'phd', 'thesis', 'defense', 'dissertation', 'external examiner'], color: 'purple', borderClass: 'border-purple-300 dark:border-purple-900/50 bg-purple-100/95 dark:bg-purple-950/40 text-purple-800 dark:text-purple-300 font-semibold', badgeClass: 'bg-purple-600 text-white', dotClass: 'bg-purple-600' },
+                { id: 'general', name: 'General Academic', keywords: [], color: 'slate', borderClass: 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300', badgeClass: 'bg-slate-500 text-white', dotClass: 'bg-slate-500' }
             ]
         };
 
-        // Determine event category based on title keywords
+        // -------------------------------------------------------------
+        // THEME MANAGEMENT
+        // -------------------------------------------------------------
+
+        function initTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            updateThemeIcon(isDark);
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcon(isDark);
+        }
+
+        function updateThemeIcon(isDark) {
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                lucide.createIcons();
+            }
+        }
+
+        // Print View Trigger
+        function triggerPrintView() {
+            const label = document.getElementById('printDateLabel');
+            if (label) label.textContent = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+            window.print();
+        }
+
+        // Export Dropdown Toggle
+        function toggleExportDropdown() {
+            const menu = document.getElementById('exportDropdownMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const btn = document.getElementById('exportMenuBtn');
+            const menu = document.getElementById('exportDropdownMenu');
+            if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        // -------------------------------------------------------------
+        // CATEGORY & AUDIENCE CLASSIFICATION
+        // -------------------------------------------------------------
+
         function getEventCategory(event) {
             const titleLower = event.title.toLowerCase();
             for (const cat of state.categories) {
-                if (cat.id === 'general') continue; // reserve general as fallback
+                if (cat.id === 'general') continue;
                 if (cat.keywords.some(kw => titleLower.includes(kw))) {
                     return cat;
                 }
@@ -2115,14 +2410,50 @@
 
         function isBreakEvent(event) {
             const titleLower = event.title.toLowerCase();
-            // Exclude make-up dates as classes are held on those days
             if (titleLower.includes('make-up') || titleLower.includes('makeup') || titleLower.includes('make up')) {
                 return false;
             }
             return breakKeywords.some(kw => titleLower.includes(kw));
         }
 
-        // Helper to format Date string to text (e.g. "Aug 21st, 2026")
+        // Audience Matching
+        function matchesAudience(evt, aud) {
+            if (aud === 'all') return true;
+            const t = evt.title.toLowerCase();
+            if (aud === 'faculty') {
+                return t.includes('class') || t.includes('exam') || t.includes('vw') || 
+                       t.includes('withdrawal') || t.includes('drop') || t.includes('study day') || 
+                       t.includes('grade') || t.includes('reading week') || t.includes('recess') ||
+                       t.includes('holiday') || t.includes('convocation') || t.includes('make-up');
+            }
+            if (aud === 'graduate') {
+                return t.includes('grad:') || t.includes('phd') || t.includes('thesis') || 
+                       t.includes('defense') || t.includes('dissertation') || t.includes('deposit') || 
+                       t.includes('phase i') || t.includes('phase ii');
+            }
+            if (aud === 'holidays') {
+                return isBreakEvent(evt) || t.includes('closed');
+            }
+            return true;
+        }
+
+        function setAudienceFilter(aud) {
+            state.audienceFilter = aud;
+            ['all', 'faculty', 'graduate', 'holidays'].forEach(id => {
+                const btn = document.getElementById('aud-' + id);
+                if (!btn) return;
+                if (id === aud) {
+                    btn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-semibold text-center border transition-all bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-300 border-brand-300 dark:border-brand-800 shadow-sm';
+                } else {
+                    btn.className = 'px-2.5 py-1.5 rounded-lg text-xs font-semibold text-center border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-all';
+                }
+            });
+            applyFilters();
+            renderCategoryFilters();
+            renderViews();
+        }
+
+        // Helper to format Date string to text
         function formatDisplayDate(dateStr) {
             if (!dateStr) return '';
             const d = new Date(dateStr + 'T12:00:00');
@@ -2139,6 +2470,23 @@
             return `${m} ${day}${suffix}, ${year}`;
         }
 
+        function formatDisplayDateLong(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr + 'T12:00:00');
+            return d.toLocaleDateString('en-CA', { month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
+        // Helper to calculate academic semester name
+        function getSemesterName(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            const year = parts[0];
+            const month = parseInt(parts[1]);
+            if (month >= 1 && month <= 4) return `Winter ${year}`;
+            if (month >= 5 && month <= 8) return `Summer ${year}`;
+            return `Fall ${year}`;
+        }
+
         // Generate gaps between semesters dynamically
         function generateSemesterBreaks(events) {
             const breaks = [];
@@ -2153,7 +2501,7 @@
             const sortedYears = Array.from(years).sort((a, b) => a - b);
 
             sortedYears.forEach(year => {
-                // 1. Summer to Fall
+                // Summer to Fall
                 const summerExams = events.find(e => 
                     e.startDate.startsWith(`${year}-08`) && 
                     e.title.toLowerCase().includes('final exam') && 
@@ -2192,7 +2540,7 @@
                     }
                 }
 
-                // 2. Fall to Winter
+                // Fall to Winter
                 const fallExams = events.find(e => 
                     e.startDate.startsWith(`${year}-12`) && 
                     e.title.toLowerCase().includes('final exam') && 
@@ -2231,7 +2579,7 @@
                     }
                 }
 
-                // 3. Winter to Summer
+                // Winter to Summer
                 const winterExams = events.find(e => 
                     e.startDate.startsWith(`${year}-04`) && 
                     e.title.toLowerCase().includes('final exam') && 
@@ -2273,16 +2621,20 @@
             return breaks;
         }
 
-        // Initialize state
+        // -------------------------------------------------------------
+        // APPLICATION INITIALIZATION
+        // -------------------------------------------------------------
+
         function initApp() {
-            // 1. Try loading events from localStorage
+            initTheme();
+
+            // Load stored events or defaults
             const savedEvents = localStorage.getItem('uwindsor_academic_events');
             const savedTime = localStorage.getItem('uwindsor_academic_events_updated');
             
             if (savedEvents) {
                 try {
                     const loaded = JSON.parse(savedEvents);
-                    // Smart merge: Add any pre-loaded events that don't exist in localStorage
                     const loadedKeys = new Set(loaded.map(e => `${e.title}-${e.startDate}`));
                     let mergedCount = 0;
                     window.SCRAPED_EVENTS.forEach(pe => {
@@ -2293,7 +2645,7 @@
                         }
                     });
                     state.events = loaded;
-                    state.lastUpdated = savedTime;
+                    state.lastUpdated = savedTime || "Cached Data";
                     if (mergedCount > 0) {
                         state.events.sort((a, b) => a.startDate.localeCompare(b.startDate));
                         localStorage.setItem('uwindsor_academic_events', JSON.stringify(state.events));
@@ -2308,23 +2660,20 @@
                 state.lastUpdated = "Pre-loaded";
             }
 
-            // Generate and merge gaps between semesters as break events
+            // Generate breaks between semesters
             const generatedBreaks = generateSemesterBreaks(state.events);
             state.events = state.events.concat(generatedBreaks);
             state.events.sort((a, b) => a.startDate.localeCompare(b.startDate));
 
-            // 2. Set categories Set (all selected by default)
+            // Select all categories by default
             state.categories.forEach(cat => state.selectedCategories.add(cat.id));
 
-            // 3. Extract years from events to populate range filters
-            const years = new Set();
-            // Default fallbacks in case list is empty
-            years.add(2026);
-            years.add(2027);
+            // Extract years
+            const years = new Set([2026, 2027, 2028, 2029]);
             state.events.forEach(evt => {
                 if (evt.startDate) {
-                    const yStart = parseInt(evt.startDate.split('-')[0]);
-                    if (yStart) years.add(yStart);
+                    const y = parseInt(evt.startDate.split('-')[0]);
+                    if (y) years.add(y);
                 }
             });
             const sortedYears = Array.from(years).sort((a, b) => a - b);
@@ -2335,48 +2684,176 @@
             endSel.innerHTML = '';
             
             sortedYears.forEach(y => {
-                const opt1 = document.createElement('option');
-                opt1.value = y;
-                opt1.textContent = y;
-                const opt2 = document.createElement('option');
-                opt2.value = y;
-                opt2.textContent = y;
-                startSel.appendChild(opt1);
-                endSel.appendChild(opt2);
+                startSel.appendChild(new Option(y, y));
+                endSel.appendChild(new Option(y, y));
             });
 
-            // Set default year selections based on database range
-            const todayYear = new Date().getFullYear();
-            state.startYear = sortedYears.includes(todayYear) ? todayYear : sortedYears[0];
+            state.startYear = 2026;
             state.endYear = sortedYears[sortedYears.length - 1];
-            
             startSel.value = state.startYear;
             endSel.value = state.endYear;
 
-            // Set current calendar date
-            state.currentDate = new Date();
+            // Determine active semester based on today's date
+            const today = new Date();
+            state.currentDate = new Date(today);
+            const currentYear = today.getFullYear();
+            const currentMonth = today.getMonth() + 1;
+            if (currentMonth >= 1 && currentMonth <= 4) {
+                state.activeSemester = `Winter ${currentYear}`;
+            } else if (currentMonth >= 5 && currentMonth <= 8) {
+                state.activeSemester = `Summer ${currentYear}`;
+            } else {
+                state.activeSemester = `Fall ${currentYear}`;
+            }
 
-            // 4. Render category checkboxes
+            // Render Semester Chips Bar
+            renderSemesterChips();
+
+            // Populate Cheat Sheet term selector
+            populateCheatSheetTerms();
+
+            // Render category filters
             renderCategoryFilters();
 
-            // 5. Run filter and render views
+            // Apply filters and render
             applyFilters();
             renderViews();
             
-            // Re-render Lucide icons
             lucide.createIcons();
         }
 
-        // Render Sidebar Category Checkboxes with dynamic counts
+        // Reset local database to pre-loaded defaults
+        function resetToOfficialDefaults() {
+            if (!confirm('Reset calendar data to built-in official 2026-2029 registrar schedule? Any custom scrapes will be cleared.')) {
+                return;
+            }
+            localStorage.removeItem('uwindsor_academic_events');
+            localStorage.removeItem('uwindsor_academic_events_updated');
+            state.events = [...window.SCRAPED_EVENTS];
+            const generatedBreaks = generateSemesterBreaks(state.events);
+            state.events = state.events.concat(generatedBreaks);
+            state.events.sort((a, b) => a.startDate.localeCompare(b.startDate));
+            state.lastUpdated = "Pre-loaded";
+            
+            applyFilters();
+            renderCategoryFilters();
+            renderViews();
+            showToast('Database reset to official pre-loaded schedule!');
+        }
+
+        // -------------------------------------------------------------
+        // SEMESTER CHIPS & JUMP CONTROLS
+        // -------------------------------------------------------------
+
+        function getAvailableSemesters() {
+            const set = new Set();
+            state.events.forEach(e => {
+                if (!e.startDate) return;
+                const sem = getSemesterName(e.startDate);
+                if (sem) set.add(sem);
+            });
+            // Sort chronologically
+            return Array.from(set).sort((a, b) => {
+                const [termA, yearA] = a.split(' ');
+                const [termB, yearB] = b.split(' ');
+                if (yearA !== yearB) return parseInt(yearA) - parseInt(yearB);
+                const order = { 'Winter': 1, 'Summer': 2, 'Fall': 3 };
+                return (order[termA] || 0) - (order[termB] || 0);
+            });
+        }
+
+        function renderSemesterChips() {
+            const bar = document.getElementById('semesterChipsBar');
+            if (!bar) return;
+            const terms = getAvailableSemesters();
+            
+            // Keep label
+            bar.innerHTML = '<span class="text-[11px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap mr-1">Semester:</span>';
+
+            const termIcons = {
+                'Fall': '🍁',
+                'Winter': '❄️',
+                'Summer': '☀️'
+            };
+
+            terms.slice(0, 6).forEach(term => {
+                const prefix = term.split(' ')[0];
+                const icon = termIcons[prefix] || '🎓';
+                const isActive = term === state.activeSemester;
+                
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.onclick = () => jumpToSemester(term);
+                btn.className = isActive 
+                    ? 'inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-brand-600 text-white shadow-sm transition-all flex-shrink-0'
+                    : 'inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-300 border border-gray-200 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-500 hover:text-brand-600 transition-all flex-shrink-0';
+                btn.innerHTML = `<span>${icon}</span><span>${term}</span>`;
+                bar.appendChild(btn);
+            });
+
+            // "All Terms" chip
+            const allBtn = document.createElement('button');
+            allBtn.type = 'button';
+            allBtn.onclick = () => jumpToSemester('all');
+            const isAll = state.activeSemester === 'all';
+            allBtn.className = isAll
+                ? 'inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-brand-600 text-white shadow-sm transition-all flex-shrink-0'
+                : 'inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-300 border border-gray-200 dark:border-slate-700 hover:border-brand-500 hover:text-brand-600 transition-all flex-shrink-0';
+            allBtn.innerHTML = '<span>🌐</span><span>All Upcoming</span>';
+            bar.appendChild(allBtn);
+        }
+
+        function jumpToSemester(term) {
+            state.activeSemester = term;
+            renderSemesterChips();
+            
+            const cheatSel = document.getElementById('cheatSheetTermSelect');
+            if (cheatSel && term !== 'all') {
+                cheatSel.value = term;
+            }
+
+            const infoList = document.getElementById('listInfo');
+            if (infoList && state.currentView === 'breaks') {
+                infoList.textContent = term === 'all' 
+                    ? 'Showing all upcoming semester breaks & holidays' 
+                    : `Showing semester breaks & holidays for ${term}`;
+            }
+
+            if (term === 'all') {
+                state.startYear = 2026;
+                state.endYear = 2029;
+                state.currentDate = new Date();
+            } else {
+                const [season, yearStr] = term.split(' ');
+                const year = parseInt(yearStr);
+                let targetMonth = 8; // September (Fall)
+                if (season === 'Winter') targetMonth = 0; // January
+                if (season === 'Summer') targetMonth = 4; // May
+
+                state.currentDate = new Date(year, targetMonth, 1);
+                state.startYear = year;
+                state.endYear = season === 'Fall' ? year + 1 : year;
+                
+                document.getElementById('startYearFilter').value = state.startYear;
+                document.getElementById('endYearFilter').value = state.endYear;
+            }
+
+            applyFilters();
+            renderViews();
+            showToast(`Switched to ${term === 'all' ? 'All Terms' : term}`);
+        }
+
+        // -------------------------------------------------------------
+        // FILTERS & CATEGORIES LOGIC
+        // -------------------------------------------------------------
+
         function renderCategoryFilters() {
             const listDiv = document.getElementById('categoryFiltersList');
             listDiv.innerHTML = '';
 
-            // Calculate counts for each category in current filter context
             const counts = {};
             state.categories.forEach(c => counts[c.id] = 0);
             
-            // Count matching items
             const showOnlyBreaks = state.currentView === 'breaks';
             state.events.forEach(evt => {
                 if (showOnlyBreaks && !isBreakEvent(evt)) return;
@@ -2389,22 +2866,21 @@
                 const count = counts[cat.id] || 0;
                 
                 const item = document.createElement('div');
-                item.className = 'flex items-center justify-between text-xs py-0.5 hover:bg-gray-50 rounded px-1 transition-colors';
+                item.className = 'flex items-center justify-between text-xs py-1 hover:bg-gray-50 dark:hover:bg-slate-800/60 rounded px-1.5 transition-colors';
                 item.innerHTML = `
                     <div class="flex items-center gap-2">
                         <input type="checkbox" id="cat-chk-${cat.id}" ${isChecked ? 'checked' : ''} 
                             onchange="toggleCategory('${cat.id}')"
-                            class="rounded text-brand-600 focus:ring-brand-500 h-4 w-4 cursor-pointer">
+                            class="rounded text-brand-600 focus:ring-brand-500 h-4 w-4 bg-white dark:bg-slate-800 border-gray-300 dark:border-slate-700 cursor-pointer">
                         <span class="w-2.5 h-2.5 rounded-full ${cat.dotClass} flex-shrink-0"></span>
-                        <label for="cat-chk-${cat.id}" class="text-gray-700 font-medium select-none cursor-pointer">${cat.name}</label>
+                        <label for="cat-chk-${cat.id}" class="text-gray-700 dark:text-slate-200 font-medium select-none cursor-pointer">${cat.name}</label>
                     </div>
-                    <span class="text-[10px] font-semibold px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded-md">${count}</span>
+                    <span class="text-[10px] font-semibold px-1.5 py-0.5 bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 rounded-md">${count}</span>
                 `;
                 listDiv.appendChild(item);
             });
         }
 
-        // Toggle category filter
         function toggleCategory(catId) {
             if (state.selectedCategories.has(catId)) {
                 state.selectedCategories.delete(catId);
@@ -2415,13 +2891,11 @@
             renderViews();
         }
 
-        // Select/Deselect All Categories
         function toggleAllCategories(selectAll) {
             state.selectedCategories.clear();
             if (selectAll) {
                 state.categories.forEach(cat => state.selectedCategories.add(cat.id));
             }
-            // Update checkbox UI
             state.categories.forEach(cat => {
                 const chk = document.getElementById(`cat-chk-${cat.id}`);
                 if (chk) chk.checked = selectAll;
@@ -2430,7 +2904,6 @@
             renderViews();
         }
 
-        // Apply filters (search, categories, date ranges)
         function applyFilters() {
             state.searchQuery = document.getElementById('eventSearch').value.toLowerCase().trim();
             state.startYear = parseInt(document.getElementById('startYearFilter').value);
@@ -2443,6 +2916,9 @@
                 // Category Filter
                 const cat = getEventCategory(evt);
                 if (!state.selectedCategories.has(cat.id)) return false;
+
+                // Audience Filter
+                if (!matchesAudience(evt, state.audienceFilter)) return false;
 
                 // Search query filter
                 if (state.searchQuery && !evt.title.toLowerCase().includes(state.searchQuery)) return false;
@@ -2465,7 +2941,6 @@
             document.getElementById('statUpdated').textContent = state.lastUpdated || 'Pre-loaded';
         }
 
-        // General filter trigger
         function handleFilterChange() {
             applyFilters();
             renderCategoryFilters();
@@ -2479,24 +2954,28 @@
             const btnCal = document.getElementById('viewTabCalendar');
             const btnList = document.getElementById('viewTabList');
             const btnBreaks = document.getElementById('viewTabBreaks');
+            const btnCheat = document.getElementById('viewTabCheatSheet');
             
             const areaCal = document.getElementById('calendarView');
             const areaList = document.getElementById('listView');
             const areaBreaks = document.getElementById('breaksView');
+            const areaCheat = document.getElementById('cheatSheetView');
             
             const navCal = document.getElementById('calendarNav');
             const infoList = document.getElementById('listInfo');
 
-            const inactiveClass = 'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-500 hover:text-gray-900';
-            const activeClass = 'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-700 bg-white shadow-sm';
+            const inactiveClass = 'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white';
+            const activeClass = 'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-gray-700 dark:text-white bg-white dark:bg-slate-700 shadow-sm';
             
             btnCal.className = inactiveClass;
             btnList.className = inactiveClass;
             btnBreaks.className = inactiveClass;
+            btnCheat.className = inactiveClass;
             
             areaCal.classList.add('hidden');
             areaList.classList.add('hidden');
             areaBreaks.classList.add('hidden');
+            areaCheat.classList.add('hidden');
             
             navCal.classList.add('hidden');
             infoList.classList.add('hidden');
@@ -2514,14 +2993,20 @@
                 btnBreaks.className = activeClass;
                 areaBreaks.classList.remove('hidden');
                 infoList.classList.remove('hidden');
-                infoList.textContent = 'Showing all upcoming semester breaks & holidays';
+                infoList.textContent = state.activeSemester === 'all'
+                    ? 'Showing all upcoming semester breaks & holidays'
+                    : `Showing semester breaks & holidays for ${state.activeSemester}`;
+            } else if (viewName === 'cheatsheet') {
+                btnCheat.className = activeClass;
+                areaCheat.classList.remove('hidden');
+                infoList.classList.remove('hidden');
+                infoList.textContent = 'Semester Deadlines & Course Outline Cheat-Sheet';
             }
 
             renderViews();
             lucide.createIcons();
         }
 
-        // Render current selected view
         function renderViews() {
             if (state.currentView === 'calendar') {
                 renderCalendar();
@@ -2529,187 +3014,29 @@
                 renderList();
             } else if (state.currentView === 'breaks') {
                 renderBreaks();
+            } else if (state.currentView === 'cheatsheet') {
+                renderCheatSheet();
             }
-        }
-
-        // Helper to get relative time countdown for future breaks
-        function getRelativeTimeString(dateStr) {
-            const today = new Date();
-            today.setHours(0,0,0,0);
-            const target = new Date(dateStr + 'T00:00:00');
-            
-            const diffTime = target - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays < 0) return 'Passed';
-            if (diffDays === 0) return 'Starts Today';
-            if (diffDays === 1) return 'Starts Tomorrow';
-            if (diffDays < 7) return `Starts in ${diffDays} days`;
-            if (diffDays < 30) {
-                const weeks = Math.floor(diffDays / 7);
-                return `Starts in ${weeks} week${weeks === 1 ? '' : 's'}`;
-            }
-            const months = Math.floor(diffDays / 30);
-            return `Starts in ${months} month${months === 1 ? '' : 's'}`;
-        }
-
-        // Helper to calculate academic semester (e.g. "Fall 2026", "Winter 2027")
-        function getSemesterName(dateStr) {
-            if (!dateStr) return '';
-            const parts = dateStr.split('-');
-            const year = parts[0];
-            const month = parseInt(parts[1]);
-            if (month >= 1 && month <= 4) return `Winter ${year}`;
-            if (month >= 5 && month <= 8) return `Summer ${year}`;
-            return `Fall ${year}`;
-        }
-
-        // Render breaks view
-        function renderBreaks() {
-            const container = document.getElementById('breaksContainer');
-            const empty = document.getElementById('breaksEmptyState');
-            container.innerHTML = '';
-
-            const todayStr = new Date().toISOString().split('T')[0];
-
-            // Filter break events: future breaks only, search-filtered, ignore category selections and year dropdowns
-            const breakEvents = state.events.filter(evt => {
-                if (!isBreakEvent(evt)) return false;
-                if (evt.endDate < todayStr) return false;
-                if (state.searchQuery && !evt.title.toLowerCase().includes(state.searchQuery)) return false;
-                return true;
-            });
-
-            if (breakEvents.length === 0) {
-                container.classList.add('hidden');
-                empty.classList.remove('hidden');
-                return;
-            }
-
-            container.classList.remove('hidden');
-            empty.classList.add('hidden');
-
-            // Group by Semester (e.g. "Fall 2026", "Winter 2027")
-            const grouped = {};
-            breakEvents.forEach(evt => {
-                const term = getSemesterName(evt.startDate);
-                if (!grouped[term]) {
-                    const parts = evt.startDate.split('-');
-                    const year = parseInt(parts[0]);
-                    const month = parseInt(parts[1]);
-                    let termPriority = 3; // Fall
-                    if (month >= 1 && month <= 4) termPriority = 1; // Winter
-                    if (month >= 5 && month <= 8) termPriority = 2; // Summer
-                    
-                    grouped[term] = {
-                        title: term,
-                        sortKey: `${year}-${termPriority}`,
-                        events: []
-                    };
-                }
-                grouped[term].events.push(evt);
-            });
-
-            // Sort semester groups chronologically
-            const sortedGroups = Object.values(grouped).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-
-            // Render groups
-            sortedGroups.forEach(group => {
-                const groupSection = document.createElement('div');
-                groupSection.className = 'flex flex-col gap-3.5';
-                
-                const header = document.createElement('h3');
-                header.className = 'text-[11px] font-bold text-gray-400 uppercase tracking-wider sticky top-0 bg-white py-2.5 -mx-5 px-5 z-10 border-b border-gray-100 flex items-center justify-between';
-                header.innerHTML = `
-                    <span class="flex items-center gap-1.5">
-                        <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-brand-500"></i>
-                        <span>${group.title}</span>
-                    </span>
-                    <span class="text-[10px] font-semibold bg-brand-50 text-brand-600 px-2 py-0.5 rounded-full">${group.events.length} break${group.events.length === 1 ? '' : 's'}</span>
-                `;
-                groupSection.appendChild(header);
-
-                const itemsDiv = document.createElement('div');
-                itemsDiv.className = 'grid grid-cols-1 md:grid-cols-2 gap-3';
-
-                group.events.forEach(evt => {
-                    const cat = getEventCategory(evt);
-                    const isClosed = evt.title.toLowerCase().includes('closed');
-                    
-                    let statusBadge = '';
-                    if (evt.startDate <= todayStr && evt.endDate >= todayStr) {
-                        statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 animate-pulse"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Happening Now 🌴</span>`;
-                    } else {
-                        const relativeTime = getRelativeTimeString(evt.startDate);
-                        statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-50 text-teal-700 border border-teal-100">${relativeTime}</span>`;
-                    }
-
-                    const diffTime = Math.abs(new Date(evt.endDate) - new Date(evt.startDate));
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                    const daysOffBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">${diffDays} day${diffDays === 1 ? '' : 's'} off 🌴</span>`;
-
-                    const item = document.createElement('div');
-                    item.className = 'p-4 border border-gray-200 hover:border-brand-400 rounded-xl flex flex-col justify-between gap-3 cursor-pointer hover:shadow-md transition-all group/item bg-white relative overflow-hidden';
-                    item.onclick = () => openEventModal(evt);
-                    
-                    const accentColor = isClosed ? 'bg-rose-500' : 'bg-emerald-500';
-
-                    item.innerHTML = `
-                        <div class="absolute left-0 top-0 bottom-0 w-1 ${accentColor}"></div>
-                        <div class="flex items-start justify-between gap-2.5">
-                            <div class="flex items-start gap-2.5">
-                                <div class="p-2 rounded-lg ${isClosed ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}">
-                                    <i data-lucide="${isClosed ? 'home-off' : 'palmtree'}" class="w-4 h-4"></i>
-                                </div>
-                                <div class="flex flex-col gap-0.5">
-                                    <h4 class="text-sm font-bold text-gray-900 leading-snug group-hover/item:text-brand-600 transition-colors">${evt.title}</h4>
-                                    <span class="text-xs text-gray-500 font-medium">${evt.dateText}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between mt-1 pt-2.5 border-t border-gray-50 text-xs text-gray-400">
-                            <div class="flex items-center gap-1.5">
-                                ${statusBadge}
-                                ${daysOffBadge}
-                            </div>
-                            <span class="text-gray-300 group-hover/item:text-brand-500 transition-all flex items-center gap-0.5">
-                                <span>Details</span>
-                                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-                            </span>
-                        </div>
-                    `;
-                    itemsDiv.appendChild(item);
-                });
-
-                groupSection.appendChild(itemsDiv);
-                container.appendChild(groupSection);
-            });
-            
-            lucide.createIcons();
         }
 
         // -------------------------------------------------------------
-        // CALENDAR VIEW RENDERING
+        // CALENDAR GRID VIEW RENDERING
         // -------------------------------------------------------------
-        
+
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid');
             grid.innerHTML = '';
 
             const year = state.currentDate.getFullYear();
-            const month = state.currentDate.getMonth(); // 0-indexed
+            const month = state.currentDate.getMonth();
 
-            // Set Header Title
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             document.getElementById('calendarTitle').textContent = `${monthNames[month]} ${year}`;
 
-            // Calculate dates
-            const firstDayIndex = new Date(year, month, 1).getDay(); // day of week for 1st
-            const totalDays = new Date(year, month + 1, 0).getDate(); // days in current month
-            const prevMonthTotalDays = new Date(year, month, 0).getDate(); // days in prev month
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            const prevMonthTotalDays = new Date(year, month, 0).getDate();
             
-            // Collect events active in this month
-            // An event is active if its range overlaps with the month's start and end date
             const startOfMonth = `${year}-${String(month + 1).padStart(2, '0')}-01`;
             const endOfMonth = `${year}-${String(month + 1).padStart(2, '0')}-${String(totalDays).padStart(2, '0')}`;
             
@@ -2717,46 +3044,39 @@
                 return evt.startDate <= endOfMonth && evt.endDate >= startOfMonth;
             });
 
-            // Total grid cells needed: 35 or 42 based on layout
             const totalCells = (firstDayIndex + totalDays) > 35 ? 42 : 35;
 
-            // Generate cells
             for (let i = 0; i < totalCells; i++) {
                 const cellIndex = i - firstDayIndex + 1;
                 const cell = document.createElement('div');
-                cell.className = 'calendar-cell min-h-[110px] bg-white flex flex-col p-1.5 overflow-hidden relative group/cell border-b border-r border-gray-100';
+                cell.className = 'calendar-cell min-h-[110px] bg-white dark:bg-slate-900 flex flex-col p-1.5 overflow-hidden relative group/cell border-b border-r border-gray-100 dark:border-slate-800';
 
                 let dayNumber, targetDateStr, isCurrentMonth = true;
 
                 if (i < firstDayIndex) {
-                    // Prev Month overflow
                     isCurrentMonth = false;
                     dayNumber = prevMonthTotalDays - firstDayIndex + i + 1;
                     const prevMonth = month === 0 ? 11 : month - 1;
                     const prevYear = month === 0 ? year - 1 : year;
                     targetDateStr = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
-                    cell.classList.add('bg-gray-50/50', 'text-gray-400');
+                    cell.classList.add('bg-gray-50/70', 'dark:bg-slate-950/40', 'text-gray-400', 'dark:text-slate-600');
                 } else if (cellIndex > totalDays) {
-                    // Next Month overflow
                     isCurrentMonth = false;
                     dayNumber = cellIndex - totalDays;
                     const nextMonth = month === 11 ? 0 : month + 1;
                     const nextYear = month === 11 ? year + 1 : year;
                     targetDateStr = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
-                    cell.classList.add('bg-gray-50/50', 'text-gray-400');
+                    cell.classList.add('bg-gray-50/70', 'dark:bg-slate-950/40', 'text-gray-400', 'dark:text-slate-600');
                 } else {
-                    // Current Month
                     dayNumber = cellIndex;
                     targetDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
-                    cell.classList.add('text-gray-800');
+                    cell.classList.add('text-gray-800', 'dark:text-slate-200');
                     
-                    // Highlight today
                     const todayStr = new Date().toISOString().split('T')[0];
                     if (targetDateStr === todayStr) {
-                        cell.classList.add('bg-teal-50/30');
-                        // Add today circle indicator
+                        cell.classList.add('bg-teal-50/40', 'dark:bg-teal-950/30');
                         const daySpan = document.createElement('span');
-                        daySpan.className = 'w-6 h-6 flex items-center justify-center bg-brand-600 text-white rounded-full text-xs font-bold font-sans';
+                        daySpan.className = 'w-6 h-6 flex items-center justify-center bg-brand-600 text-white rounded-full text-xs font-bold';
                         daySpan.textContent = dayNumber;
                         
                         const dayContainer = document.createElement('div');
@@ -2766,20 +3086,17 @@
                     }
                 }
 
-                // If not already rendered today's header layout
                 if (cell.children.length === 0) {
                     const dayContainer = document.createElement('div');
-                    dayContainer.className = `flex justify-between items-center mb-1 text-xs font-semibold ${isCurrentMonth ? 'text-gray-700' : 'text-gray-400'}`;
+                    dayContainer.className = `flex justify-between items-center mb-1 text-xs font-semibold ${isCurrentMonth ? 'text-gray-700 dark:text-slate-300' : 'text-gray-400 dark:text-slate-600'}`;
                     dayContainer.innerHTML = `<span>${dayNumber}</span>`;
                     cell.appendChild(dayContainer);
                 }
 
-                // Filter events matching this specific day
                 const dayEvents = monthEvents.filter(evt => {
                     return evt.startDate <= targetDateStr && evt.endDate >= targetDateStr;
                 });
 
-                // Render day events
                 const eventsContainer = document.createElement('div');
                 eventsContainer.className = 'flex flex-col gap-1 overflow-y-auto flex-grow max-h-[82px] pr-0.5';
 
@@ -2809,18 +3126,17 @@
 
                 if (hiddenCount > 0) {
                     const moreIndicator = document.createElement('div');
-                    moreIndicator.className = 'text-[9px] font-bold text-gray-500 hover:text-brand-600 cursor-pointer pl-1 py-0.5 hover:underline select-none';
+                    moreIndicator.className = 'text-[9px] font-bold text-gray-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer pl-1 py-0.5 hover:underline select-none';
                     moreIndicator.textContent = `+${hiddenCount} more`;
                     moreIndicator.onclick = (e) => {
                         e.stopPropagation();
-                        showDayPopover(targetDateStr, dayEvents, e);
+                        showDayPopover(targetDateStr, dayEvents);
                     };
                     eventsContainer.appendChild(moreIndicator);
                 }
 
                 cell.appendChild(eventsContainer);
                 
-                // Allow clicking cell to show list of that day
                 cell.onclick = () => {
                     if (dayEvents.length > 0) {
                         showDayPopover(targetDateStr, dayEvents);
@@ -2831,20 +3147,18 @@
             }
         }
 
-        // Calendar Nav Month Trigger
         function navigateMonth(direction) {
             state.currentDate.setMonth(state.currentDate.getMonth() + direction);
             renderCalendar();
         }
 
-        // Go to today's month
         function navigateToday() {
             state.currentDate = new Date();
             renderCalendar();
         }
 
-        // Day Popover View (shows all events of a day in list format)
-        function showDayPopover(dateStr, dayEvents, eventClick) {
+        // Day Popover View
+        function showDayPopover(dateStr, dayEvents) {
             const formattedDate = new Date(dateStr + 'T12:00:00').toLocaleDateString(undefined, { 
                 weekday: 'long', 
                 year: 'numeric', 
@@ -2852,25 +3166,23 @@
                 day: 'numeric' 
             });
 
-            // We can create a simple popover overlay or redirect list view. 
-            // A simple temporary overlay works perfectly and feels premium.
             const overlay = document.createElement('div');
             overlay.id = 'dayPopoverOverlay';
-            overlay.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-[1px]';
+            overlay.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 dark:bg-black/70 backdrop-blur-[1px]';
             overlay.onclick = () => overlay.remove();
 
             const box = document.createElement('div');
-            box.className = 'bg-white rounded-xl border border-gray-200 shadow-2xl max-w-sm w-full overflow-hidden animate-[fadeIn_0.15s_ease-out]';
+            box.className = 'bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 shadow-2xl max-w-sm w-full overflow-hidden animate-[fadeIn_0.15s_ease-out]';
             box.onclick = (e) => e.stopPropagation();
 
             const header = document.createElement('div');
-            header.className = 'px-4 py-3 bg-gray-50 border-b border-gray-150 flex justify-between items-center';
+            header.className = 'px-4 py-3 bg-gray-50 dark:bg-slate-800/70 border-b border-gray-150 dark:border-slate-800 flex justify-between items-center';
             header.innerHTML = `
                 <div>
-                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Events on</h4>
-                    <p class="text-xs font-semibold text-gray-800">${formattedDate}</p>
+                    <h4 class="text-[10px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider">Events on</h4>
+                    <p class="text-xs font-semibold text-gray-900 dark:text-white">${formattedDate}</p>
                 </div>
-                <button id="popoverClose" class="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-150 rounded-lg">
+                <button id="popoverClose" class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg">
                     <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             `;
@@ -2882,7 +3194,7 @@
             dayEvents.forEach(evt => {
                 const cat = getEventCategory(evt);
                 const item = document.createElement('div');
-                item.className = `p-2.5 rounded-lg border hover:border-brand-400 cursor-pointer flex flex-col gap-1 transition-all ${cat.borderClass}`;
+                item.className = `p-2.5 rounded-lg border hover:border-brand-400 dark:hover:border-brand-500 cursor-pointer flex flex-col gap-1 transition-all ${cat.borderClass}`;
                 item.onclick = () => {
                     overlay.remove();
                     openEventModal(evt);
@@ -2905,7 +3217,7 @@
         // -------------------------------------------------------------
         // LIST VIEW RENDERING
         // -------------------------------------------------------------
-        
+
         function renderList() {
             const container = document.getElementById('listContainer');
             const empty = document.getElementById('listEmptyState');
@@ -2920,15 +3232,12 @@
             container.classList.remove('hidden');
             empty.classList.add('hidden');
 
-            // Group events by Month & Year
             const grouped = {};
             state.filteredEvents.forEach(evt => {
                 if (!evt.startDate) return;
-                
-                // Parse date
                 const dateParts = evt.startDate.split('-');
                 const y = parseInt(dateParts[0]);
-                const m = parseInt(dateParts[1]) - 1; // 0-indexed
+                const m = parseInt(dateParts[1]) - 1;
                 
                 const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
                 const groupKey = `${monthNames[m]} ${y}`;
@@ -2944,19 +3253,17 @@
                 grouped[groupKey].events.push(evt);
             });
 
-            // Sort months chronologically
             const sortedGroups = Object.values(grouped).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
 
-            // Render groups
             sortedGroups.forEach(group => {
                 const groupSection = document.createElement('div');
                 groupSection.className = 'flex flex-col gap-2.5';
                 
                 const header = document.createElement('h3');
-                header.className = 'text-[11px] font-bold text-gray-400 uppercase tracking-wider sticky top-0 bg-white py-2.5 -mx-5 px-5 z-10 border-b border-gray-100 flex items-center justify-between';
+                header.className = 'text-[11px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider sticky top-0 bg-white dark:bg-slate-900 py-2.5 -mx-5 px-5 z-10 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between';
                 header.innerHTML = `
                     <span>${group.title}</span>
-                    <span class="text-[10px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">${group.events.length} event${group.events.length === 1 ? '' : 's'}</span>
+                    <span class="text-[10px] font-semibold bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 px-2 py-0.5 rounded-full">${group.events.length} event${group.events.length === 1 ? '' : 's'}</span>
                 `;
                 groupSection.appendChild(header);
 
@@ -2966,18 +3273,18 @@
                 group.events.forEach(evt => {
                     const cat = getEventCategory(evt);
                     const item = document.createElement('div');
-                    item.className = 'p-3.5 border border-gray-200 hover:border-brand-400 rounded-xl flex items-center justify-between gap-4 cursor-pointer hover:shadow-md transition-all group/item bg-white';
+                    item.className = 'p-3.5 border border-gray-200 dark:border-slate-800 hover:border-brand-400 dark:hover:border-brand-500 rounded-xl flex items-center justify-between gap-4 cursor-pointer hover:shadow-md transition-all group/item bg-white dark:bg-slate-900';
                     item.onclick = () => openEventModal(evt);
                     
                     item.innerHTML = `
                         <div class="flex items-start gap-3">
                             <span class="w-2.5 h-2.5 rounded-full ${cat.dotClass} mt-1.5 flex-shrink-0"></span>
                             <div class="flex flex-col gap-0.5">
-                                <h4 class="text-sm font-bold text-gray-900 leading-snug group-hover/item:text-brand-600 transition-colors">${evt.title}</h4>
-                                <span class="text-xs text-gray-500 font-medium">${evt.dateText}</span>
+                                <h4 class="text-sm font-bold text-gray-900 dark:text-white leading-snug group-hover/item:text-brand-600 dark:group-hover/item:text-brand-400 transition-colors">${evt.title}</h4>
+                                <span class="text-xs text-gray-500 dark:text-slate-400 font-medium">${evt.dateText}</span>
                             </div>
                         </div>
-                        <div class="flex items-center gap-1.5 text-gray-300 group-hover/item:text-brand-500 transition-colors">
+                        <div class="flex items-center gap-1.5 text-gray-300 dark:text-slate-600 group-hover/item:text-brand-500 transition-colors">
                             <i data-lucide="chevron-right" class="w-5 h-5"></i>
                         </div>
                     `;
@@ -2990,18 +3297,520 @@
         }
 
         // -------------------------------------------------------------
-        // DETAIL MODAL FUNCTIONS
+        // BREAKS VIEW RENDERING
         // -------------------------------------------------------------
-        
+
+        function getRelativeTimeString(dateStr) {
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const target = new Date(dateStr + 'T00:00:00');
+            const diffTime = target - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) return 'Passed';
+            if (diffDays === 0) return 'Starts Today';
+            if (diffDays === 1) return 'Starts Tomorrow';
+            if (diffDays < 7) return `Starts in ${diffDays} days`;
+            if (diffDays < 30) {
+                const weeks = Math.floor(diffDays / 7);
+                return `Starts in ${weeks} week${weeks === 1 ? '' : 's'}`;
+            }
+            const months = Math.floor(diffDays / 30);
+            return `Starts in ${months} month${months === 1 ? '' : 's'}`;
+        }
+
+        function renderBreaks() {
+            const container = document.getElementById('breaksContainer');
+            const empty = document.getElementById('breaksEmptyState');
+            container.innerHTML = '';
+
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            const breakEvents = state.events.filter(evt => {
+                if (!isBreakEvent(evt)) return false;
+                if (state.searchQuery && !evt.title.toLowerCase().includes(state.searchQuery)) return false;
+
+                // Filter by selected semester chip
+                if (state.activeSemester !== 'all') {
+                    if (getSemesterName(evt.startDate) !== state.activeSemester) return false;
+                    if (state.hidePast && evt.endDate < todayStr) return false;
+                } else {
+                    if (evt.endDate < todayStr) return false;
+                }
+                return true;
+            });
+
+            if (breakEvents.length === 0) {
+                container.classList.add('hidden');
+                empty.classList.remove('hidden');
+                const emptyMsg = empty.querySelector('p');
+                if (emptyMsg) {
+                    emptyMsg.textContent = state.activeSemester !== 'all'
+                        ? `No breaks or holidays found for ${state.activeSemester}. Try selecting "All Upcoming" on the semester bar above.`
+                        : 'Try adjusting your search query.';
+                }
+                return;
+            }
+
+            container.classList.remove('hidden');
+            empty.classList.add('hidden');
+
+            const grouped = {};
+            breakEvents.forEach(evt => {
+                const term = getSemesterName(evt.startDate);
+                if (!grouped[term]) {
+                    const parts = evt.startDate.split('-');
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]);
+                    let termPriority = 3;
+                    if (month >= 1 && month <= 4) termPriority = 1;
+                    if (month >= 5 && month <= 8) termPriority = 2;
+                    
+                    grouped[term] = {
+                        title: term,
+                        sortKey: `${year}-${termPriority}`,
+                        events: []
+                    };
+                }
+                grouped[term].events.push(evt);
+            });
+
+            const sortedGroups = Object.values(grouped).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+
+            sortedGroups.forEach(group => {
+                const groupSection = document.createElement('div');
+                groupSection.className = 'flex flex-col gap-3.5';
+                
+                const header = document.createElement('h3');
+                header.className = 'text-[11px] font-bold text-gray-400 dark:text-slate-400 uppercase tracking-wider sticky top-0 bg-white dark:bg-slate-900 py-2.5 -mx-5 px-5 z-10 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between';
+                header.innerHTML = `
+                    <span class="flex items-center gap-1.5">
+                        <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-brand-500"></i>
+                        <span>${group.title}</span>
+                    </span>
+                    <span class="text-[10px] font-semibold bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-300 px-2 py-0.5 rounded-full">${group.events.length} break${group.events.length === 1 ? '' : 's'}</span>
+                `;
+                groupSection.appendChild(header);
+
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'grid grid-cols-1 md:grid-cols-2 gap-3';
+
+                group.events.forEach(evt => {
+                    const isClosed = evt.title.toLowerCase().includes('closed');
+                    
+                    let statusBadge = '';
+                    if (evt.startDate <= todayStr && evt.endDate >= todayStr) {
+                        statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800 animate-pulse"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Happening Now 🌴</span>`;
+                    } else {
+                        const relativeTime = getRelativeTimeString(evt.startDate);
+                        statusBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 border border-teal-100 dark:border-teal-900">${relativeTime}</span>`;
+                    }
+
+                    const diffTime = Math.abs(new Date(evt.endDate) - new Date(evt.startDate));
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    const daysOffBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 border border-gray-200 dark:border-slate-700">${diffDays} day${diffDays === 1 ? '' : 's'} off 🌴</span>`;
+
+                    const item = document.createElement('div');
+                    item.className = 'p-4 border border-gray-200 dark:border-slate-800 hover:border-brand-400 dark:hover:border-brand-500 rounded-xl flex flex-col justify-between gap-3 cursor-pointer hover:shadow-md transition-all group/item bg-white dark:bg-slate-900 relative overflow-hidden';
+                    item.onclick = () => openEventModal(evt);
+                    
+                    const accentColor = isClosed ? 'bg-rose-500' : 'bg-emerald-500';
+
+                    item.innerHTML = `
+                        <div class="absolute left-0 top-0 bottom-0 w-1 ${accentColor}"></div>
+                        <div class="flex items-start justify-between gap-2.5">
+                            <div class="flex items-start gap-2.5">
+                                <div class="p-2 rounded-lg ${isClosed ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400' : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400'}">
+                                    <i data-lucide="${isClosed ? 'home-off' : 'palmtree'}" class="w-4 h-4"></i>
+                                </div>
+                                <div class="flex flex-col gap-0.5">
+                                    <h4 class="text-sm font-bold text-gray-900 dark:text-white leading-snug group-hover/item:text-brand-600 dark:group-hover/item:text-brand-400 transition-colors">${evt.title}</h4>
+                                    <span class="text-xs text-gray-500 dark:text-slate-400 font-medium">${evt.dateText}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between mt-1 pt-2.5 border-t border-gray-50 dark:border-slate-800/80 text-xs text-gray-400 dark:text-slate-500">
+                            <div class="flex items-center gap-1.5">
+                                ${statusBadge}
+                                ${daysOffBadge}
+                            </div>
+                            <span class="text-gray-300 dark:text-slate-600 group-hover/item:text-brand-500 transition-all flex items-center gap-0.5">
+                                <span>Details</span>
+                                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                            </span>
+                        </div>
+                    `;
+                    itemsDiv.appendChild(item);
+                });
+
+                groupSection.appendChild(itemsDiv);
+                container.appendChild(groupSection);
+            });
+            
+            lucide.createIcons();
+        }
+
+        // -------------------------------------------------------------
+        // ⚡ DEADLINES CHEAT-SHEET VIEW RENDERING
+        // -------------------------------------------------------------
+
+        function populateCheatSheetTerms() {
+            const select = document.getElementById('cheatSheetTermSelect');
+            if (!select) return;
+            select.innerHTML = '';
+            const terms = getAvailableSemesters();
+            terms.forEach(t => {
+                select.appendChild(new Option(t, t));
+            });
+            if (terms.includes(state.activeSemester)) {
+                select.value = state.activeSemester;
+            } else if (terms.length > 0) {
+                select.value = terms[0];
+            }
+        }
+
+        function handleCheatSheetTermChange() {
+            const select = document.getElementById('cheatSheetTermSelect');
+            if (!select) return;
+            state.activeSemester = select.value;
+            renderSemesterChips();
+            renderCheatSheet();
+        }
+
+        function findEventByTerms(events, keywords, termSeason, termYear) {
+            return events.find(e => {
+                const title = e.title.toLowerCase();
+                const matchesKeyword = keywords.some(k => title.includes(k));
+                if (!matchesKeyword) return false;
+                if (!e.startDate.startsWith(String(termYear))) return false;
+                return true;
+            });
+        }
+
+        function extractSemesterMilestones(term) {
+            const [season, yearStr] = term.split(' ');
+            const year = parseInt(yearStr);
+
+            // Filter events belonging to this semester timeframe
+            let startMonth = '09', endMonth = '12';
+            if (season === 'Winter') { startMonth = '01'; endMonth = '04'; }
+            if (season === 'Summer') { startMonth = '05'; endMonth = '08'; }
+
+            const termEvents = state.events.filter(e => {
+                if (!e.startDate) return false;
+                const m = e.startDate.split('-')[1];
+                const y = parseInt(e.startDate.split('-')[0]);
+                if (y !== year) return false;
+                return m >= startMonth && m <= endMonth;
+            });
+
+            const isSpecialty = t => t.startsWith('law:') || t.startsWith('law ') || t.startsWith('consecutive ed:') || t.startsWith('education:');
+            const pickBest = (list) => {
+                if (!list || list.length === 0) return null;
+                const general = list.find(e => !isSpecialty(e.title.toLowerCase()));
+                return general || list[0];
+            };
+
+            // 1. Classes Begin
+            const classStartEvt = pickBest(termEvents.filter(e => {
+                const t = e.title.toLowerCase();
+                return (t.includes('first day') || t.includes('classes begin') || t.includes('classes start')) && 
+                       (t.includes('classes') || t.includes('class'));
+            }));
+
+            // 2. Classes End
+            const classEndEvt = pickBest(termEvents.filter(e => {
+                const t = e.title.toLowerCase();
+                return (t.includes('last day of') || t.includes('last day') || t.includes('classes end')) && 
+                       (t.includes('classes') || t.includes('class')) && !t.includes('withdraw');
+            }));
+
+            // 3. Academic Add/Drop (usually 10th day)
+            const addDropEvt = pickBest(termEvents.filter(e => {
+                const t = e.title.toLowerCase();
+                return (t.includes('add/drop') || t.includes('add and drop') || t.includes('change of course'));
+            }));
+
+            // 4. Financial Drop Date (full refund)
+            const financialDropEvt = pickBest(termEvents.filter(e => {
+                const t = e.title.toLowerCase();
+                return (t.includes('financial drop') || t.includes('refund'));
+            }));
+
+            // 5. Reading Week / Recess
+            const readingWeekEvt = pickBest(termEvents.filter(e => {
+                const t = e.title.toLowerCase();
+                return t.includes('reading week') || t.includes('study week') || t.includes('reading day') || t.includes('recess');
+            }));
+
+            // 6. Voluntary Withdrawal (VW)
+            const vwEvt = pickBest(termEvents.filter(e => {
+                const t = e.title.toLowerCase();
+                return t.includes('voluntary withdrawal') || t.includes('vw');
+            }));
+
+            // 7. Pre-examination Study Day
+            const studyDayEvt = pickBest(termEvents.filter(e => {
+                const t = e.title.toLowerCase();
+                return t.includes('pre-examination study') || t.includes('study day');
+            }));
+
+            // 8. Final Exam Period
+            const examEvt = pickBest(termEvents.filter(e => {
+                const t = e.title.toLowerCase();
+                return t.includes('final exam') && !t.includes('alternate') && !t.includes('makeup');
+            }));
+
+            // 9. Alternate Exam Day
+            const altExamEvt = pickBest(termEvents.filter(e => {
+                const t = e.title.toLowerCase();
+                return t.includes('alternate final exam') || t.includes('alternate exam');
+            }));
+
+            // 10. Grade Submission Deadline (7 days post final exam period)
+            let gradeDeadlineStr = 'Within 7 calendar days after scheduled final exam';
+            let gradeTargetDate = '';
+            if (examEvt && examEvt.endDate) {
+                const examEnd = new Date(examEvt.endDate + 'T12:00:00');
+                examEnd.setDate(examEnd.getDate() + 7);
+                gradeTargetDate = examEnd.toISOString().split('T')[0];
+                gradeDeadlineStr = `Target: ${formatDisplayDateLong(gradeTargetDate)} (Senate Policy: 7 days after exam)`;
+            }
+
+            // 11. Convocation
+            const convocationEvt = state.events.find(e => {
+                const t = e.title.toLowerCase();
+                if (!t.includes('convocation')) return false;
+                const m = e.startDate.split('-')[1];
+                const y = parseInt(e.startDate.split('-')[0]);
+                if (y !== year) return false;
+                if (season === 'Fall') return m === '10' || m === '11';
+                if (season === 'Winter') return m === '05' || m === '06';
+                return false;
+            });
+
+            return {
+                term,
+                season,
+                year,
+                classStart: classStartEvt,
+                classEnd: classEndEvt,
+                addDrop: addDropEvt,
+                financialDrop: financialDropEvt,
+                readingWeek: readingWeekEvt,
+                vw: vwEvt,
+                studyDay: studyDayEvt,
+                exam: examEvt,
+                altExam: altExamEvt,
+                gradeDeadline: gradeDeadlineStr,
+                gradeTargetDate,
+                convocation: convocationEvt
+            };
+        }
+
+        function renderCheatSheet() {
+            const currentTerm = state.activeSemester === 'all' ? 'Fall 2026' : state.activeSemester;
+            const milestones = extractSemesterMilestones(currentTerm);
+            const grid = document.getElementById('cheatSheetCardsGrid');
+            grid.innerHTML = '';
+
+            const items = [
+                {
+                    title: 'Classes Begin',
+                    icon: 'book-open',
+                    color: 'blue',
+                    event: milestones.classStart,
+                    notes: 'First day of instruction for 12-week semester'
+                },
+                {
+                    title: 'Academic Add / Drop Deadline',
+                    icon: 'user-check',
+                    color: 'rose',
+                    event: milestones.addDrop,
+                    notes: 'Last day to add courses or drop without academic penalty (Day 10)'
+                },
+                {
+                    title: 'Financial Drop Deadline',
+                    icon: 'dollar-sign',
+                    color: 'emerald',
+                    event: milestones.financialDrop,
+                    notes: '100% tuition refund cutoff deadline'
+                },
+                {
+                    title: 'Reading Week / Study Days',
+                    icon: 'palmtree',
+                    color: 'teal',
+                    event: milestones.readingWeek,
+                    notes: 'No classes scheduled; university remains open'
+                },
+                {
+                    title: 'Voluntary Withdrawal (VW) Deadline',
+                    icon: 'alert-octagon',
+                    color: 'amber',
+                    event: milestones.vw,
+                    notes: 'Last day to withdraw without receiving a grade or failure'
+                },
+                {
+                    title: 'Pre-Examination Study Days',
+                    icon: 'clock',
+                    color: 'purple',
+                    event: milestones.studyDay,
+                    notes: 'Reading and preparation period prior to final exam window'
+                },
+                {
+                    title: 'Final Examination Period',
+                    icon: 'file-text',
+                    color: 'indigo',
+                    event: milestones.exam,
+                    notes: 'Official examination timetable window'
+                },
+                {
+                    title: 'Alternate Final Exam Day',
+                    icon: 'calendar-plus',
+                    color: 'slate',
+                    event: milestones.altExam,
+                    notes: 'Reserved day for rescheduled or emergency examination conflicts'
+                },
+                {
+                    title: 'Grade Submission Deadline',
+                    icon: 'check-circle-2',
+                    color: 'emerald',
+                    customDate: milestones.gradeDeadline,
+                    notes: 'Senate Policy: Grades must be submitted within 7 days of the scheduled exam'
+                }
+            ];
+
+            if (milestones.convocation) {
+                items.push({
+                    title: 'Convocation Ceremonies',
+                    icon: 'award',
+                    color: 'amber',
+                    event: milestones.convocation,
+                    notes: 'Graduation ceremonies and degree conferral'
+                });
+            }
+
+            const colorMap = {
+                blue: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/60',
+                rose: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60',
+                emerald: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60',
+                teal: 'bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 border-teal-200 dark:border-teal-900/60',
+                amber: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-900/60',
+                purple: 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900/60',
+                indigo: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/60',
+                slate: 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+            };
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'p-4 rounded-xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex flex-col justify-between gap-3 hover:border-brand-400 dark:hover:border-brand-500 transition-all';
+                
+                const cStyles = colorMap[item.color] || colorMap.blue;
+                const dateDisplay = item.customDate 
+                    ? item.customDate 
+                    : (item.event ? item.event.dateText : 'Date to be confirmed by Registrar');
+
+                card.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <div class="p-2.5 rounded-lg border ${cStyles} flex-shrink-0">
+                            <i data-lucide="${item.icon}" class="w-5 h-5"></i>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <h4 class="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">${item.title}</h4>
+                            <div class="text-sm font-bold text-gray-900 dark:text-white leading-snug">${dateDisplay}</div>
+                        </div>
+                    </div>
+                    <div class="text-[11px] text-gray-500 dark:text-slate-400 pt-2 border-t border-gray-100 dark:border-slate-800/80">
+                        ${item.notes}
+                    </div>
+                `;
+
+                if (item.event) {
+                    card.classList.add('cursor-pointer');
+                    card.onclick = () => openEventModal(item.event);
+                }
+
+                grid.appendChild(card);
+            });
+
+            // Generate Markdown Blurb
+            const md = generateSyllabusMarkdown(milestones);
+            document.getElementById('syllabusMarkdownSnippet').textContent = md;
+
+            lucide.createIcons();
+        }
+
+        function generateSyllabusMarkdown(m) {
+            let lines = [
+                `### Important Academic Dates & Deadlines — ${m.term} (University of Windsor)`,
+                ``,
+                `- **Classes Begin:** ${m.classStart ? m.classStart.dateText : 'See Registrar timetable'}`,
+                `- **Last Day to Add/Drop Courses:** ${m.addDrop ? m.addDrop.dateText : 'Day 10 of classes'}`,
+                `- **Financial Drop Deadline (Full Refund):** ${m.financialDrop ? m.financialDrop.dateText : 'Refer to Cashiers Office'}`,
+                `- **Reading Week (No Classes):** ${m.readingWeek ? m.readingWeek.dateText : 'Mid-semester break'}`,
+                `- **Voluntary Withdrawal (VW) Deadline:** ${m.vw ? m.vw.dateText : 'See Registrar important dates'}`,
+                `- **Classes End:** ${m.classEnd ? m.classEnd.dateText : 'Last scheduled lecture day'}`,
+                `- **Final Examination Period:** ${m.exam ? m.exam.dateText : 'Refer to exam schedule'}`,
+                `- **Alternate Final Exam Day:** ${m.altExam ? m.altExam.dateText : 'Reserved emergency day'}`,
+                `- **Final Grade Submission:** ${m.gradeDeadline}`,
+                ``,
+                `*Note: Senate policy requires students to be available for examinations during the entirety of the scheduled exam period. Personal travel should not be arranged until after the alternate examination day.*`
+            ];
+            return lines.join('\n');
+        }
+
+        function copyCheatSheetMarkdown() {
+            const currentTerm = state.activeSemester === 'all' ? 'Fall 2026' : state.activeSemester;
+            const milestones = extractSemesterMilestones(currentTerm);
+            const md = generateSyllabusMarkdown(milestones);
+
+            navigator.clipboard.writeText(md).then(() => {
+                const btn = document.getElementById('copySyllabusBtn');
+                if (btn) {
+                    btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i><span>Copied to Clipboard!</span>';
+                    setTimeout(() => {
+                        btn.innerHTML = '<i data-lucide="copy" class="w-3.5 h-3.5"></i><span>Copy Syllabus Blurb</span>';
+                        lucide.createIcons();
+                    }, 2000);
+                }
+                showToast('Syllabus dates Markdown copied to clipboard!');
+                lucide.createIcons();
+            }).catch(() => {
+                showToast('Failed to copy to clipboard.', true);
+            });
+        }
+
+        // -------------------------------------------------------------
+        // EVENT DETAIL MODAL & DIRECT CALENDAR INTEGRATIONS
+        // -------------------------------------------------------------
+
+        function getGoogleCalendarUrl(evt) {
+            const title = encodeURIComponent(evt.title);
+            const details = encodeURIComponent(`Official UWindsor Academic Date: ${evt.title}\nListing: ${evt.url || 'https://www.uwindsor.ca/registrar/events-listing'}`);
+            const location = encodeURIComponent('University of Windsor, Windsor, ON, Canada');
+            
+            const start = evt.startDate.replace(/-/g, '');
+            const dEnd = new Date(evt.endDate || evt.startDate);
+            dEnd.setDate(dEnd.getDate() + 1);
+            const end = dEnd.toISOString().split('T')[0].replace(/-/g, '');
+            
+            return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
+        }
+
+        function getOutlookCalendarUrl(evt) {
+            const subject = encodeURIComponent(evt.title);
+            const body = encodeURIComponent(`Official UWindsor Academic Date: ${evt.title}\n${evt.url || ''}`);
+            const location = encodeURIComponent('University of Windsor');
+            return `https://outlook.office.com/calendar/0/deeplink/compose?subject=${subject}&startdt=${evt.startDate}&enddt=${evt.endDate || evt.startDate}&allday=true&body=${body}&location=${location}`;
+        }
+
         function openEventModal(evt) {
             const modal = document.getElementById('eventModal');
             const cat = getEventCategory(evt);
 
-            // Set Title & Details
             document.getElementById('modalTitle').textContent = evt.title;
             document.getElementById('modalDateRange').textContent = evt.dateText;
             
-            // Set Link
             const linkBtn = document.getElementById('modalLink');
             if (evt.url) {
                 linkBtn.href = evt.url;
@@ -3010,12 +3819,10 @@
                 linkBtn.classList.add('hidden');
             }
 
-            // Set Category Badge
             const badge = document.getElementById('modalCategoryBadge');
             badge.textContent = cat.name;
             badge.className = `inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border ${cat.borderClass}`;
 
-            // Calculate duration
             const durationSpan = document.getElementById('modalDuration');
             if (evt.startDate && evt.endDate) {
                 const diffTime = Math.abs(new Date(evt.endDate) - new Date(evt.startDate));
@@ -3025,12 +3832,16 @@
                 durationSpan.textContent = 'Duration: 1 day';
             }
 
-            // Dynamic Single ICS Export click handler
+            // Direct Google and Outlook Calendar Links
+            document.getElementById('modalGoogleCalLink').href = getGoogleCalendarUrl(evt);
+            document.getElementById('modalOutlookCalLink').href = getOutlookCalendarUrl(evt);
+
+            // Single ICS download
             document.getElementById('modalSingleExportIcs').onclick = () => {
                 exportSingleEventToICS(evt);
             };
 
-            // Copy to clipboard click handler
+            // Copy details
             document.getElementById('modalCopyDetails').onclick = () => {
                 const copyText = `${evt.title}\nDate: ${evt.dateText}\nOfficial Link: ${evt.url || 'N/A'}`;
                 navigator.clipboard.writeText(copyText).then(() => {
@@ -3040,10 +3851,8 @@
                 });
             };
 
-            // Show modal
             modal.classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
-            
             lucide.createIcons();
         }
 
@@ -3052,7 +3861,6 @@
             document.body.classList.remove('overflow-hidden');
         }
 
-        // Close modal when clicking background
         window.onclick = function(e) {
             const evModal = document.getElementById('eventModal');
             if (e.target === evModal) {
@@ -3065,15 +3873,14 @@
         }
 
         // -------------------------------------------------------------
-        // ICS EXPORTER FUNCTIONS
+        // ICS & CSV EXPORTERS
         // -------------------------------------------------------------
 
-        // Format dates into iCal format (YYYYMMDD) for all-day events
         function formatICSDate(dateStr, nextDay = false) {
             if (!dateStr) return '';
-            const d = new Date(dateStr + 'T12:00:00'); // set to noon to avoid timezone shifts
+            const d = new Date(dateStr + 'T12:00:00');
             if (nextDay) {
-                d.setDate(d.getDate() + 1); // add 1 day for inclusive end date
+                d.setDate(d.getDate() + 1);
             }
             const y = d.getFullYear();
             const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -3081,15 +3888,14 @@
             return `${y}${m}${day}`;
         }
 
-        // Generate ICS string for a list of events
-        function generateICSContent(eventList) {
+        function generateICSContent(eventList, calName = 'UWindsor Academic Dates') {
             let ics = [
                 'BEGIN:VCALENDAR',
                 'VERSION:2.0',
                 'PRODID:-//Faculty Tools//UWindsor Academic Dates//EN',
                 'CALSCALE:GREGORIAN',
                 'METHOD:PUBLISH',
-                'X-WR-CALNAME:UWindsor Academic Dates',
+                `X-WR-CALNAME:${calName}`,
                 'X-WR-TIMEZONE:America/Toronto'
             ];
 
@@ -3099,7 +3905,7 @@
                 if (!evt.startDate) return;
 
                 const dtStart = formatICSDate(evt.startDate);
-                const dtEnd = formatICSDate(evt.endDate || evt.startDate, true); // add 1 day as exclusive end
+                const dtEnd = formatICSDate(evt.endDate || evt.startDate, true);
                 const uid = `uw-evt-${idx}-${dtStart}@faculty-tools`;
                 
                 ics.push('BEGIN:VEVENT');
@@ -3108,7 +3914,6 @@
                 ics.push(`DTSTART;VALUE=DATE:${dtStart}`);
                 ics.push(`DTEND;VALUE=DATE:${dtEnd}`);
                 
-                // Escape special characters in iCal
                 const summary = evt.title.replace(/[,;]/g, '\\$&').replace(/\n/g, '\\n');
                 ics.push(`SUMMARY:${summary}`);
                 
@@ -3127,62 +3932,107 @@
             return ics.join('\r\n');
         }
 
-        // Trigger file download in browser
-        function downloadFile(filename, content) {
-            const blob = new Blob([content], { type: 'text/calendar;charset=utf-8;' });
+        function downloadFile(filename, content, mime = 'text/calendar;charset=utf-8;') {
+            const blob = new Blob([content], { type: mime });
             const link = document.createElement('a');
-            
-            if (navigator.msSaveBlob) { // IE 10+
-                navigator.msSaveBlob(blob, filename);
-            } else {
-                link.href = URL.createObjectURL(blob);
-                link.setAttribute('download', filename);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', filename);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
-        // Export a single event
         function exportSingleEventToICS(evt) {
             const content = generateICSContent([evt]);
-            // Clean up name for file
             const name = evt.title.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
             downloadFile(`uwindsor-event-${name}.ics`, content);
             showToast('Single event downloaded!');
         }
 
-        // Export all filtered events
-        function exportFilteredEventsToICS() {
+        function exportAllFilteredEventsToICS() {
             if (state.filteredEvents.length === 0) {
                 showToast('No events matching filters to export.', true);
                 return;
             }
-            const content = generateICSContent(state.filteredEvents);
+            const content = generateICSContent(state.filteredEvents, 'UWindsor Academic Dates');
             downloadFile('uwindsor-academic-calendar.ics', content);
             showToast(`Exported ${state.filteredEvents.length} events successfully!`);
         }
 
+        function exportActiveSemesterICS() {
+            const currentTerm = state.activeSemester === 'all' ? 'Fall 2026' : state.activeSemester;
+            const termEvents = state.events.filter(e => e.startDate && getSemesterName(e.startDate) === currentTerm);
+            if (termEvents.length === 0) {
+                showToast(`No dates found for ${currentTerm}.`, true);
+                return;
+            }
+            const content = generateICSContent(termEvents, `UWindsor ${currentTerm}`);
+            const slug = currentTerm.toLowerCase().replace(/\s+/g, '-');
+            downloadFile(`uwindsor-${slug}.ics`, content);
+            showToast(`Exported ${termEvents.length} events for ${currentTerm}!`);
+        }
+
+        function exportBreaksOnlyICS() {
+            const breaks = state.events.filter(e => isBreakEvent(e));
+            if (breaks.length === 0) {
+                showToast('No breaks found to export.', true);
+                return;
+            }
+            const content = generateICSContent(breaks, 'UWindsor Teaching Breaks & Holidays');
+            downloadFile('uwindsor-breaks-and-holidays.ics', content);
+            showToast(`Exported ${breaks.length} breaks and holidays!`);
+        }
+
+        function exportFacultyMilestonesICS() {
+            const milestones = state.events.filter(e => matchesAudience(e, 'faculty'));
+            if (milestones.length === 0) {
+                showToast('No faculty milestones found.', true);
+                return;
+            }
+            const content = generateICSContent(milestones, 'UWindsor Faculty Milestones');
+            downloadFile('uwindsor-faculty-milestones.ics', content);
+            showToast(`Exported ${milestones.length} faculty milestones!`);
+        }
+
+        function exportFilteredEventsToCSV() {
+            if (state.filteredEvents.length === 0) {
+                showToast('No events matching filters to export.', true);
+                return;
+            }
+            let rows = [['Title', 'Start Date', 'End Date', 'Date Display', 'Category', 'URL']];
+            state.filteredEvents.forEach(e => {
+                const cat = getEventCategory(e);
+                rows.push([
+                    `"${(e.title || '').replace(/"/g, '""')}"`,
+                    e.startDate || '',
+                    e.endDate || '',
+                    `"${(e.dateText || '').replace(/"/g, '""')}"`,
+                    `"${(cat.name || '').replace(/"/g, '""')}"`,
+                    `"${(e.url || '').replace(/"/g, '""')}"`
+                ]);
+            });
+            const csv = rows.map(r => r.join(',')).join('\r\n');
+            downloadFile('uwindsor-academic-calendar.csv', csv, 'text/csv;charset=utf-8;');
+            showToast(`Exported ${state.filteredEvents.length} events to CSV!`);
+        }
+
         // -------------------------------------------------------------
-        // LIVE SCRAPER (CORS PROXY & MANUAL IMPORT)
+        // LIVE SCRAPER & RESILIENT MANUAL IMPORTER
         // -------------------------------------------------------------
         
         let isManualMode = false;
 
         function openSyncModal() {
             document.getElementById('syncModal').classList.remove('hidden');
-            
-            // Reset to scraper view
             isManualMode = false;
             document.getElementById('syncInfoArea').classList.remove('hidden');
             document.getElementById('syncProgressArea').classList.add('hidden');
             document.getElementById('syncManualArea').classList.add('hidden');
-            document.getElementById('syncManualModeToggle').textContent = 'Import HTML Manually';
+            document.getElementById('syncManualModeToggle').textContent = 'Import HTML / Text';
             document.getElementById('syncActionBtn').classList.remove('hidden');
             document.getElementById('syncActionBtn').innerHTML = '<i data-lucide="play" class="w-3.5 h-3.5"></i><span>Start Scrape</span>';
             document.getElementById('syncCancelBtn').classList.remove('hidden');
             document.getElementById('syncCloseX').classList.remove('hidden');
-            
             lucide.createIcons();
         }
 
@@ -3192,7 +4042,6 @@
 
         function toggleSyncManualMode() {
             isManualMode = !isManualMode;
-            
             const info = document.getElementById('syncInfoArea');
             const manual = document.getElementById('syncManualArea');
             const toggleBtn = document.getElementById('syncManualModeToggle');
@@ -3202,18 +4051,16 @@
                 info.classList.add('hidden');
                 manual.classList.remove('hidden');
                 toggleBtn.textContent = 'Use Scraper Mode';
-                actBtn.innerHTML = '<i data-lucide="upload" class="w-3.5 h-3.5"></i><span>Import HTML</span>';
+                actBtn.innerHTML = '<i data-lucide="upload" class="w-3.5 h-3.5"></i><span>Parse &amp; Import</span>';
             } else {
                 info.classList.remove('hidden');
                 manual.classList.add('hidden');
-                toggleBtn.textContent = 'Import HTML Manually';
+                toggleBtn.textContent = 'Import HTML / Text';
                 actBtn.innerHTML = '<i data-lucide="play" class="w-3.5 h-3.5"></i><span>Start Scrape</span>';
             }
-            
             lucide.createIcons();
         }
 
-        // Fetch helper through proxy with multi-proxy fallback
         async function fetchThroughProxy(targetUrl) {
             const proxies = [
                 url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
@@ -3233,17 +4080,15 @@
                     console.warn(`Proxy ${i + 1} failed, trying fallback...`, e);
                 }
             }
-            throw new Error(`Failed to fetch live data from UWindsor Registrar. Check internet connection.`);
+            throw new Error(`Failed to fetch live data. Please use the Import HTML / Text tab.`);
         }
 
-        // Live scraping coordinator
         async function startScrapingLive() {
             if (isManualMode) {
-                handleManualHtmlImport();
+                handleManualImport();
                 return;
             }
 
-            // Scraper Mode
             const info = document.getElementById('syncInfoArea');
             const progress = document.getElementById('syncProgressArea');
             const cancelBtn = document.getElementById('syncCancelBtn');
@@ -3271,7 +4116,7 @@
             try {
                 while (page < maxPages) {
                     statusText.textContent = `Scraping Registrar: page ${page + 1}...`;
-                    const pct = Math.round((page / 12) * 100); // assume ~12 pages
+                    const pct = Math.round((page / 12) * 100);
                     bar.style.width = `${Math.min(pct, 95)}%`;
                     percentText.textContent = `${Math.min(pct, 95)}%`;
 
@@ -3285,41 +4130,35 @@
                     try {
                         html = await fetchThroughProxy(targetUrl);
                     } catch(fetchErr) {
-                        console.error('Fetch error:', fetchErr);
                         throw new Error(`Connection failed on page ${page + 1}. The proxy might be down.`);
                     }
 
-                    // Parse HTML rows
                     const items = parseHtmlForEvents(html);
                     subtext.textContent = `Page ${page + 1} complete. Found ${items.length} items.`;
                     
                     if (items.length === 0) {
                         consecEmpty++;
-                        if (consecEmpty >= 2) break; // stop at 2 empty pages
+                        if (consecEmpty >= 2) break;
                     } else {
                         consecEmpty = 0;
                         scrapedList = scrapedList.concat(items);
                     }
 
                     page++;
-                    // short pause
-                    await new Promise(r => setTimeout(r, 500));
+                    await new Promise(r => setTimeout(r, 400));
                 }
 
                 if (scrapedList.length === 0) {
-                    throw new Error('Scraped 0 events. Proxy might be returning empty response.');
+                    throw new Error('Scraped 0 events. Proxy might be returning an empty response.');
                 }
 
-                // Sorting and merging scraped data
                 scrapedList.sort((a, b) => a.startDate.localeCompare(b.startDate));
                 
-                // Save to localStorage
                 state.events = scrapedList;
                 state.lastUpdated = new Date().toLocaleString();
                 localStorage.setItem('uwindsor_academic_events', JSON.stringify(scrapedList));
                 localStorage.setItem('uwindsor_academic_events_updated', state.lastUpdated);
 
-                // Regenerate breaks for current session
                 const generatedBreaks = generateSemesterBreaks(state.events);
                 state.events = state.events.concat(generatedBreaks);
                 state.events.sort((a, b) => a.startDate.localeCompare(b.startDate));
@@ -3329,7 +4168,6 @@
                 statusText.textContent = `Sync Complete!`;
                 subtext.textContent = `Saved ${scrapedList.length} events.`;
 
-                // Update UI
                 applyFilters();
                 renderCategoryFilters();
                 renderViews();
@@ -3344,7 +4182,6 @@
                 subtext.textContent = err.message;
                 bar.className = 'bg-rose-500 h-full w-full';
                 
-                // Restore buttons
                 cancelBtn.classList.remove('hidden');
                 closeX.classList.remove('hidden');
                 toggleBtn.classList.remove('hidden');
@@ -3352,7 +4189,67 @@
             }
         }
 
-        // Parsing HTML string (regex equivalent of node scraper)
+        // Resilient parser supporting HTML rows AND plain-text lines
+        function parseInputForEvents(raw) {
+            const trimmed = raw.trim();
+            if (trimmed.includes('<tr') || trimmed.includes('<td') || trimmed.includes('views-field-title')) {
+                return parseHtmlForEvents(trimmed);
+            }
+
+            // Plain text line parser
+            const results = [];
+            const lines = trimmed.split(/\r?\n/);
+            
+            const monthMap = {
+                'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'may': '05', 'jun': '06',
+                'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12'
+            };
+
+            lines.forEach(line => {
+                const l = line.trim();
+                if (!l || l.length < 5) return;
+
+                // Pattern 1: ISO date "2026-09-03 - Event title"
+                const isoMatch = l.match(/^(\d{4}-\d{2}-\d{2})\s*(?:to|-)\s*(\d{4}-\d{2}-\d{2})?\s*[:\-–—]?\s*(.+)$/i);
+                if (isoMatch) {
+                    const start = isoMatch[1];
+                    const end = isoMatch[2] || start;
+                    const title = isoMatch[3].trim();
+                    results.push({
+                        title,
+                        url: 'https://www.uwindsor.ca/registrar/events-listing',
+                        startDate: start,
+                        endDate: end,
+                        dateText: formatDisplayDate(start) + (end !== start ? ' to ' + formatDisplayDate(end) : '')
+                    });
+                    return;
+                }
+
+                // Pattern 2: Text dates "September 3, 2026 - Event title"
+                const textMatch = l.match(/^([A-Za-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?(?:\s*[-–—]\s*(\d{1,2})(?:st|nd|rd|th)?)?,?\s*(\d{4})?\s*[:\-–—\t]\s*(.+)$/i);
+                if (textMatch) {
+                    const monthStr = textMatch[1].slice(0, 3).toLowerCase();
+                    const m = monthMap[monthStr] || '01';
+                    const d1 = String(textMatch[2]).padStart(2, '0');
+                    const d2 = textMatch[3] ? String(textMatch[3]).padStart(2, '0') : d1;
+                    const y = textMatch[4] || '2026';
+                    const title = textMatch[5].trim();
+                    
+                    const start = `${y}-${m}-${d1}`;
+                    const end = `${y}-${m}-${d2}`;
+                    results.push({
+                        title,
+                        url: 'https://www.uwindsor.ca/registrar/events-listing',
+                        startDate: start,
+                        endDate: end,
+                        dateText: formatDisplayDate(start) + (end !== start ? ' to ' + formatDisplayDate(end) : '')
+                    });
+                }
+            });
+
+            return results;
+        }
+
         function parseHtmlForEvents(html) {
             const parsed = [];
             const rowSplits = html.split(/<tr\b[^>]*>/i);
@@ -3412,22 +4309,20 @@
             return parsed;
         }
 
-        // Manual HTML import process
-        function handleManualHtmlImport() {
-            const html = document.getElementById('manualHtmlInput').value.trim();
-            if (!html) {
-                showToast('Please paste some HTML contents first!', true);
+        function handleManualImport() {
+            const input = document.getElementById('manualHtmlInput').value.trim();
+            if (!input) {
+                showToast('Please paste HTML or text lines first!', true);
                 return;
             }
 
             try {
-                const parsed = parseHtmlForEvents(html);
+                const parsed = parseInputForEvents(input);
                 if (parsed.length === 0) {
-                    showToast('Could not extract any events. Please verify the HTML source structure.', true);
+                    showToast('Could not extract any events. Please verify the format.', true);
                     return;
                 }
 
-                // Merge manually imported events. We first extract the raw official events.
                 const rawEvents = state.events.filter(e => 
                     !e.title.includes('Academic Break') && 
                     !e.title.includes('Between Semesters')
@@ -3451,28 +4346,28 @@
                     rawEvents.sort((a, b) => a.startDate.localeCompare(b.startDate));
                     state.lastUpdated = new Date().toLocaleString();
                     
-                    // Save ONLY raw events to local storage
                     localStorage.setItem('uwindsor_academic_events', JSON.stringify(rawEvents));
                     localStorage.setItem('uwindsor_academic_events_updated', state.lastUpdated);
                     
-                    // Regenerate breaks for UI state
                     state.events = [...rawEvents];
                     const generatedBreaks = generateSemesterBreaks(state.events);
                     state.events = state.events.concat(generatedBreaks);
                     state.events.sort((a, b) => a.startDate.localeCompare(b.startDate));
                     
+                    renderSemesterChips();
+                    populateCheatSheetTerms();
                     applyFilters();
                     renderCategoryFilters();
                     renderViews();
                     
-                    showToast(`Imported ${addedCount} new events! Total size is now ${state.events.length}.`);
+                    showToast(`Imported ${addedCount} new events! Total events: ${state.events.length}.`);
                 }
                 
                 closeSyncModal();
                 document.getElementById('manualHtmlInput').value = '';
             } catch(e) {
                 console.error(e);
-                showToast('Error processing HTML source.', true);
+                showToast('Error processing input content.', true);
             }
         }
 
@@ -3490,13 +4385,13 @@
 
             msg.textContent = message;
             if (isError) {
-                toast.classList.remove('bg-gray-900');
+                toast.classList.remove('bg-gray-900', 'dark:bg-slate-800');
                 toast.classList.add('bg-rose-600');
                 icon.className = 'w-4 h-4 text-white';
                 icon.setAttribute('data-lucide', 'alert-circle');
             } else {
                 toast.classList.remove('bg-rose-600');
-                toast.classList.add('bg-gray-900');
+                toast.classList.add('bg-gray-900', 'dark:bg-slate-800');
                 icon.className = 'w-4 h-4 text-emerald-400';
                 icon.setAttribute('data-lucide', 'check-circle');
             }
@@ -3512,7 +4407,7 @@
             }, 3000);
         }
 
-        // Run App Initializer
+        // Run Initializer
         window.addEventListener('DOMContentLoaded', initApp);
 
     </script>
