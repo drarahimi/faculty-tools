@@ -51,6 +51,22 @@ const FACULTY_TOOLS = [
     }
 })();
 
+window.updateThemeIcons = function() {
+    const isDark = document.documentElement.classList.contains('dark');
+    document.querySelectorAll('[data-theme-icon]').forEach(icon => {
+        icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+    });
+    if (window.lucide) lucide.createIcons();
+};
+
+window.toggleFacultyTheme = function() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('faculty_tools_theme', isDark ? 'dark' : 'light');
+    window.updateThemeIcons();
+    if (window.showToast) window.showToast(isDark ? 'Dark mode enabled' : 'Light mode enabled');
+    return isDark;
+};
+
 // Starred & Recent Tools State Management
 window.getStarredToolIds = function() {
     return new Set(JSON.parse(localStorage.getItem('faculty_starred_tools') || '[]'));
@@ -233,6 +249,7 @@ window.initGlobalNavigation = function() {
 
 window.addEventListener('DOMContentLoaded', () => {
     window.initGlobalNavigation();
+    window.updateThemeIcons();
     if (window.lucide) lucide.createIcons();
 });
 
