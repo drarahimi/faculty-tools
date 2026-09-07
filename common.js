@@ -9,19 +9,15 @@ const FACULTY_TOOLS = [
     { id: 'committee-selector', title: 'Committee Selector', description: 'Select an appropriate graduate committee based on research interests and expertise.', category: 'Teaching & Accreditation', icon: 'users', path: 'committee-selector.html' },
     { id: 'course-mapping-tool', title: 'Course Mapping Tool', description: 'Visualize and manage course mappings for the MAME program.', category: 'Teaching & Accreditation', icon: 'map', path: 'course-mapping.html' },
     { id: 'grade-curve-calculator', title: 'Grade Curving Calculator', description: 'Compute exam statistics, apply standard academic curves, and export CSVs.', category: 'Teaching & Accreditation', icon: 'calculator', path: 'grade-curve-calculator.html' },
-    { id: 'reference-letter-builder', title: 'Reference Letter Builder', description: 'Generate structured academic recommendation letters for grad school & scholarships.', category: 'Teaching & Accreditation', icon: 'file-check', path: 'reference-letter-builder.html' },
 
     // Research & Conferences
     { id: 'ieee-conferences', title: 'IEEE Conference Directory', description: 'Search flagship IEEE conferences worldwide with deadlines, calendar exports, and ranks.', category: 'Research & Conferences', icon: 'globe', path: 'ieee-conferences.html' },
     { id: 'citation-generator', title: 'Citation Generator', description: 'Convert DOIs or search titles to format BibTeX, APA, MLA, IEEE, and Chicago.', category: 'Research & Conferences', icon: 'quote', path: 'citation-generator.html' },
     { id: 'bib-cleaner-tool', title: 'Bib Cleaner Tool', description: 'Clean and format bibliographic entries for LaTeX / BibTeX.', category: 'Research & Conferences', icon: 'file-text', path: 'bib-cleaner.html' },
     { id: 'latex-flattener-tool', title: 'LaTeX Flattener Tool', description: 'Flatten nested LaTeX structures for improved compatibility.', category: 'Research & Conferences', icon: 'file-code', path: 'latex-flattener.html' },
-    { id: 'proceedings-compiler', title: 'Compile Proceedings', description: 'Compile accepted paper PDFs into a single proceedings PDF with table of contents.', category: 'Research & Conferences', icon: 'book-open', path: 'proceedings-compiler.html' },
     { id: 'latex-equation-editor', title: 'LaTeX Equation Builder', description: 'Interactive live visual KaTeX equation editor with symbol palettes.', category: 'Research & Conferences', icon: 'binary', path: 'latex-equation-editor.html' },
-    { id: 'image-to-equation', title: 'Image to Equation Converter', description: 'Convert math screenshots into LaTeX ($$) and MS Word OMML equation formats.', category: 'Research & Conferences', icon: 'file-digit', path: 'image-to-equation.html' },
 
     // Grants & Funding
-    { id: 'nserc-discovery-helper', title: 'NSERC Discovery Grant Helper', description: 'Interactive 5-year budget planner, HQP ratio calculator, LaTeX & CSV exporters.', category: 'Grants & Funding', icon: 'award', path: 'nserc-discovery.html' },
     { id: 'travel-policy-tool', title: 'Travel Policy Tool', description: 'Access and view the latest university travel policies and procedures.', category: 'Grants & Funding', icon: 'plane', path: 'travel-policy.html' },
 
     // PDF & Document Suite
