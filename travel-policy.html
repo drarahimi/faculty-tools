@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UWindsor Faculty Travel Policy Guide - Faculty Tools</title>
+    <title>Faculty Travel Policy & Expense Studio - Faculty Tools</title>
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%230d9488'/%3E%3Cpath d='M50,18 A22,22 0 0,0 30.5,54.5 C34.5,58.8 37,63.2 37,69 L63,69 C63,63.2 65.5,58.8 69.5,54.5 A22,22 0 0,0 50,18 Z M42,74 L58,74 A2,2 0 0,1 56,79 L44,79 A2,2 0 0,1 42,74 Z' fill='white'/%3E%3C/svg%3E">
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
 
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -37,14 +38,17 @@
                             500: '#005596', // UWindsor Blue
                             600: '#004478',
                             700: '#00355e',
+                            800: '#00294a',
                             900: '#002542',
                         },
                         gold: {
                             50: '#fffdf0',
                             100: '#fef8c3',
+                            200: '#fef08a',
                             500: '#ffce00', // UWindsor Gold
                             600: '#e0b500',
                             700: '#b89400',
+                            800: '#856b00',
                             900: '#735800',
                         }
                     }
@@ -52,55 +56,63 @@
             }
         }
     </script>
+
     <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
         @media print {
+            body * { visibility: hidden; }
+            #worksheetModal, #worksheetModal * { visibility: visible; }
+            #worksheetModal { position: absolute; left: 0; top: 0; width: 100%; max-width: 100%; border: none !important; box-shadow: none !important; background: white !important; color: black !important; }
             .no-print { display: none !important; }
-            body { background: white; color: black; }
-            .shadow-sm, .shadow-md, .shadow-lg, .shadow-xl { box-shadow: none !important; }
-            .border { border-color: #ddd !important; }
-            .card { break-inside: avoid; }
-        }
-        /* Custom scrollbars */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
         }
     </style>
 </head>
+
 <body class="bg-gray-50 dark:bg-slate-950 text-gray-800 dark:text-slate-100 font-sans antialiased flex flex-col min-h-screen transition-colors duration-200">
 
-    <!-- Header -->
-    <header class="bg-white/90 dark:bg-slate-900/90 border-b border-gray-200 dark:border-slate-800 sticky top-0 z-50 shadow-sm backdrop-blur-md">
+    <!-- Header / Navigation Bar -->
+    <header class="bg-white/90 dark:bg-slate-900/90 border-b border-gray-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm backdrop-blur-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center space-x-3">
-                <div class="bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 p-2 rounded-lg">
+                <div class="bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 p-2.5 rounded-xl border border-brand-100 dark:border-brand-900/30">
                     <i data-lucide="plane" class="h-5 w-5"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold text-gray-900 dark:text-white leading-tight">Travel Policy Tool</h1>
-                    <p class="text-xs text-gray-500 dark:text-slate-400">Access and view the latest university travel policies and procedures</p>
+                    <div class="flex items-center gap-2">
+                        <h1 class="text-lg font-bold text-gray-900 dark:text-white leading-tight">Faculty Travel Policy & Expense Studio</h1>
+                        <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800">WUFA & Tri-Agency</span>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-slate-400">Interactive per-diem calculator, Windsor mileage log, Tri-Agency compliance & UWinsite claim worksheet</p>
                 </div>
             </div>
-            <div class="flex items-center gap-3 no-print">
+
+            <!-- Controls: Quick Links + Theme Toggle + Dashboard -->
+            <div class="flex items-center gap-2.5 flex-wrap sm:flex-nowrap no-print">
                 <a href="https://www.uwindsor.ca/finance/uwinsite-finance" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 px-3 py-1.5 rounded-lg shadow-sm transition-colors">
                     <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                    <span>UWinsite Login</span>
+                    <span>UWinsite Finance</span>
                 </a>
-                <button onclick="window.print()" class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-700 shadow-sm transition-colors">
+
+                <button onclick="openWorksheetModal()" class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-700 shadow-sm transition-colors">
                     <i data-lucide="printer" class="w-3.5 h-3.5"></i>
-                    <span>Print / Save PDF</span>
+                    <span>Print Worksheet</span>
                 </button>
+
                 <div id="header-quick-nav"></div>
+
+                <!-- Theme Toggle Button -->
+                <button id="theme-toggle-btn" onclick="window.toggleFacultyTheme()" title="Toggle Dark / Light Mode"
+                    class="p-2 text-gray-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-lg border border-gray-200 dark:border-slate-700 transition-colors shrink-0">
+                    <i data-theme-icon data-lucide="moon" class="w-4 h-4"></i>
+                </button>
+
+                <!-- Dashboard Link -->
                 <a href="index.html" class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors bg-gray-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700">
                     <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
                     <span>Dashboard</span>
@@ -109,274 +121,1057 @@
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex-grow max-w-none px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+    <!-- Main Workspace -->
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
 
-        <!-- Critical Alerts / Risk Assessment -->
-        <div class="bg-blue-50/70 border-l-4 border-brand-500 p-4 rounded-r-xl border border-gray-200 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center shadow-sm">
+        <!-- Critical Alerts / Campus Safety Banner -->
+        <div class="bg-blue-50/80 dark:bg-blue-950/30 border-l-4 border-brand-500 p-4 rounded-r-2xl border border-blue-200/60 dark:border-blue-900/40 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center shadow-sm">
             <div class="flex gap-3">
-                <div class="p-2 bg-brand-100 text-brand-500 rounded-lg shrink-0 h-fit">
-                    <i data-lucide="alert-circle" class="w-5.5 h-5.5"></i>
+                <div class="p-2 bg-brand-100 dark:bg-brand-900/60 text-brand-600 dark:text-brand-400 rounded-xl shrink-0 h-fit">
+                    <i data-lucide="alert-circle" class="w-5 h-5"></i>
                 </div>
                 <div>
-                    <h2 class="font-bold text-brand-700 text-base flex items-center gap-1.5">
-                        Mandatory International Travel Risk Protocol (Updated Nov 2025)
+                    <h2 class="font-bold text-brand-800 dark:text-brand-300 text-sm flex items-center gap-1.5">
+                        Mandatory International Travel Risk Protocol (Campus Safety Nov 2025)
                     </h2>
-                    <p class="text-sm text-gray-600 mt-1 max-w-4xl leading-relaxed">
-                        All international travel must be registered with Campus Safety prior to departure. Any academic travel to high-risk zones ("Avoid Non-Essential Travel") requires formal approval from the corresponding Vice-President or Provost.
+                    <p class="text-xs text-gray-600 dark:text-slate-300 mt-1 max-w-4xl leading-relaxed">
+                        All international travel must be registered with Campus Safety prior to departure. Any academic travel to high-risk zones ("Avoid Non-Essential Travel") requires formal approval from the Provost. Reimbursement requires submission in UWinsite Finance within <strong>15 working days</strong> of return.
                     </p>
                 </div>
             </div>
-            <div class="flex gap-2 text-sm shrink-0 w-full lg:w-auto justify-end no-print">
-                <a href="https://www.uwindsor.ca/campus-safety/sites/uwindsor.ca.campus-safety/files/travel_risk_management_policy_-_v4_final.pdf" target="_blank" class="inline-flex items-center gap-1.5 bg-white text-brand-500 border border-brand-200 px-3 py-1.5 rounded-lg hover:bg-brand-50 transition-colors">
-                    <i data-lucide="file-text" class="w-4 h-4"></i> Read Full Policy
+            <div class="flex gap-2 text-xs shrink-0 w-full lg:w-auto justify-end no-print">
+                <a href="https://www.uwindsor.ca/campus-safety/sites/uwindsor.ca.campus-safety/files/travel_risk_management_policy_-_v4_final.pdf" target="_blank" class="inline-flex items-center gap-1 bg-white dark:bg-slate-800 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-slate-700 px-3 py-1.5 rounded-lg hover:bg-brand-50 transition-colors font-medium">
+                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Read Policy
                 </a>
-                <a href="https://travel.gc.ca/travelling/advisories" target="_blank" class="inline-flex items-center gap-1.5 bg-red-50 text-red-700 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors">
-                    <i data-lucide="globe" class="w-4 h-4"></i> GC Advisories
+                <a href="https://travel.gc.ca/travelling/advisories" target="_blank" class="inline-flex items-center gap-1 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900/50 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors font-medium">
+                    <i data-lucide="globe" class="w-3.5 h-3.5"></i> GC Advisories
                 </a>
             </div>
         </div>
 
-        <!-- Columns Layout -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Mode / Navigation Tabs -->
+        <div class="flex items-center justify-between border-b border-gray-200 dark:border-slate-800 pb-3 gap-4 flex-wrap">
+            <div class="flex items-center gap-2 p-1 bg-gray-200/70 dark:bg-slate-800/80 rounded-xl">
+                <button onclick="switchTab('calculator')" id="tabBtnCalculator" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-sm flex items-center gap-1.5">
+                    <i data-lucide="calculator" class="w-4 h-4"></i>
+                    <span>Expense & Per-Diem Calculator</span>
+                </button>
+                <button onclick="switchTab('compliance')" id="tabBtnCompliance" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition-all flex items-center gap-1.5">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                    <span>Tri-Agency & Policy Matrix</span>
+                </button>
+                <button onclick="switchTab('faqs')" id="tabBtnFaqs" class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition-all flex items-center gap-1.5">
+                    <i data-lucide="help-circle" class="w-4 h-4"></i>
+                    <span>Policy FAQs & Knowledge Base</span>
+                </button>
+            </div>
 
-            <!-- Left Column: Pre-Travel & Meal Allowances -->
-            <div class="lg:col-span-2 flex flex-col gap-6">
+            <!-- Quick Rates Pill Indicator -->
+            <div class="flex items-center gap-2 text-xs font-mono text-gray-500 dark:text-slate-400">
+                <span class="px-2 py-1 bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800">WUFA Meals: <strong>$99/day</strong></span>
+                <span class="px-2 py-1 bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800">Mileage: <strong>$0.55/km</strong></span>
+                <span class="px-2 py-1 bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-800">Private Stay: <strong>$30/night</strong></span>
+            </div>
+        </div>
 
-                <!-- Pre-Travel & Authorizations -->
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden card">
-                    <div class="bg-brand-900 text-white px-5 py-3.5 flex justify-between items-center">
-                        <h2 class="text-base font-bold flex items-center gap-2">
-                            <i data-lucide="check-square" class="w-4 h-4 text-gold-500"></i> Pre-Travel Authorization
-                        </h2>
-                        <a href="https://www.uwindsor.ca/finance/sites/uwindsor.ca.finance/files/travel_policy_and_procedures_2023-09-28.pdf" target="_blank" class="text-xs text-brand-200 hover:text-white underline inline-flex items-center gap-1.5 transition-colors">
-                            Finance Policy Sec. 3 <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        </a>
+        <!-- TAB 1: EXPENSE & PER-DIEM CALCULATOR -->
+        <div id="tabContentCalculator" class="flex flex-col gap-6">
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                <!-- Left Column: Trip Details, Itinerary & Per-Diem (8 Cols) -->
+                <div class="lg:col-span-8 flex flex-col gap-5">
+
+                    <!-- Trip Header & Parameters Card -->
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+                        <div class="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
+                            <h2 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="calendar" class="w-4 h-4 text-brand-600 dark:text-brand-400"></i>
+                                1. Trip Itinerary & Parameters
+                            </h2>
+                            <span class="text-[11px] text-gray-400 font-mono" id="tripDurationText">3 Days • 2 Nights</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                            <div class="sm:col-span-2">
+                                <label class="font-medium text-gray-700 dark:text-slate-300 block mb-1">Trip Purpose / Conference Name</label>
+                                <input type="text" id="tripTitle" value="IEEE International Conference on Smart Sensors" oninput="updateCalculator()" class="w-full px-3 py-1.5 border border-gray-300 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 text-xs">
+                            </div>
+                            <div>
+                                <label class="font-medium text-gray-700 dark:text-slate-300 block mb-1">Departure Date</label>
+                                <input type="date" id="tripDepartureDate" onchange="onDatesChanged()" class="w-full px-3 py-1.5 border border-gray-300 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 text-xs">
+                            </div>
+                            <div>
+                                <label class="font-medium text-gray-700 dark:text-slate-300 block mb-1">Return Date</label>
+                                <input type="date" id="tripReturnDate" onchange="onDatesChanged()" class="w-full px-3 py-1.5 border border-gray-300 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 text-xs">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-2 border-t border-gray-100 dark:border-slate-800">
+                            <div>
+                                <label class="font-medium text-gray-700 dark:text-slate-300 block mb-1">Funding Account Source</label>
+                                <select id="tripFundSource" onchange="updateCalculator()" class="w-full px-3 py-1.5 border border-gray-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 text-xs">
+                                    <option value="wufa_pd">Professional Development (WUFA Schedule A)</option>
+                                    <option value="triagency">Tri-Agency Research Grant (NSERC / SSHRC / CIHR)</option>
+                                    <option value="operating">Departmental Operating / Dean's Travel Fund</option>
+                                    <option value="external">External Sponsor / Sub-Contract</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="font-medium text-gray-700 dark:text-slate-300 block mb-1">Foreign Receipt Currency Conversion</label>
+                                <div class="flex items-center gap-2">
+                                    <select id="foreignCurrencySelect" onchange="onCurrencySelectChanged()" class="w-24 px-2 py-1.5 border border-gray-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100">
+                                        <option value="CAD">CAD ($)</option>
+                                        <option value="USD">USD ($)</option>
+                                        <option value="EUR">EUR (€)</option>
+                                        <option value="GBP">GBP (£)</option>
+                                    </select>
+                                    <div class="flex items-center gap-1 flex-1">
+                                        <span class="text-gray-400 text-[11px]">1 FX =</span>
+                                        <input type="number" id="fxRateInput" value="1.38" step="0.01" min="0.01" oninput="updateCalculator()" class="w-full px-2 py-1.5 border border-gray-300 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 text-xs font-mono text-right">
+                                        <span class="text-gray-400 text-[11px]">CAD</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200/80">
-                            <h3 class="font-bold text-sm text-brand-500 mb-1.5 flex items-center gap-1.5">
-                                <i data-lucide="user-check" class="w-4.5 h-4.5"></i> "One-Up" Rule
-                            </h3>
-                            <p class="text-sm text-gray-600 leading-relaxed">All travel must be authorized in writing/system by the person to whom you report (e.g. Department Head for Faculty, Dean for Heads) prior to booking.</p>
+
+                    <!-- Daily Meal Allowances (Per Diem Itinerary Table) -->
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+                        <div class="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3 flex-wrap gap-2">
+                            <div>
+                                <h2 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="coffee" class="w-4 h-4 text-gold-500"></i>
+                                    2. Daily Meal Allowances (WUFA Per Diem)
+                                </h2>
+                                <p class="text-[11px] text-gray-400">No receipts required for per diems. Deduct any meals provided by conferences, flights, or hotels.</p>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-xs">
+                                <button onclick="bulkMealAction('all')" class="px-2.5 py-1 rounded-lg font-medium text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/50 hover:bg-brand-100 transition-colors">Select All ($99/day)</button>
+                                <button onclick="bulkMealAction('noLunch')" class="px-2.5 py-1 rounded-lg font-medium text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 transition-colors">Deduct Lunches</button>
+                                <button onclick="bulkMealAction('noBreakfast')" class="px-2.5 py-1 rounded-lg font-medium text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 transition-colors">Hotel Breakfasts</button>
+                            </div>
                         </div>
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200/80">
-                            <h3 class="font-bold text-sm text-brand-500 mb-1.5 flex items-center gap-1.5">
-                                <i data-lucide="calendar" class="w-4.5 h-4.5"></i> Absence from Duties
-                            </h3>
-                            <p class="text-sm text-gray-600 leading-relaxed">Faculty members are responsible for arranging appropriate coverage of their teaching, exams, student consultations, or administrative duties, subject to Head/Dean approval.</p>
-                        </div>
-                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200/80">
-                            <h3 class="font-bold text-sm text-brand-500 mb-1.5 flex items-center gap-1.5">
-                                <i data-lucide="wallet" class="w-4.5 h-4.5"></i> Fund Verification
-                            </h3>
-                            <p class="text-sm text-gray-600 leading-relaxed">Ensure sufficient balance is available in your Professional Development (PD) account or specific Research Grant prior to booking. Over-expenditures require secondary approval.</p>
+
+                        <!-- Per Diem Day-by-Day Table -->
+                        <div class="overflow-x-auto border border-gray-100 dark:border-slate-800 rounded-xl">
+                            <table class="w-full text-xs text-left">
+                                <thead class="bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-slate-400 font-bold uppercase tracking-wider">
+                                    <tr>
+                                        <th class="py-2.5 px-3">Date</th>
+                                        <th class="py-2.5 px-2 text-center">Breakfast ($17)</th>
+                                        <th class="py-2.5 px-2 text-center">Lunch ($22)</th>
+                                        <th class="py-2.5 px-2 text-center">Dinner ($43)</th>
+                                        <th class="py-2.5 px-2 text-center">Incidentals ($17)</th>
+                                        <th class="py-2.5 px-3 text-right">Day Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mealTableBody" class="divide-y divide-gray-100 dark:divide-slate-800 font-mono">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                                <tfoot class="bg-gray-50 dark:bg-slate-800/60 font-bold text-gray-900 dark:text-white border-t border-gray-200 dark:border-slate-700">
+                                    <tr>
+                                        <td colspan="5" class="py-2.5 px-3 font-sans text-right uppercase tracking-wider text-xs">Total Meal Per-Diem:</td>
+                                        <td id="mealSubtotalText" class="py-2.5 px-3 text-right text-sm text-brand-600 dark:text-brand-400 font-mono">$0.00</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
                         </div>
                     </div>
+
+                    <!-- Personal Vehicle Mileage & Presets Card -->
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+                        <div class="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
+                            <div>
+                                <h2 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="car" class="w-4 h-4 text-brand-600 dark:text-brand-400"></i>
+                                    3. Personal Vehicle Mileage ($0.55 / km)
+                                </h2>
+                                <p class="text-[11px] text-gray-400">Official WUFA Article K mileage rate for authorized university driving</p>
+                            </div>
+                            <span class="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 px-2 py-0.5 rounded bg-brand-50 dark:bg-brand-950">$0.55 / km</span>
+                        </div>
+
+                        <!-- 1-Click Popular Windsor Route Presets -->
+                        <div class="flex flex-col gap-2">
+                            <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wider">1-Click UWindsor Campus Departure Presets:</span>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 text-xs">
+                                <button onclick="setMileagePreset('dtw', 75)" class="p-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/70 hover:border-brand-500 hover:bg-brand-50/30 text-left transition-all">
+                                    <span class="font-bold block text-gray-800 dark:text-slate-200">DTW Airport</span>
+                                    <span class="text-[10px] text-gray-400 font-mono">75 km • $41.25</span>
+                                </button>
+                                <button onclick="setMileagePreset('yyz', 730)" class="p-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/70 hover:border-brand-500 hover:bg-brand-50/30 text-left transition-all">
+                                    <span class="font-bold block text-gray-800 dark:text-slate-200">Pearson (YYZ)</span>
+                                    <span class="text-[10px] text-gray-400 font-mono">730 km • $401.50</span>
+                                </button>
+                                <button onclick="setMileagePreset('london', 380)" class="p-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/70 hover:border-brand-500 hover:bg-brand-50/30 text-left transition-all">
+                                    <span class="font-bold block text-gray-800 dark:text-slate-200">Western (London)</span>
+                                    <span class="text-[10px] text-gray-400 font-mono">380 km • $209.00</span>
+                                </button>
+                                <button onclick="setMileagePreset('waterloo', 570)" class="p-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/70 hover:border-brand-500 hover:bg-brand-50/30 text-left transition-all">
+                                    <span class="font-bold block text-gray-800 dark:text-slate-200">Univ of Waterloo</span>
+                                    <span class="text-[10px] text-gray-400 font-mono">570 km • $313.50</span>
+                                </button>
+                                <button onclick="setMileagePreset('ottawa', 1560)" class="p-2 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/70 hover:border-brand-500 hover:bg-brand-50/30 text-left transition-all">
+                                    <span class="font-bold block text-gray-800 dark:text-slate-200">Ottawa (Tri-Agency)</span>
+                                    <span class="text-[10px] text-gray-400 font-mono">1,560 km • $858.00</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Manual Distance Input & Tally -->
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-slate-800 text-xs">
+                            <div class="flex items-center gap-2">
+                                <label for="mileageKmInput" class="font-medium text-gray-700 dark:text-slate-300">Total Roundtrip Distance:</label>
+                                <input type="number" id="mileageKmInput" value="75" min="0" oninput="updateCalculator()" class="w-24 px-2 py-1 border border-gray-300 dark:border-slate-700 rounded-lg text-xs font-mono text-right bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+                                <span class="font-bold text-gray-400">km</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-gray-400 text-[11px] block">Mileage Claim Total:</span>
+                                <span id="mileageSubtotalText" class="font-mono font-bold text-base text-brand-600 dark:text-brand-400">$41.25 CAD</span>
+                            </div>
+                        </div>
+
+                        <div id="mileageAirfareWarning" class="hidden text-[11px] p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900/60 flex items-center gap-2">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
+                            <span>Long-distance driving policy notice: For driving trips exceeding 500 km, reimbursement is capped at the equivalent economy air/rail fare if cheaper.</span>
+                        </div>
+                    </div>
+
+                    <!-- Lodging & Accommodations Card -->
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+                        <div class="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
+                            <div>
+                                <h2 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="home" class="w-4 h-4 text-gold-500"></i>
+                                    4. Lodging & Accommodations
+                                </h2>
+                                <p class="text-[11px] text-gray-400">Commercial hotel, Airbnb, or Gratuitous private lodging ($30/night no receipts needed)</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                            <!-- Commercial Hotel -->
+                            <div class="bg-gray-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-2">
+                                <div class="flex items-center justify-between font-bold text-gray-800 dark:text-slate-200">
+                                    <span>Commercial Hotel / Airbnb</span>
+                                    <span class="text-[10px] text-gray-400">Receipts required</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Nights</label>
+                                        <input type="number" id="hotelNights" value="2" min="0" oninput="updateCalculator()" class="w-full px-2 py-1 border border-gray-300 dark:border-slate-700 rounded-lg text-xs font-mono text-right bg-white dark:bg-slate-900">
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Nightly Rate (incl. tax)</label>
+                                        <input type="number" id="hotelRate" value="185" min="0" oninput="updateCalculator()" class="w-full px-2 py-1 border border-gray-300 dark:border-slate-700 rounded-lg text-xs font-mono text-right bg-white dark:bg-slate-900">
+                                    </div>
+                                </div>
+                                <div class="text-right text-[11px] font-mono text-gray-600 dark:text-slate-300 pt-1">
+                                    Hotel Subtotal: <span id="hotelSubtotalText" class="font-bold text-slate-900 dark:text-white">$370.00</span>
+                                </div>
+                            </div>
+
+                            <!-- Gratuitous Stay -->
+                            <div class="bg-gray-50 dark:bg-slate-800/60 p-3.5 rounded-xl border border-gray-200 dark:border-slate-700 flex flex-col gap-2">
+                                <div class="flex items-center justify-between font-bold text-gray-800 dark:text-slate-200">
+                                    <span>Gratuitous Private Stay</span>
+                                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-700 font-bold">$30.00 / night</span>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] uppercase font-bold text-gray-400 block mb-1">Nights Staying with Friends/Family (No receipts)</label>
+                                    <input type="number" id="gratuitousNights" value="0" min="0" oninput="updateCalculator()" class="w-full px-2 py-1 border border-gray-300 dark:border-slate-700 rounded-lg text-xs font-mono text-right bg-white dark:bg-slate-900">
+                                </div>
+                                <div class="text-right text-[11px] font-mono text-gray-600 dark:text-slate-300 pt-1">
+                                    Gratuitous Subtotal: <span id="gratuitousSubtotalText" class="font-bold text-slate-900 dark:text-white">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Itemized Receipts & Other Expenses Card -->
+                    <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+                        <div class="flex items-center justify-between border-b border-gray-100 dark:border-slate-800 pb-3">
+                            <div>
+                                <h2 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                                    <i data-lucide="receipt" class="w-4 h-4 text-brand-600 dark:text-brand-400"></i>
+                                    5. Commercial Transportation & Registration
+                                </h2>
+                                <p class="text-[11px] text-gray-400">Itemized invoices required in UWinsite Finance (Boarding passes mandatory for Tri-Agency flights)</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                            <div>
+                                <label class="font-medium text-gray-700 dark:text-slate-300 block mb-1">Airfare / Flight (CAD)</label>
+                                <input type="number" id="expFlight" value="540" min="0" step="any" oninput="updateCalculator()" class="w-full px-3 py-1.5 border border-gray-300 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 font-mono text-right">
+                            </div>
+                            <div>
+                                <label class="font-medium text-gray-700 dark:text-slate-300 block mb-1">Conference Registration Fee</label>
+                                <input type="number" id="expRegistration" value="650" min="0" step="any" oninput="updateCalculator()" class="w-full px-3 py-1.5 border border-gray-300 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 font-mono text-right">
+                            </div>
+                            <div>
+                                <label class="font-medium text-gray-700 dark:text-slate-300 block mb-1">Train / Via Rail</label>
+                                <input type="number" id="expTrain" value="0" min="0" step="any" oninput="updateCalculator()" class="w-full px-3 py-1.5 border border-gray-300 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 font-mono text-right">
+                            </div>
+                            <div>
+                                <label class="font-medium text-gray-700 dark:text-slate-300 block mb-1">Taxi / Uber / Transit</label>
+                                <input type="number" id="expTaxi" value="85" min="0" step="any" oninput="updateCalculator()" class="w-full px-3 py-1.5 border border-gray-300 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 font-mono text-right">
+                            </div>
+                            <div>
+                                <label class="font-medium text-gray-700 dark:text-slate-300 block mb-1">Airport Parking / Highway 407</label>
+                                <input type="number" id="expParking" value="45" min="0" step="any" oninput="updateCalculator()" class="w-full px-3 py-1.5 border border-gray-300 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 font-mono text-right">
+                            </div>
+                            <div>
+                                <label class="font-medium text-gray-700 dark:text-slate-300 block mb-1">Airline Baggage Fees</label>
+                                <input type="number" id="expBaggage" value="70" min="0" step="any" oninput="updateCalculator()" class="w-full px-3 py-1.5 border border-gray-300 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 font-mono text-right">
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <!-- Meal Allowances (Per Diems) -->
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden card">
-                    <div class="bg-brand-900 text-white px-5 py-3.5 flex justify-between items-center">
-                        <h2 class="text-base font-bold flex items-center gap-2">
-                            <i data-lucide="coffee" class="w-4 h-4 text-gold-500"></i> Meal Allowances (WUFA Per Diem)
-                        </h2>
-                        <a href="https://www.wufa.ca/article-173/travel-information" target="_blank" class="text-xs text-brand-200 hover:text-white underline inline-flex items-center gap-1.5 transition-colors">
-                            Agreement Ref. Schedule A <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        </a>
-                    </div>
-                    <div class="p-5">
-                        <div class="flex justify-between items-center mb-4">
-                            <p class="text-sm text-gray-500 font-medium">No receipts are required when claiming the per-diem rates. Claims are made in CAD.</p>
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gold-100 text-gold-900 border border-gold-200">Receipts Not Required</span>
-                        </div>
+                <!-- Right Column: Live Expense Summary & Export Card (4 Cols) -->
+                <div class="lg:col-span-4 flex flex-col gap-5">
 
-                        <!-- Per Diem Blocks -->
-                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
-                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-center">
-                                <div class="text-xs text-gray-400 font-bold uppercase tracking-wider">Breakfast</div>
-                                <div class="text-lg font-bold text-brand-500 mt-0.5">$17.00</div>
-                            </div>
-                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-center">
-                                <div class="text-xs text-gray-400 font-bold uppercase tracking-wider">Lunch</div>
-                                <div class="text-lg font-bold text-brand-500 mt-0.5">$22.00</div>
-                            </div>
-                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-center">
-                                <div class="text-xs text-gray-400 font-bold uppercase tracking-wider">Dinner</div>
-                                <div class="text-lg font-bold text-brand-500 mt-0.5">$43.00</div>
-                            </div>
-                            <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-center">
-                                <div class="text-xs text-gray-400 font-bold uppercase tracking-wider">Incidentals</div>
-                                <div class="text-lg font-bold text-brand-500 mt-0.5">$17.00</div>
-                            </div>
-                            <div class="p-3 bg-brand-50 rounded-xl border border-brand-200 text-center col-span-2 sm:col-span-1 shadow-sm flex flex-col justify-center">
-                                <div class="text-xs text-brand-900 font-extrabold uppercase tracking-wider">Daily Total</div>
-                                <div class="text-2xl font-black text-brand-700 mt-0.5">$99.00</div>
-                            </div>
-                        </div>
-
-                        <!-- Additional Per Diem Considerations -->
-                        <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                            <h3 class="text-sm font-bold text-gray-700 mb-2 border-b pb-1.5 flex items-center gap-1.5">
-                                <i data-lucide="help-circle" class="w-4 h-4 text-brand-500"></i> Rules & Considerations
+                    <!-- Sticky Summary Card -->
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-lg p-5 sticky top-20 flex flex-col gap-4">
+                        <div class="border-b border-gray-100 dark:border-slate-800 pb-3 flex items-center justify-between">
+                            <h3 class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                                <i data-lucide="wallet" class="w-4 h-4 text-brand-600 dark:text-brand-400"></i>
+                                Claim Summary
                             </h3>
-                            <ul class="space-y-2 text-sm text-gray-600">
-                                <li class="flex items-start">
-                                    <i data-lucide="ban" class="w-4 h-4 text-red-500 mt-0.5 mr-2 shrink-0"></i>
-                                    <span><strong>Meals Provided:</strong> You cannot claim per diem for meals that are already provided by a conference, workshop, flight, or hotel stay.</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <i data-lucide="droplet" class="w-4 h-4 text-amber-500 mt-0.5 mr-2 shrink-0"></i>
-                                    <span><strong>Alcohol Exclusion:</strong> Alcohol is strictly non-reimbursable. If ordering meals based on actual cost instead of per diems, ensure any alcohol is charged on a separate receipt. Refer to <a href="https://www.uwindsor.ca/finance/sites/uwindsor.ca.finance/files/travel_policy_and_procedures_2023-09-28.pdf#page=10" target="_blank" class="text-brand-500 hover:underline inline-flex items-center gap-0.5">Finance Policy Sec. 6.1 <i data-lucide="external-link" class="w-3 h-3"></i></a>.</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <i data-lucide="users" class="w-4 h-4 text-brand-500 mt-0.5 mr-2 shrink-0"></i>
-                                    <span><strong>Business Hosting:</strong> If hosting a guest or business dinner, you must claim actual meal costs using an itemized receipt (names and organizational affiliations of attendees required). You cannot claim per diems for hosting.</span>
-                                </li>
-                            </ul>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">CAD Currency</span>
+                        </div>
+
+                        <!-- Itemized Tallies -->
+                        <div class="space-y-2.5 text-xs">
+                            <div class="flex items-center justify-between text-gray-600 dark:text-slate-300">
+                                <span>Meal Allowances (Per Diems):</span>
+                                <span id="summaryMeals" class="font-mono font-bold text-gray-900 dark:text-white">$0.00</span>
+                            </div>
+                            <div class="flex items-center justify-between text-gray-600 dark:text-slate-300">
+                                <span>Personal Vehicle Mileage:</span>
+                                <span id="summaryMileage" class="font-mono font-bold text-gray-900 dark:text-white">$0.00</span>
+                            </div>
+                            <div class="flex items-center justify-between text-gray-600 dark:text-slate-300">
+                                <span>Commercial & Private Lodging:</span>
+                                <span id="summaryLodging" class="font-mono font-bold text-gray-900 dark:text-white">$0.00</span>
+                            </div>
+                            <div class="flex items-center justify-between text-gray-600 dark:text-slate-300">
+                                <span>Airfare, Fares & Registration:</span>
+                                <span id="summaryOther" class="font-mono font-bold text-gray-900 dark:text-white">$0.00</span>
+                            </div>
+
+                            <!-- Total Callout Box -->
+                            <div class="mt-4 p-4 rounded-xl bg-brand-50 dark:bg-brand-950/60 border border-brand-100 dark:border-brand-900/50 flex flex-col gap-1 text-center">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-brand-700 dark:text-brand-400">Total Reimbursable Claim</span>
+                                <span id="summaryGrandTotal" class="text-3xl font-black text-brand-900 dark:text-white font-mono">$0.00</span>
+                                <span class="text-[11px] text-gray-500 dark:text-slate-400">Estimated payout via UWinsite Finance</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex flex-col gap-2 pt-2 border-t border-gray-100 dark:border-slate-800">
+                            <button onclick="openWorksheetModal()" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2">
+                                <i data-lucide="printer" class="w-4 h-4"></i>
+                                Generate UWinsite Worksheet (Print / PDF)
+                            </button>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="exportClaimCSV()" class="py-2.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-800 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 border border-gray-200 dark:border-slate-700">
+                                    <i data-lucide="download" class="w-3.5 h-3.5"></i> Export CSV
+                                </button>
+                                <button onclick="copyClaimSummary()" class="py-2.5 bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-800 dark:text-slate-200 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 border border-gray-200 dark:border-slate-700">
+                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy Excel
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Quick Compliance Tip -->
+                        <div class="p-3 bg-gray-50 dark:bg-slate-800/40 rounded-xl border border-gray-200 dark:border-slate-800 text-[11px] text-gray-500 dark:text-slate-400 leading-relaxed">
+                            <strong class="text-gray-700 dark:text-slate-200 block mb-1">💡 Submission Checklist:</strong>
+                            Submit within 15 working days. Attach itemized zero-balance hotel folios, airline booking receipts, and boarding passes.
                         </div>
                     </div>
+
                 </div>
 
             </div>
 
-            <!-- Right Column: Transportation, Lodging, and Receipts -->
-            <div class="flex flex-col gap-6">
+        </div>
 
-                <!-- Transportation & Rentals -->
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden card">
-                    <div class="bg-brand-900 text-white px-5 py-3.5 flex justify-between items-center">
+        <!-- TAB 2: TRI-AGENCY & POLICY COMPLIANCE MATRIX -->
+        <div id="tabContentCompliance" class="hidden flex flex-col gap-6">
+
+            <!-- Compliance Comparison Matrix -->
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="bg-brand-900 text-white px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div>
                         <h2 class="text-base font-bold flex items-center gap-2">
-                            <i data-lucide="car" class="w-4 h-4 text-gold-500"></i> Transportation Policies
+                            <i data-lucide="scale" class="w-5 h-5 text-gold-500"></i>
+                            University Operating / PD Funds vs. Tri-Agency Research Grants
                         </h2>
-                        <a href="https://www.wufa.ca/article-108/article-k-car-allowance" target="_blank" class="text-xs text-brand-200 hover:text-white underline inline-flex items-center gap-1.5 transition-colors">
-                            WUFA Mileage Rate <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        </a>
-                    </div>
-                    <div class="p-5 flex flex-col gap-4">
-                        <!-- Personal Mileage -->
-                        <div class="flex items-center gap-4 border-b border-gray-150 pb-3">
-                            <div class="text-center p-3 bg-brand-50 rounded-xl border border-brand-100 shrink-0">
-                                <span class="text-xs text-brand-600 font-bold block uppercase tracking-wider">Per KM</span>
-                                <span class="text-2xl font-extrabold text-brand-700">$0.55</span>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-bold text-gray-800">Personal Car Allowance</h3>
-                                <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">Reimbursed for authorized driving. Limited to the cost of equivalent economy flight/rail if driving long-distance (e.g. Windsor to Ottawa).</p>
-                            </div>
-                        </div>
-
-                        <!-- Rental Rules -->
-                        <div class="space-y-2.5 text-sm text-gray-700">
-                            <div class="flex gap-2">
-                                <i data-lucide="shield" class="w-4.5 h-4.5 text-green-600 shrink-0 mt-0.5"></i>
-                                <span><strong>Insurance (Ontario):</strong> Use corporate card where possible. Purchasing rental CDW inside Ontario is generally optional.</span>
-                            </div>
-                            <div class="flex gap-2">
-                                <i data-lucide="shield-alert" class="w-4.5 h-4.5 text-amber-500 shrink-0 mt-0.5"></i>
-                                <span><strong>Insurance (Outside Ontario):</strong> Mandatory to purchase agency's <strong>Collision Damage Waiver (CDW)</strong> for all rental vehicles out-of-province/country. See <a href="https://www.uwindsor.ca/legal-services/309/rental-vehicles-insurance" target="_blank" class="text-brand-500 hover:underline inline-flex items-center gap-0.5">Legal Services Rules <i data-lucide="external-link" class="w-3 h-3"></i></a>.</span>
-                            </div>
-                            <div class="flex gap-2">
-                                <i data-lucide="plane" class="w-4.5 h-4.5 text-brand-500 shrink-0 mt-0.5"></i>
-                                <span><strong>Combined Personal Travel:</strong> If extending travel with vacation, you must print a quote of the business-only itinerary on the same day you book to establish the reimbursable cap.</span>
-                            </div>
-                        </div>
+                        <p class="text-xs text-brand-200 mt-0.5">Understand the critical audit differences before charging travel to research grants</p>
                     </div>
                 </div>
 
-                <!-- Lodging Guidelines -->
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden card">
-                    <div class="bg-brand-900 text-white px-5 py-3.5 flex justify-between items-center">
-                        <h2 class="text-base font-bold flex items-center gap-2">
-                            <i data-lucide="home" class="w-4 h-4 text-gold-500"></i> Accommodations
-                        </h2>
-                        <a href="https://www.uwindsor.ca/finance/sites/uwindsor.ca.finance/files/travel_policy_and_procedures_2023-09-28.pdf#page=12" target="_blank" class="text-xs text-brand-200 hover:text-white underline inline-flex items-center gap-1.5 transition-colors">
-                            Lodging Rules <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        </a>
-                    </div>
-                    <div class="p-5 flex flex-col gap-4">
-                        <!-- Gratuitous stay -->
-                        <div class="flex items-center gap-4 border-b border-gray-150 pb-3">
-                            <div class="text-center p-3 bg-brand-50 rounded-xl border border-brand-100 shrink-0">
-                                <span class="text-xs text-brand-600 font-bold block uppercase tracking-wider">Per Night</span>
-                                <span class="text-2xl font-extrabold text-brand-700">$30.00</span>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-bold text-gray-800">Gratuitous Lodging Allowance</h3>
-                                <p class="text-xs text-gray-500 mt-0.5 leading-relaxed">Claimable without receipts if staying privately with friends or family instead of a commercial hotel. Encourages cost savings.</p>
-                            </div>
-                        </div>
-
-                        <!-- Hotel Guidelines -->
-                        <div class="space-y-2.5 text-sm text-gray-700">
-                            <div class="flex gap-2">
-                                <i data-lucide="check" class="w-4.5 h-4.5 text-green-600 shrink-0 mt-0.5"></i>
-                                <span><strong>Standard Commercial Room:</strong> Reimbursement is limited to a single standard room rate. Luxury rooms/suites require VP approval.</span>
-                            </div>
-                            <div class="flex gap-2">
-                                <i data-lucide="check" class="w-4.5 h-4.5 text-green-600 shrink-0 mt-0.5"></i>
-                                <span><strong>Short-Term Rentals (Airbnb):</strong> Allowed if equivalent or cheaper than local standard commercial hotels. Final invoice/receipt is mandatory.</span>
-                            </div>
-                        </div>
-                    </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 font-bold uppercase tracking-wider border-b border-gray-200 dark:border-slate-700">
+                            <tr>
+                                <th class="p-4 w-1/4">Policy Category</th>
+                                <th class="p-4 w-3/8 bg-blue-50/50 dark:bg-blue-950/20 text-brand-700 dark:text-brand-300 border-r border-gray-200 dark:border-slate-700">University Operating & WUFA PD</th>
+                                <th class="p-4 w-3/8 bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300">Federal Tri-Agency (NSERC / SSHRC / CIHR)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-150 dark:divide-slate-800 leading-relaxed">
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-slate-800/40">
+                                <td class="p-4 font-bold text-gray-900 dark:text-white">Boarding Passes Proof of Travel</td>
+                                <td class="p-4 border-r border-gray-200 dark:border-slate-700">
+                                    <span class="inline-flex items-center gap-1 font-semibold text-emerald-600"><i data-lucide="check" class="w-4 h-4"></i> Flexible</span><br>
+                                    Itinerary, detailed e-ticket, or hotel folio proving presence at destination is usually accepted if pass misplaced.
+                                </td>
+                                <td class="p-4 bg-amber-50/20 dark:bg-amber-950/10">
+                                    <span class="inline-flex items-center gap-1 font-bold text-red-600"><i data-lucide="alert-octagon" class="w-4 h-4"></i> Strictly Mandatory</span><br>
+                                    Original boarding passes (physical stubs or digital wallet screenshots) are required by federal auditors to prove travel took place.
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-slate-800/40">
+                                <td class="p-4 font-bold text-gray-900 dark:text-white">Research Justification Linkage</td>
+                                <td class="p-4 border-r border-gray-200 dark:border-slate-700">
+                                    General academic or professional development purpose stated on the expense report.
+                                </td>
+                                <td class="p-4 bg-amber-50/20 dark:bg-amber-950/10">
+                                    <strong class="text-amber-900 dark:text-amber-300">Explicit Objective Link:</strong> Must clearly explain how the conference or fieldwork directly advanced the specific goals of the funded research project.
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-slate-800/40">
+                                <td class="p-4 font-bold text-gray-900 dark:text-white">Airfare Class of Service</td>
+                                <td class="p-4 border-r border-gray-200 dark:border-slate-700">
+                                    Standard economy airfare. Seat selection and one checked bag reimbursable. Premium economy requires Dean approval.
+                                </td>
+                                <td class="p-4 bg-amber-50/20 dark:bg-amber-950/10">
+                                    <strong>Lowest Logical Economy Airfare:</strong> Business or premium economy is entirely ineligible. Upgrades are personal expenses.
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-slate-800/40">
+                                <td class="p-4 font-bold text-gray-900 dark:text-white">Alcohol & Hospitality</td>
+                                <td class="p-4 border-r border-gray-200 dark:border-slate-700">
+                                    Alcohol is strictly non-reimbursable. Business hosting allowed with prior VP approval and detailed attendee list.
+                                </td>
+                                <td class="p-4 bg-amber-50/20 dark:bg-amber-950/10">
+                                    <strong>Strictly Ineligible:</strong> Alcohol cannot be charged under any circumstances. Any personal entertainment is completely disallowed.
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-slate-800/40">
+                                <td class="p-4 font-bold text-gray-900 dark:text-white">Combined Personal / Vacation Travel</td>
+                                <td class="p-4 border-r border-gray-200 dark:border-slate-700">
+                                    Permitted if business trip is primary. Must print a flight quote for direct business-only dates on the day of booking.
+                                </td>
+                                <td class="p-4 bg-amber-50/20 dark:bg-amber-950/10">
+                                    <strong>Strict Pro-Rating:</strong> Grant will only pay the lesser of the business quote vs. actual ticket. Zero incremental personal lodging/meals may be charged.
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50/50 dark:hover:bg-slate-800/40">
+                                <td class="p-4 font-bold text-gray-900 dark:text-white">Rental Car CDW Insurance</td>
+                                <td class="p-4 border-r border-gray-200 dark:border-slate-700" colspan="2">
+                                    <div class="p-3 bg-blue-50 dark:bg-slate-800 rounded-xl border border-blue-200 dark:border-slate-700 flex items-start gap-2">
+                                        <i data-lucide="shield" class="w-4 h-4 text-blue-600 shrink-0 mt-0.5"></i>
+                                        <span><strong>Universal University Rule:</strong> Inside Ontario, CDW is optional (covered by university/credit card). Outside Ontario or international, purchasing the agency's <strong>Collision Damage Waiver (CDW) is mandatory</strong>.</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+            </div>
 
-                <!-- Receipt & Claim Standards -->
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden card">
-                    <div class="bg-brand-900 text-white px-5 py-3.5 flex justify-between items-center">
-                        <h2 class="text-base font-bold flex items-center gap-2">
-                            <i data-lucide="file-text" class="w-4 h-4 text-gold-500"></i> Receipt Standards & Timelines
-                        </h2>
-                        <a href="https://www.uwindsor.ca/finance/travel-and-entertainment-expenses" target="_blank" class="text-xs text-brand-200 hover:text-white underline inline-flex items-center gap-1.5 transition-colors">
-                            Submission Rules <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-                        </a>
-                    </div>
-                    <div class="p-5 flex flex-col gap-3">
-                        <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 text-sm leading-relaxed text-gray-600 space-y-2">
-                            <p><strong>UWinsite Submission:</strong> Claims must be submitted via UWinsite Finance Expenses module within <strong>15 working days</strong> of return.</p>
-                            <p><strong>Itemized Requirement:</strong> Booking receipts must show individual itemization (e.g. specific flight, ticket details, itemized foods). Credit card transaction slips with just the total are <u>not acceptable</u>.</p>
-                            <p><strong>Research Grants (Tri-Agency):</strong> Stricter guidelines apply. Original boarding passes (physical or digital screenshots) are mandatory to prove travel occurred.</p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 text-xs no-print">
-                            <div class="bg-green-50 text-green-700 p-2.5 rounded-lg border border-green-100 flex flex-col gap-1">
-                                <span class="font-bold flex items-center gap-1"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Valid</span>
-                                <span class="text-xs leading-tight text-green-950">Hotel folio showing zero balance, itemized meal invoices, plane boarding passes.</span>
-                            </div>
-                            <div class="bg-red-50 text-red-700 p-2.5 rounded-lg border border-red-100 flex flex-col gap-1">
-                                <span class="font-bold flex items-center gap-1"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> Invalid</span>
-                                <span class="text-xs leading-tight text-red-950">Credit card purchase slips, booking confirmation emails without final invoice, credit card statements.</span>
-                            </div>
-                        </div>
-                    </div>
+        </div>
+
+        <!-- TAB 3: SEARCHABLE POLICY FAQS -->
+        <div id="tabContentFaqs" class="hidden flex flex-col gap-6">
+
+            <!-- Search Bar -->
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="relative w-full sm:w-96">
+                    <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-3"></i>
+                    <input type="text" id="faqSearchInput" oninput="filterFaqs()" placeholder="Search travel policy questions (e.g. Uber, alcohol, receipts)..." class="w-full pl-9 pr-3 py-2 border border-gray-300 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 text-xs focus:ring-2 focus:ring-brand-500">
                 </div>
+                <div class="flex items-center gap-1 text-xs">
+                    <button onclick="setFaqCategory('all')" id="faqCatAll" class="px-2.5 py-1 rounded-lg font-semibold bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400">All</button>
+                    <button onclick="setFaqCategory('meals')" id="faqCatMeals" class="px-2.5 py-1 rounded-lg font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white">Meals</button>
+                    <button onclick="setFaqCategory('transport')" id="faqCatTransport" class="px-2.5 py-1 rounded-lg font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white">Transport</button>
+                    <button onclick="setFaqCategory('lodging')" id="faqCatLodging" class="px-2.5 py-1 rounded-lg font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white">Lodging</button>
+                    <button onclick="setFaqCategory('receipts')" id="faqCatReceipts" class="px-2.5 py-1 rounded-lg font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white">Claims</button>
+                </div>
+            </div>
 
+            <!-- FAQ Accordion Container -->
+            <div id="faqContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Dynamically rendered -->
             </div>
 
         </div>
 
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 py-4 mt-auto">
-        <div class="max-w-none px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
-            <div class="flex items-center gap-1.5 font-medium text-gray-700">
-                <i data-lucide="lightbulb" class="w-4 h-4 text-brand-500"></i>
-                <span>Faculty Tools by A. Rahimi</span>
+    <!-- Executive Printable UWinsite Finance Worksheet Modal -->
+    <div id="worksheetModalBackdrop" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div id="worksheetModal" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-8 shadow-2xl border border-gray-200 dark:border-slate-800 flex flex-col gap-6">
+            
+            <!-- Modal Header / Controls -->
+            <div class="flex items-start justify-between border-b border-gray-200 dark:border-slate-800 pb-4 no-print">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-brand-50 dark:bg-brand-950 text-brand-600 rounded-xl">
+                        <i data-lucide="file-check" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold">UWinsite Finance Travel Expense Claim Worksheet</h2>
+                        <p class="text-xs text-gray-500">Itemized departmental travel expense record and approval document</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.print()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="printer" class="w-4 h-4"></i> Print / Save PDF
+                    </button>
+                    <button onclick="closeWorksheetModal()" class="p-2 text-gray-400 hover:text-gray-700 rounded-lg">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
             </div>
-            <div class="text-center sm:text-left leading-relaxed">
-                <strong>Disclaimer:</strong> This pocket reference acts as a guide. The official Travel & Expense Policies and the WUFA Collective Agreement govern all final claims.
-            </div>
-            <div class="flex space-x-3 text-brand-500 font-semibold no-print">
-                <a href="https://www.uwindsor.ca/finance/travel-and-entertainment-expenses" target="_blank" class="hover:underline">Finance Page</a>
-                <span>&bull;</span>
-                <a href="https://www.wufa.ca/article-173/travel-information" target="_blank" class="hover:underline">WUFA Travel</a>
-            </div>
-        </div>
-    </footer>
 
-    <!-- Lucide Icons Initialization -->
+            <!-- Printable Sheet Body -->
+            <div class="flex flex-col gap-6 font-sans text-xs">
+                
+                <!-- Institutional Header -->
+                <div class="flex items-center justify-between border-b-2 border-brand-900 pb-4">
+                    <div>
+                        <h1 class="text-lg font-black tracking-tight text-brand-900 dark:text-white uppercase">University of Windsor</h1>
+                        <p class="text-xs font-bold text-gray-600 dark:text-slate-300">Faculty Travel Expense Reimbursement Worksheet</p>
+                    </div>
+                    <div class="text-right text-[11px] text-gray-500">
+                        <p>Date Generated: <span id="wsDate" class="font-mono font-bold"></span></p>
+                        <p>WUFA Agreement Schedule A</p>
+                    </div>
+                </div>
+
+                <!-- Claimant & Trip Details -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 dark:bg-slate-800/60 p-4 rounded-xl border border-gray-200 dark:border-slate-700">
+                    <div>
+                        <span class="font-bold text-gray-400 block uppercase text-[9px]">Claimant Name</span>
+                        <input type="text" id="wsClaimant" value="Dr. Afshin Rahimi" class="w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded px-2 py-1 font-semibold mt-0.5">
+                    </div>
+                    <div>
+                        <span class="font-bold text-gray-400 block uppercase text-[9px]">Department / Faculty</span>
+                        <input type="text" id="wsDept" value="MAME / Engineering" class="w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded px-2 py-1 font-semibold mt-0.5">
+                    </div>
+                    <div>
+                        <span class="font-bold text-gray-400 block uppercase text-[9px]">Travel Dates</span>
+                        <span id="wsTravelDates" class="font-mono font-bold block mt-1 text-slate-800 dark:text-slate-200"></span>
+                    </div>
+                    <div>
+                        <span class="font-bold text-gray-400 block uppercase text-[9px]">Funding Account</span>
+                        <span id="wsFundSource" class="font-mono font-bold block mt-1 text-slate-800 dark:text-slate-200"></span>
+                    </div>
+                </div>
+
+                <!-- Expense Breakdown Table -->
+                <div>
+                    <h3 class="font-bold uppercase tracking-wider text-gray-500 mb-2 text-[11px]">Itemized Reimbursable Breakdown (CAD)</h3>
+                    <table class="w-full text-xs border border-gray-200 dark:border-slate-700 text-left">
+                        <thead class="bg-gray-100 dark:bg-slate-800 font-bold border-b border-gray-200 dark:border-slate-700">
+                            <tr>
+                                <th class="p-2.5">Category</th>
+                                <th class="p-2.5">Details / Basis of Claim</th>
+                                <th class="p-2.5 text-right">Amount (CAD)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wsTableBody" class="divide-y divide-gray-150 dark:divide-slate-800 font-mono">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                        <tfoot class="bg-gray-50 dark:bg-slate-800 font-bold border-t-2 border-gray-300 dark:border-slate-600">
+                            <tr>
+                                <td colspan="2" class="p-3 text-right uppercase text-[11px] font-sans">Total Reimbursement Claim:</td>
+                                <td id="wsGrandTotal" class="p-3 text-right text-base text-brand-700 dark:text-brand-400 font-mono"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Compliance Statement -->
+                <div class="p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl border border-blue-200 dark:border-blue-900/50 text-[11px] text-gray-600 dark:text-slate-300 leading-relaxed">
+                    <strong>Claimant Certification:</strong> I certify that all expenses listed above were incurred strictly for authorized University of Windsor academic / research duties in accordance with the Travel Policy and WUFA Collective Agreement, that no meals claimed were provided by hosts, and that no part has been or will be claimed from another source.
+                </div>
+
+                <!-- Signature Block -->
+                <div class="mt-4 pt-6 border-t border-gray-300 dark:border-slate-700 grid grid-cols-3 gap-6 text-gray-600 dark:text-slate-400 text-[11px]">
+                    <div>
+                        <div class="border-b border-gray-400 dark:border-slate-600 h-8"></div>
+                        <p class="mt-1 font-medium">Claimant Signature & Date</p>
+                    </div>
+                    <div>
+                        <div class="border-b border-gray-400 dark:border-slate-600 h-8"></div>
+                        <p class="mt-1 font-medium">Head / Supervisor ("One-Up")</p>
+                    </div>
+                    <div>
+                        <div class="border-b border-gray-400 dark:border-slate-600 h-8"></div>
+                        <p class="mt-1 font-medium">Dean / VP / Research Finance</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Application Script -->
     <script>
-        lucide.createIcons();
+        // State
+        let currentTab = 'calculator';
+        let tripDays = []; // [{ dateStr, breakfast: true, lunch: true, dinner: true, incidentals: true }]
+        let activeFaqCategory = 'all';
+
+        // FAQs Data
+        const FAQS_DATA = [
+            {
+                cat: 'meals',
+                q: 'What is the standard WUFA meal per-diem rate?',
+                a: 'The daily per-diem is $99.00 CAD ($17 Breakfast, $22 Lunch, $43 Dinner, $17 Incidentals). No receipts are required when claiming standard per-diems.'
+            },
+            {
+                cat: 'meals',
+                q: 'Can I claim per-diem if lunch was provided at the conference?',
+                a: 'No. Whenever a meal is provided as part of conference registration, hotel stay, or flight, that specific meal allowance must be deducted from your daily claim.'
+            },
+            {
+                cat: 'meals',
+                q: 'Is alcohol ever reimbursable?',
+                a: 'No. Alcohol is strictly non-reimbursable under University of Windsor Finance Policy and Tri-Agency guidelines. If dining on actual receipts, ask for a separate alcohol bill.'
+            },
+            {
+                cat: 'transport',
+                q: 'What is the personal vehicle mileage rate?',
+                a: 'The WUFA Article K mileage allowance is $0.55 per kilometer. Claimants must list starting location, destination, and purpose.'
+            },
+            {
+                cat: 'transport',
+                q: 'Can I drive to Ottawa instead of flying?',
+                a: 'Yes, but for long-distance trips (over 500 km), reimbursement is capped at the cost of the lowest logical economy flight or rail fare if driving is more expensive.'
+            },
+            {
+                cat: 'transport',
+                q: 'Do I need Collision Damage Waiver (CDW) on rental cars?',
+                a: 'Within Ontario, CDW is optional (covered under corporate credit card / university agreement). Outside Ontario or internationally, purchasing agency CDW is mandatory.'
+            },
+            {
+                cat: 'transport',
+                q: 'Are taxi and rideshare (Uber/Lyft) tips reimbursable?',
+                a: 'Yes. Gratuities of up to 15%–20% on taxis and rideshares are fully eligible expenses with receipt.'
+            },
+            {
+                cat: 'lodging',
+                q: 'What is the gratuitous lodging allowance?',
+                a: 'If you stay privately with friends or relatives instead of booking a commercial hotel, you may claim $30.00 CAD per night without receipts.'
+            },
+            {
+                cat: 'lodging',
+                q: 'Are Airbnb / VRBO rentals permitted?',
+                a: 'Yes, provided the total rate is comparable or cheaper than local commercial hotels. An official itemized invoice with zero balance is required.'
+            },
+            {
+                cat: 'receipts',
+                q: 'What is the expense submission deadline?',
+                a: 'Expense claims must be submitted in UWinsite Finance within 15 working days following the completion of your trip.'
+            },
+            {
+                cat: 'receipts',
+                q: 'Why are boarding passes required for Tri-Agency grants?',
+                a: 'Federal Tri-Agency (NSERC, SSHRC, CIHR) audit rules mandate original boarding passes (physical or digital screenshots) as proof that the travel actually took place.'
+            },
+            {
+                cat: 'receipts',
+                q: 'What should I do if I lost a receipt?',
+                a: 'For missing receipts under $50, submit an itemized credit card slip with a signed Declaration in Lieu of Receipt form explaining the purchase.'
+            }
+        ];
+
+        // Initialization
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+
+            // Default dates: tomorrow + 3 days
+            const today = new Date();
+            const dep = new Date(today);
+            dep.setDate(dep.getDate() + 7);
+            const ret = new Date(dep);
+            ret.setDate(ret.getDate() + 2);
+
+            document.getElementById('tripDepartureDate').value = dep.toISOString().slice(0, 10);
+            document.getElementById('tripReturnDate').value = ret.toISOString().slice(0, 10);
+
+            onDatesChanged();
+            renderFaqs();
+        });
+
+        // Tab Switching
+        function switchTab(tab) {
+            currentTab = tab;
+            const tabs = ['calculator', 'compliance', 'faqs'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                const content = document.getElementById(`tabContent${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if (t === tab) {
+                    btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-white dark:bg-slate-700 text-brand-600 dark:text-brand-400 shadow-sm flex items-center gap-1.5";
+                    content.classList.remove('hidden');
+                } else {
+                    btn.className = "px-3.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition-all flex items-center gap-1.5";
+                    content.classList.add('hidden');
+                }
+            });
+            if (window.lucide) lucide.createIcons();
+        }
+
+        // Date Handling
+        function onDatesChanged() {
+            const depVal = document.getElementById('tripDepartureDate').value;
+            const retVal = document.getElementById('tripReturnDate').value;
+            if (!depVal || !retVal) return;
+
+            const d1 = new Date(depVal + 'T00:00:00');
+            const d2 = new Date(retVal + 'T00:00:00');
+
+            if (d2 < d1) {
+                document.getElementById('tripReturnDate').value = depVal;
+                return onDatesChanged();
+            }
+
+            const diffTime = Math.abs(d2 - d1);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            const nights = Math.max(0, diffDays - 1);
+
+            document.getElementById('tripDurationText').textContent = `${diffDays} Days • ${nights} Nights`;
+            document.getElementById('hotelNights').value = nights;
+
+            // Generate daily meal items
+            tripDays = [];
+            for (let i = 0; i < diffDays; i++) {
+                const currDate = new Date(d1);
+                currDate.setDate(currDate.getDate() + i);
+                const dateStr = currDate.toLocaleDateString('en-CA', { month: 'short', day: 'numeric', weekday: 'short' });
+                tripDays.push({
+                    dateStr,
+                    breakfast: true,
+                    lunch: true,
+                    dinner: true,
+                    incidentals: true
+                });
+            }
+
+            renderMealTable();
+            updateCalculator();
+        }
+
+        // Meal Table Rendering
+        function renderMealTable() {
+            const tbody = document.getElementById('mealTableBody');
+            tbody.innerHTML = tripDays.map((d, idx) => {
+                let daySum = (d.breakfast ? 17 : 0) + (d.lunch ? 22 : 0) + (d.dinner ? 43 : 0) + (d.incidentals ? 17 : 0);
+                return `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-slate-800/40">
+                        <td class="py-2.5 px-3 font-sans font-medium text-gray-800 dark:text-slate-200">
+                            Day ${idx + 1} (${d.dateStr})
+                        </td>
+                        <td class="py-2.5 px-2 text-center">
+                            <input type="checkbox" ${d.breakfast ? 'checked' : ''} onchange="toggleMeal(${idx}, 'breakfast')" class="rounded text-brand-600 focus:ring-brand-500">
+                        </td>
+                        <td class="py-2.5 px-2 text-center">
+                            <input type="checkbox" ${d.lunch ? 'checked' : ''} onchange="toggleMeal(${idx}, 'lunch')" class="rounded text-brand-600 focus:ring-brand-500">
+                        </td>
+                        <td class="py-2.5 px-2 text-center">
+                            <input type="checkbox" ${d.dinner ? 'checked' : ''} onchange="toggleMeal(${idx}, 'dinner')" class="rounded text-brand-600 focus:ring-brand-500">
+                        </td>
+                        <td class="py-2.5 px-2 text-center">
+                            <input type="checkbox" ${d.incidentals ? 'checked' : ''} onchange="toggleMeal(${idx}, 'incidentals')" class="rounded text-brand-600 focus:ring-brand-500">
+                        </td>
+                        <td class="py-2.5 px-3 text-right font-bold text-gray-900 dark:text-white">
+                            $${daySum.toFixed(2)}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function toggleMeal(dayIdx, meal) {
+            if (tripDays[dayIdx]) {
+                tripDays[dayIdx][meal] = !tripDays[dayIdx][meal];
+                renderMealTable();
+                updateCalculator();
+            }
+        }
+
+        function bulkMealAction(action) {
+            tripDays.forEach(d => {
+                if (action === 'all') {
+                    d.breakfast = true; d.lunch = true; d.dinner = true; d.incidentals = true;
+                } else if (action === 'noLunch') {
+                    d.lunch = false;
+                } else if (action === 'noBreakfast') {
+                    d.breakfast = false;
+                }
+            });
+            renderMealTable();
+            updateCalculator();
+        }
+
+        // Mileage Presets
+        function setMileagePreset(preset, km) {
+            document.getElementById('mileageKmInput').value = km;
+            updateCalculator();
+            if (window.showToast) window.showToast(`Selected ${preset.toUpperCase()} (${km} km roundtrip)`);
+        }
+
+        function onCurrencySelectChanged() {
+            const cur = document.getElementById('foreignCurrencySelect').value;
+            const rateInput = document.getElementById('fxRateInput');
+            if (cur === 'CAD') rateInput.value = 1.0;
+            else if (cur === 'USD') rateInput.value = 1.38;
+            else if (cur === 'EUR') rateInput.value = 1.49;
+            else if (cur === 'GBP') rateInput.value = 1.76;
+            updateCalculator();
+        }
+
+        // Core Calculator Engine
+        function updateCalculator() {
+            // Meals
+            let mealTotal = 0;
+            tripDays.forEach(d => {
+                mealTotal += (d.breakfast ? 17 : 0) + (d.lunch ? 22 : 0) + (d.dinner ? 43 : 0) + (d.incidentals ? 17 : 0);
+            });
+            document.getElementById('mealSubtotalText').textContent = `$${mealTotal.toFixed(2)} CAD`;
+
+            // Mileage ($0.55/km)
+            const km = parseFloat(document.getElementById('mileageKmInput').value) || 0;
+            const mileageTotal = km * 0.55;
+            document.getElementById('mileageSubtotalText').textContent = `$${mileageTotal.toFixed(2)} CAD`;
+
+            const warnBox = document.getElementById('mileageAirfareWarning');
+            if (km > 500) warnBox.classList.remove('hidden');
+            else warnBox.classList.add('hidden');
+
+            // Lodging
+            const hotelNights = parseFloat(document.getElementById('hotelNights').value) || 0;
+            const hotelRate = parseFloat(document.getElementById('hotelRate').value) || 0;
+            const hotelTotal = hotelNights * hotelRate;
+            document.getElementById('hotelSubtotalText').textContent = `$${hotelTotal.toFixed(2)}`;
+
+            const gratNights = parseFloat(document.getElementById('gratuitousNights').value) || 0;
+            const gratTotal = gratNights * 30.0;
+            document.getElementById('gratuitousSubtotalText').textContent = `$${gratTotal.toFixed(2)}`;
+
+            const lodgingTotal = hotelTotal + gratTotal;
+
+            // Other Itemized Receipts
+            const expFlight = parseFloat(document.getElementById('expFlight').value) || 0;
+            const expReg = parseFloat(document.getElementById('expRegistration').value) || 0;
+            const expTrain = parseFloat(document.getElementById('expTrain').value) || 0;
+            const expTaxi = parseFloat(document.getElementById('expTaxi').value) || 0;
+            const expParking = parseFloat(document.getElementById('expParking').value) || 0;
+            const expBaggage = parseFloat(document.getElementById('expBaggage').value) || 0;
+
+            const otherTotal = expFlight + expReg + expTrain + expTaxi + expParking + expBaggage;
+
+            // Grand Total
+            const grandTotal = mealTotal + mileageTotal + lodgingTotal + otherTotal;
+
+            // Summary Side Card
+            document.getElementById('summaryMeals').textContent = `$${mealTotal.toFixed(2)}`;
+            document.getElementById('summaryMileage').textContent = `$${mileageTotal.toFixed(2)}`;
+            document.getElementById('summaryLodging').textContent = `$${lodgingTotal.toFixed(2)}`;
+            document.getElementById('summaryOther').textContent = `$${otherTotal.toFixed(2)}`;
+            document.getElementById('summaryGrandTotal').textContent = `$${grandTotal.toFixed(2)}`;
+        }
+
+        // FAQs Filtering
+        function setFaqCategory(cat) {
+            activeFaqCategory = cat;
+            ['all', 'meals', 'transport', 'lodging', 'receipts'].forEach(c => {
+                const btn = document.getElementById(`faqCat${c.charAt(0).toUpperCase() + c.slice(1)}`);
+                if (c === cat) {
+                    btn.className = "px-2.5 py-1 rounded-lg font-semibold bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400";
+                } else {
+                    btn.className = "px-2.5 py-1 rounded-lg font-medium text-gray-500 hover:text-gray-900 dark:hover:text-white";
+                }
+            });
+            filterFaqs();
+        }
+
+        function filterFaqs() {
+            const search = document.getElementById('faqSearchInput').value.toLowerCase().trim();
+            const container = document.getElementById('faqContainer');
+
+            const filtered = FAQS_DATA.filter(f => {
+                const matchCat = activeFaqCategory === 'all' || f.cat === activeFaqCategory;
+                const matchSearch = f.q.toLowerCase().includes(search) || f.a.toLowerCase().includes(search);
+                return matchCat && matchSearch;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="col-span-2 text-center py-8 text-gray-400">No matching policy questions found.</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(f => `
+                <div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-gray-200 dark:border-slate-800 shadow-sm flex flex-col gap-2">
+                    <h3 class="font-bold text-xs text-brand-700 dark:text-brand-300 flex items-start gap-1.5">
+                        <i data-lucide="help-circle" class="w-4 h-4 shrink-0 mt-0.5 text-gold-500"></i>
+                        <span>${f.q}</span>
+                    </h3>
+                    <p class="text-xs text-gray-600 dark:text-slate-300 leading-relaxed pl-5">${f.a}</p>
+                </div>
+            `).join('');
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function renderFaqs() {
+            filterFaqs();
+        }
+
+        // Export Claim CSV
+        function exportClaimCSV() {
+            const depVal = document.getElementById('tripDepartureDate').value;
+            const retVal = document.getElementById('tripReturnDate').value;
+            const title = document.getElementById('tripTitle').value;
+
+            let csv = `Expense Claim Summary - University of Windsor\n`;
+            csv += `Trip Purpose,"${title}"\n`;
+            csv += `Departure Date,${depVal}\n`;
+            csv += `Return Date,${retVal}\n\n`;
+
+            csv += `Category,Description,Amount (CAD)\n`;
+
+            let mealSum = 0;
+            tripDays.forEach(d => {
+                mealSum += (d.breakfast ? 17 : 0) + (d.lunch ? 22 : 0) + (d.dinner ? 43 : 0) + (d.incidentals ? 17 : 0);
+            });
+            csv += `Meals & Incidentals,Per-Diem Allowance (${tripDays.length} days),${mealSum.toFixed(2)}\n`;
+
+            const km = parseFloat(document.getElementById('mileageKmInput').value) || 0;
+            csv += `Mileage,Personal Car (${km} km @ $0.55/km),${(km * 0.55).toFixed(2)}\n`;
+
+            const hNights = parseFloat(document.getElementById('hotelNights').value) || 0;
+            const hRate = parseFloat(document.getElementById('hotelRate').value) || 0;
+            if (hNights > 0) csv += `Lodging,Commercial Hotel (${hNights} nights @ $${hRate}),${(hNights * hRate).toFixed(2)}\n`;
+
+            const gNights = parseFloat(document.getElementById('gratuitousNights').value) || 0;
+            if (gNights > 0) csv += `Lodging,Gratuitous Stay (${gNights} nights @ $30),${(gNights * 30).toFixed(2)}\n`;
+
+            const flight = parseFloat(document.getElementById('expFlight').value) || 0;
+            if (flight > 0) csv += `Transportation,Commercial Airfare,${flight.toFixed(2)}\n`;
+
+            const reg = parseFloat(document.getElementById('expRegistration').value) || 0;
+            if (reg > 0) csv += `Registration,Conference Registration Fee,${reg.toFixed(2)}\n`;
+
+            const taxi = parseFloat(document.getElementById('expTaxi').value) || 0;
+            if (taxi > 0) csv += `Transportation,Taxi / Rideshare,${taxi.toFixed(2)}\n`;
+
+            const parking = parseFloat(document.getElementById('expParking').value) || 0;
+            if (parking > 0) csv += `Transportation,Airport Parking,${parking.toFixed(2)}\n`;
+
+            const baggage = parseFloat(document.getElementById('expBaggage').value) || 0;
+            if (baggage > 0) csv += `Transportation,Baggage Fees,${baggage.toFixed(2)}\n`;
+
+            const total = mealSum + (km * 0.55) + (hNights * hRate) + (gNights * 30) + flight + reg + taxi + parking + baggage;
+            csv += `TOTAL CLAIM,,${total.toFixed(2)}\n`;
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `uwindsor_travel_claim_${depVal}.csv`;
+            link.click();
+            if (window.showToast) window.showToast('Downloaded Travel Expense Claim CSV');
+        }
+
+        function copyClaimSummary() {
+            const title = document.getElementById('tripTitle').value;
+            const total = document.getElementById('summaryGrandTotal').textContent;
+            const text = `Travel Claim: ${title}\n` +
+                         `Meals: ${document.getElementById('summaryMeals').textContent}\n` +
+                         `Mileage: ${document.getElementById('summaryMileage').textContent}\n` +
+                         `Lodging: ${document.getElementById('summaryLodging').textContent}\n` +
+                         `Fares & Reg: ${document.getElementById('summaryOther').textContent}\n` +
+                         `Grand Total: ${total} CAD`;
+            navigator.clipboard.writeText(text).then(() => {
+                if (window.showToast) window.showToast('Copied summary to clipboard!');
+            });
+        }
+
+        // Printable UWinsite Worksheet Modal
+        function openWorksheetModal() {
+            document.getElementById('wsDate').textContent = new Date().toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric' });
+            const depVal = document.getElementById('tripDepartureDate').value;
+            const retVal = document.getElementById('tripReturnDate').value;
+            document.getElementById('wsTravelDates').textContent = `${depVal} to ${retVal}`;
+
+            const fundSelect = document.getElementById('tripFundSource');
+            document.getElementById('wsFundSource').textContent = fundSelect.options[fundSelect.selectedIndex].text;
+
+            let items = [];
+
+            // Meals
+            let mealSum = 0;
+            tripDays.forEach(d => {
+                mealSum += (d.breakfast ? 17 : 0) + (d.lunch ? 22 : 0) + (d.dinner ? 43 : 0) + (d.incidentals ? 17 : 0);
+            });
+            items.push({ cat: 'Meals (Per-Diem)', desc: `${tripDays.length} Days Itinerary (Schedule A)`, amt: mealSum });
+
+            // Mileage
+            const km = parseFloat(document.getElementById('mileageKmInput').value) || 0;
+            if (km > 0) items.push({ cat: 'Mileage Allowance', desc: `Personal Car (${km} km @ $0.55/km)`, amt: km * 0.55 });
+
+            // Hotel
+            const hNights = parseFloat(document.getElementById('hotelNights').value) || 0;
+            const hRate = parseFloat(document.getElementById('hotelRate').value) || 0;
+            if (hNights > 0) items.push({ cat: 'Commercial Lodging', desc: `Hotel (${hNights} nights @ $${hRate})`, amt: hNights * hRate });
+
+            const gNights = parseFloat(document.getElementById('gratuitousNights').value) || 0;
+            if (gNights > 0) items.push({ cat: 'Gratuitous Stay', desc: `Private Accommodation (${gNights} nights @ $30)`, amt: gNights * 30 });
+
+            // Others
+            const flight = parseFloat(document.getElementById('expFlight').value) || 0;
+            if (flight > 0) items.push({ cat: 'Airfare', desc: 'Commercial Airline Ticket (Economy)', amt: flight });
+
+            const reg = parseFloat(document.getElementById('expRegistration').value) || 0;
+            if (reg > 0) items.push({ cat: 'Registration', desc: 'Conference Registration Fee', amt: reg });
+
+            const taxi = parseFloat(document.getElementById('expTaxi').value) || 0;
+            if (taxi > 0) items.push({ cat: 'Local Transit', desc: 'Taxis / Airport Rideshare', amt: taxi });
+
+            const parking = parseFloat(document.getElementById('expParking').value) || 0;
+            if (parking > 0) items.push({ cat: 'Parking', desc: 'Terminal / Hotel Parking', amt: parking });
+
+            const baggage = parseFloat(document.getElementById('expBaggage').value) || 0;
+            if (baggage > 0) items.push({ cat: 'Baggage', desc: 'Checked Baggage Fees', amt: baggage });
+
+            let grandTotal = 0;
+            document.getElementById('wsTableBody').innerHTML = items.map(item => {
+                grandTotal += item.amt;
+                return `
+                    <tr>
+                        <td class="p-2.5 font-sans font-bold text-gray-800 dark:text-slate-200">${item.cat}</td>
+                        <td class="p-2.5 text-gray-600 dark:text-slate-300 font-sans">${item.desc}</td>
+                        <td class="p-2.5 text-right font-bold text-slate-900 dark:text-white">$${item.amt.toFixed(2)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('wsGrandTotal').textContent = `$${grandTotal.toFixed(2)} CAD`;
+            document.getElementById('worksheetModalBackdrop').classList.remove('hidden');
+        }
+
+        function closeWorksheetModal() {
+            document.getElementById('worksheetModalBackdrop').classList.add('hidden');
+        }
     </script>
 </body>
 </html>

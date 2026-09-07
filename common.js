@@ -18,7 +18,7 @@ const FACULTY_TOOLS = [
     { id: 'latex-equation-editor', title: 'LaTeX Equation Builder', description: 'Interactive live visual KaTeX equation editor with symbol palettes.', category: 'Research & Conferences', icon: 'binary', path: 'latex-equation-editor.html' },
 
     // Grants & Funding
-    { id: 'travel-policy-tool', title: 'Travel Policy Tool', description: 'Access and view the latest university travel policies and procedures.', category: 'Grants & Funding', icon: 'plane', path: 'travel-policy.html' },
+    { id: 'travel-policy-tool', title: 'Travel Policy & Expense Estimator', description: 'WUFA per diem calculator, Windsor mileage presets, Tri-Agency matrix, and UWinsite claim worksheet.', category: 'Grants & Funding', icon: 'plane', path: 'travel-policy.html' },
 
     // PDF & Document Suite
     { id: 'pdf-editor', title: 'PDF Suite & Editor', description: 'Extract pages, combine multiple PDFs, add rubber stamps & watermarks, rotate/reorder pages.', category: 'PDF & Document Suite', icon: 'file-edit', path: 'pdf-editor.html' },
