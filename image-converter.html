@@ -4,7 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universal Image Converter - Vector, Raster & WebP | Faculty Tools</title>
+    <title>Academic &amp; Research Image Studio | Universal Image Converter</title>
+
+    <!-- Immediate Theme Initialization -->
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml"
@@ -14,7 +23,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap"
         rel="stylesheet">
 
     <!-- Lucide Icons -->
@@ -28,6 +37,9 @@
 
     <!-- ImageTracerJS for Raster-to-Vector SVG tracing -->
     <script src="https://cdn.jsdelivr.net/npm/imagetracerjs@1.2.6/imagetracer_v1.2.6.js"></script>
+
+    <!-- PDF-Lib for Figure-to-PDF & Multi-Page Binder -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -43,11 +55,14 @@
                             50: '#f5f3ff',
                             100: '#ede9fe',
                             200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
                             500: '#8b5cf6',
                             600: '#7c3aed',
                             700: '#6d28d9',
                             800: '#5b21b6',
                             900: '#4c1d95',
+                            950: '#2e1065',
                         }
                     }
                 }
@@ -64,14 +79,23 @@
         ::-webkit-scrollbar-track {
             background: #f1f5f9;
         }
+        .dark ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
 
         ::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 4px;
         }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
 
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
         }
 
         /* Transparency grid background for image previews */
@@ -83,6 +107,13 @@
                               linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
             background-size: 16px 16px;
             background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+        }
+        .dark .bg-checkerboard {
+            background-color: #0f172a;
+            background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%),
+                              linear-gradient(-45deg, #1e293b 25%, transparent 25%),
+                              linear-gradient(45deg, transparent 75%, #1e293b 75%),
+                              linear-gradient(-45deg, transparent 75%, #1e293b 75%);
         }
 
         /* Toast styling */
@@ -103,6 +134,11 @@
             transition: opacity 0.3s, bottom 0.3s, visibility 0.3s;
         }
 
+        .dark .toast {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+        }
+
         .toast.show {
             visibility: visible;
             opacity: 1;
@@ -112,6 +148,9 @@
         .dropzone-active {
             border-color: #7c3aed !important;
             background-color: #f5f3ff !important;
+        }
+        .dark .dropzone-active {
+            background-color: #2e1065/40 !important;
         }
     </style>
 </head>
@@ -126,21 +165,30 @@
                     <i data-lucide="file-image" class="h-5 w-5"></i>
                 </div>
                 <div>
-                    <h1 class="text-lg font-bold text-gray-900 dark:text-white leading-tight">Universal Image Converter</h1>
-                    <p class="text-xs text-gray-500 dark:text-slate-400">Batch convert images between SVG, WebP, PNG, JPEG, GIF, BMP, ICO, AVIF</p>
+                    <h1 class="text-lg font-bold text-gray-900 dark:text-white leading-tight">Academic Image Studio &amp; Converter</h1>
+                    <p class="text-xs text-gray-500 dark:text-slate-400">Publication presets (300 DPI), auto-trim, vector tracing, PDF export &amp; batch WebP/PNG/AVIF</p>
                 </div>
             </div>
 
-            <div class="flex items-center gap-3">
-                <span class="hidden md:inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-medium rounded-full border border-emerald-200 dark:border-emerald-800">
-                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-                    Local Client-Side Only
-                </span>
-                <button id="clearAllBtn" onclick="clearQueue()" class="hidden px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors items-center gap-1.5 border border-slate-200 dark:border-slate-700">
-                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    Clear Queue
+            <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
+                <!-- Theme Toggle Button -->
+                <button id="themeToggleBtn" onclick="toggleTheme()" class="p-2 border border-gray-300 dark:border-slate-700 hover:border-brand-500 text-gray-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 shadow-sm transition-all" title="Toggle Theme (Dark/Light)">
+                    <i id="themeIcon" data-lucide="moon" class="w-4 h-4"></i>
                 </button>
+
+                <!-- Double-Blind Safe Badge -->
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 text-xs font-medium rounded-full border border-emerald-200 dark:border-emerald-800" title="All camera, GPS, and author EXIF metadata is stripped client-side before export">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
+                    <span>Double-Blind Safe (EXIF Stripped)</span>
+                </span>
+
+                <button id="clearAllBtn" onclick="clearQueue()" class="hidden px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors items-center gap-1.5 border border-slate-200 dark:border-slate-700">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    <span>Clear Queue</span>
+                </button>
+
                 <div id="header-quick-nav"></div>
+
                 <a href="index.html" class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 transition-colors bg-gray-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-slate-700">
                     <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
                     <span>Dashboard</span>
@@ -152,27 +200,33 @@
     <!-- Main Content Container -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        <!-- Dropzone / Upload Area -->
-        <div id="dropzone" class="bg-white border-2 border-dashed border-slate-300 hover:border-brand-500 rounded-2xl p-8 sm:p-12 text-center transition-all duration-300 shadow-sm relative cursor-pointer group">
-            <input type="file" id="fileInput" multiple accept="image/*,.svg,.webp,.png,.jpg,.jpeg,.gif,.bmp,.ico,.tiff,.tif,.avif" class="hidden" onchange="handleFileSelect(event)">
+        <!-- Dropzone / Upload Area with Paste Support -->
+        <div id="dropzone" class="bg-white dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-500 rounded-2xl p-8 sm:p-12 text-center transition-all duration-300 shadow-sm relative cursor-pointer group">
+            <input type="file" id="fileInput" multiple accept="image/*,.svg,.webp,.png,.jpg,.jpeg,.gif,.bmp,.ico,.tiff,.tif,.avif,.pdf" class="hidden" onchange="handleFileSelect(event)">
             
             <div class="max-w-xl mx-auto flex flex-col items-center">
-                <div class="w-16 h-16 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-brand-100 transition-all duration-300 shadow-inner">
+                <div class="w-16 h-16 bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-brand-100 dark:group-hover:bg-brand-900/60 transition-all duration-300 shadow-inner">
                     <i data-lucide="upload-cloud" class="w-8 h-8"></i>
                 </div>
 
-                <h2 class="text-xl font-bold text-slate-900 mb-1">Drag & Drop images here</h2>
-                <p class="text-sm text-slate-500 mb-6">Or click anywhere to browse files from your computer</p>
+                <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-1">Drag &amp; Drop figures or images here</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-2">Or click anywhere to browse from your computer</p>
+                
+                <!-- Clipboard Paste Tip -->
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-300 rounded-full text-xs font-semibold mb-5 border border-brand-200 dark:border-brand-900">
+                    <i data-lucide="clipboard" class="w-3.5 h-3.5"></i>
+                    <span>Tip: Press <kbd class="px-1.5 py-0.5 bg-white dark:bg-slate-800 rounded border border-brand-300 dark:border-brand-800 shadow-xs text-[10px] font-mono font-bold">Ctrl + V</kbd> anywhere to paste screenshot captures directly</span>
+                </div>
 
                 <div class="flex flex-wrap justify-center gap-2 mb-6">
-                    <span class="px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-md border border-purple-200">SVG (Vector)</span>
-                    <span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-md border border-blue-200">WebP</span>
-                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-md border border-emerald-200">PNG</span>
-                    <span class="px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-md border border-amber-200">JPEG</span>
-                    <span class="px-2.5 py-1 bg-rose-50 text-rose-700 text-xs font-semibold rounded-md border border-rose-200">GIF</span>
-                    <span class="px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded-md border border-indigo-200">BMP</span>
-                    <span class="px-2.5 py-1 bg-teal-50 text-teal-700 text-xs font-semibold rounded-md border border-teal-200">ICO</span>
-                    <span class="px-2.5 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded-md border border-slate-200">TIFF / AVIF</span>
+                    <span class="px-2.5 py-1 bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 text-xs font-semibold rounded-md border border-purple-200 dark:border-purple-900">SVG (Vector)</span>
+                    <span class="px-2.5 py-1 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-md border border-blue-200 dark:border-blue-900">WebP</span>
+                    <span class="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold rounded-md border border-emerald-200 dark:border-emerald-900">PNG</span>
+                    <span class="px-2.5 py-1 bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 text-xs font-semibold rounded-md border border-amber-200 dark:border-amber-900">JPEG</span>
+                    <span class="px-2.5 py-1 bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 text-xs font-semibold rounded-md border border-rose-200 dark:border-rose-900">PDF Document</span>
+                    <span class="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-md border border-indigo-200 dark:border-indigo-900">BMP</span>
+                    <span class="px-2.5 py-1 bg-teal-50 dark:bg-teal-950/50 text-teal-700 dark:text-teal-300 text-xs font-semibold rounded-md border border-teal-200 dark:border-teal-900">ICO</span>
+                    <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-md border border-slate-200 dark:border-slate-700">AVIF / GIF</span>
                 </div>
 
                 <div class="flex flex-wrap items-center justify-center gap-3">
@@ -180,50 +234,55 @@
                         <i data-lucide="plus-circle" class="w-4 h-4"></i>
                         Select Images
                     </button>
-                    <button type="button" onclick="loadSampleImages(event)" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm rounded-xl transition-colors flex items-center gap-2">
+                    <button type="button" onclick="loadSampleImages(event)" class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium text-sm rounded-xl transition-colors flex items-center gap-2 border border-slate-200 dark:border-slate-700">
                         <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
-                        Load Sample Images
+                        Load Sample Scientific Figures
                     </button>
                 </div>
             </div>
         </div>
 
         <!-- Global Conversion Settings & Batch Bar (Hidden when queue is empty) -->
-        <div id="settingsContainer" class="hidden bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-6">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+        <div id="settingsContainer" class="hidden bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                    <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                        <i data-lucide="sliders" class="w-5 h-5 text-brand-600"></i>
-                        Global Conversion Settings
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        <i data-lucide="sliders" class="w-5 h-5 text-brand-600 dark:text-brand-400"></i>
+                        Conversion &amp; Publication Settings
                     </h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Apply default format, resolution, and quality options to all files in queue</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Configure target format, academic publication presets, auto-trim, and batch renaming</p>
                 </div>
 
                 <!-- Action buttons -->
-                <div class="flex items-center gap-3">
-                    <button id="convertAllBtn" onclick="convertAll()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2">
+                <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+                    <button id="convertAllBtn" onclick="convertAll()" class="px-4 sm:px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2">
                         <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                        Convert All Files
+                        <span>Convert All Files</span>
                     </button>
-                    <button id="downloadZipBtn" onclick="downloadAllZip()" disabled class="px-5 py-2.5 bg-slate-100 text-slate-400 font-semibold text-sm rounded-xl cursor-not-allowed transition-all flex items-center gap-2 border border-slate-200">
+                    <button id="downloadZipBtn" onclick="downloadAllZip()" disabled class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-400 font-semibold text-sm rounded-xl cursor-not-allowed transition-all flex items-center gap-2 border border-slate-200 dark:border-slate-700">
                         <i data-lucide="archive" class="w-4 h-4"></i>
-                        Download All (ZIP)
+                        <span>Download ZIP</span>
+                    </button>
+                    <button id="combinePdfBtn" onclick="combineIntoMultiPagePDF()" disabled class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-400 font-semibold text-sm rounded-xl cursor-not-allowed transition-all flex items-center gap-2 border border-slate-200 dark:border-slate-700" title="Combine all converted figures into a single multi-page PDF document">
+                        <i data-lucide="book-open" class="w-4 h-4 text-rose-500"></i>
+                        <span>Combine into PDF Binder</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Settings Grid -->
+            <!-- Settings Grid (Row 1) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Target Format -->
                 <div>
-                    <label for="globalFormat" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+                    <label for="globalFormat" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                         Target Format
                     </label>
-                    <select idglobalFormat id="globalFormat" onchange="updateGlobalFormat(this.value)" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all">
+                    <select id="globalFormat" onchange="updateGlobalFormat(this.value)" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none transition-all">
                         <option value="webp">WebP (.webp) - High Efficiency</option>
-                        <option value="png">PNG (.png) - Lossless Transparency</option>
+                        <option value="png" selected>PNG (.png) - Lossless Transparency</option>
                         <option value="jpeg">JPEG (.jpg) - Standard Lossy</option>
                         <option value="svg">SVG (.svg) - Vector Format</option>
+                        <option value="pdf">PDF (.pdf) - Vector / LaTeX Document</option>
                         <option value="gif">GIF (.gif) - Graphics Format</option>
                         <option value="ico">ICO (.ico) - Favicon Icon</option>
                         <option value="bmp">BMP (.bmp) - Bitmap</option>
@@ -231,46 +290,50 @@
                     </select>
                 </div>
 
-                <!-- Quality Slider (JPEG/WebP/AVIF) -->
+                <!-- Academic Publication Presets & Sizing -->
+                <div>
+                    <label for="pubPreset" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+                        <span>Journal / Column Preset</span>
+                        <span class="text-[10px] text-brand-600 dark:text-brand-400 font-bold">300 DPI</span>
+                    </label>
+                    <select id="pubPreset" onchange="applyPublicationPreset(this.value)" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+                        <option value="none">Original Scale (1x)</option>
+                        <option value="ieee_single">IEEE / ACM Single Col (3.5" @ 300 DPI — 1050 px)</option>
+                        <option value="ieee_1.5">IEEE / ACM 1.5 Col (5.0" @ 300 DPI — 1500 px)</option>
+                        <option value="ieee_double">IEEE / ACM Double Col (7.0" @ 300 DPI — 2100 px)</option>
+                        <option value="nature_single">Nature / Springer Single (89 mm @ 300 DPI — 1050 px)</option>
+                        <option value="nature_double">Nature / Springer Double (183 mm @ 300 DPI — 2161 px)</option>
+                        <option value="slide_16_9">Presentation Slide 16:9 (1920 × 1080 px)</option>
+                        <option value="lineart_600">High-DPI Line Art (600 DPI Double Width)</option>
+                        <option value="custom">Custom Scale / Dimensions...</option>
+                    </select>
+                </div>
+
+                <!-- Quality Slider -->
                 <div id="qualitySettingGroup">
                     <div class="flex justify-between items-center mb-2">
-                        <label for="globalQuality" class="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                        <label for="globalQuality" class="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                             Quality / Compression
                         </label>
-                        <span id="qualityVal" class="text-xs font-mono font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded">90%</span>
+                        <span id="qualityVal" class="text-xs font-mono font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950 px-2 py-0.5 rounded">90%</span>
                     </div>
-                    <input type="range" id="globalQuality" min="10" max="100" value="90" oninput="updateQualityVal(this.value)" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-600">
+                    <input type="range" id="globalQuality" min="10" max="100" value="90" oninput="updateQualityVal(this.value)" class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-600">
                     <div class="flex justify-between text-[10px] text-slate-400 mt-1">
                         <span>Smaller File</span>
                         <span>Higher Quality</span>
                     </div>
                 </div>
 
-                <!-- Resize Option -->
+                <!-- Background Fill Color -->
                 <div>
-                    <label for="globalScale" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
-                        Resize / Scaling
-                    </label>
-                    <select id="globalScale" onchange="toggleCustomDimensions(this.value)" class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition-all">
-                        <option value="1">Original Size (1x)</option>
-                        <option value="2">2x High-DPI (200%)</option>
-                        <option value="0.75">75% Scale</option>
-                        <option value="0.5">50% Scale</option>
-                        <option value="0.25">25% Thumbnail</option>
-                        <option value="custom">Custom Dimensions (px)</option>
-                    </select>
-                </div>
-
-                <!-- Background Fill Color (for JPEG / transparent source) -->
-                <div>
-                    <label for="bgColorPicker" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+                    <label for="bgColorSelect" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                         Background Color
                     </label>
                     <div class="flex items-center gap-2">
-                        <input type="color" id="bgColorPicker" value="#ffffff" class="w-9 h-9 p-0.5 border border-slate-300 rounded-lg cursor-pointer bg-white">
-                        <select id="bgColorSelect" onchange="syncBgColor(this.value)" class="flex-grow px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-brand-500 outline-none">
-                            <option value="#ffffff">White (#FFFFFF)</option>
-                            <option value="transparent">Transparent (PNG/WebP/SVG)</option>
+                        <input type="color" id="bgColorPicker" value="#ffffff" class="w-9 h-9 p-0.5 border border-slate-300 dark:border-slate-700 rounded-lg cursor-pointer bg-white dark:bg-slate-800">
+                        <select id="bgColorSelect" onchange="syncBgColor(this.value)" class="flex-grow px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-brand-500 outline-none">
+                            <option value="transparent">Transparent (PNG/WebP/SVG/PDF)</option>
+                            <option value="#ffffff" selected>White (#FFFFFF)</option>
                             <option value="#000000">Black (#000000)</option>
                             <option value="custom">Custom Color...</option>
                         </select>
@@ -278,56 +341,149 @@
                 </div>
             </div>
 
+            <!-- Quick Academic Processing Toggles (Row 2) -->
+            <div class="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/80 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-6 flex-wrap">
+                    <!-- Auto-Trim Margins Checkbox -->
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" id="autoTrimMargins" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500 border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800">
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                            <i data-lucide="crop" class="w-3.5 h-3.5 text-brand-600"></i>
+                            <span>Auto-Trim White/Transparent Plot Margins</span>
+                        </span>
+                    </label>
+
+                    <!-- Grayscale Print Mode Checkbox -->
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" id="grayscalePrintMode" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500 border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800">
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                            <i data-lucide="contrast" class="w-3.5 h-3.5 text-slate-500"></i>
+                            <span>Grayscale / Monochrome Mode (Print-Ready)</span>
+                        </span>
+                    </label>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="toggleAccordion('figureAdjustmentsPanel')" class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
+                        <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5"></i>
+                        <span>Figure Adjustments</span>
+                    </button>
+                    <span class="text-slate-300 dark:text-slate-700">|</span>
+                    <button type="button" onclick="toggleAccordion('renamingPanel')" class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
+                        <i data-lucide="tag" class="w-3.5 h-3.5"></i>
+                        <span>Batch Renaming &amp; LaTeX Sanitizer</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Figure Adjustments Panel (Collapsible) -->
+            <div id="figureAdjustmentsPanel" class="hidden p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3 animate-[fadeIn_0.15s_ease-out]">
+                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="sliders-horizontal" class="w-4 h-4 text-brand-600"></i>
+                    <span>Microscopy &amp; Scientific Plot Adjustments</span>
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-xs">
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="font-medium text-slate-700 dark:text-slate-300">Brightness</label>
+                            <span id="brightnessVal" class="font-mono text-slate-500">0%</span>
+                        </div>
+                        <input type="range" id="adjustBrightness" min="-50" max="50" value="0" oninput="document.getElementById('brightnessVal').textContent = (this.value > 0 ? '+' : '') + this.value + '%'" class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-600">
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="font-medium text-slate-700 dark:text-slate-300">Contrast</label>
+                            <span id="contrastVal" class="font-mono text-slate-500">0%</span>
+                        </div>
+                        <input type="range" id="adjustContrast" min="-50" max="50" value="0" oninput="document.getElementById('contrastVal').textContent = (this.value > 0 ? '+' : '') + this.value + '%'" class="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-brand-600">
+                    </div>
+                    <div class="flex items-center gap-2 pt-4">
+                        <input type="checkbox" id="invertColors" class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500 border-gray-300 dark:border-slate-600">
+                        <label for="invertColors" class="font-medium text-slate-700 dark:text-slate-300 cursor-pointer">Invert Colors (Dark plot to white paper)</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Batch Renaming & LaTeX Sanitizer Panel (Collapsible) -->
+            <div id="renamingPanel" class="hidden p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3 animate-[fadeIn_0.15s_ease-out]">
+                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="tag" class="w-4 h-4 text-brand-600"></i>
+                    <span>Batch File Renaming &amp; LaTeX Sanitizer</span>
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+                    <div>
+                        <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Filename Prefix</label>
+                        <input type="text" id="renamePrefix" placeholder="e.g. fig_" class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Filename Suffix</label>
+                        <input type="text" id="renameSuffix" placeholder="e.g. _300dpi" class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Sequential Numbering</label>
+                        <select id="renameNumbering" class="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200">
+                            <option value="none">Keep Original Base Name</option>
+                            <option value="1">1, 2, 3...</option>
+                            <option value="01">01, 02, 03...</option>
+                            <option value="001">001, 002, 003...</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2 pt-4">
+                        <input type="checkbox" id="sanitizeLatexCheckbox" checked class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500 border-gray-300 dark:border-slate-600">
+                        <label for="sanitizeLatexCheckbox" class="font-medium text-slate-700 dark:text-slate-300 cursor-pointer" title="Replaces spaces and illegal characters with hyphens to prevent LaTeX includegraphics{} errors">LaTeX Safe Filenames (no spaces/symbols)</label>
+                    </div>
+                </div>
+            </div>
+
             <!-- Custom Dimensions Row (Collapsed by default) -->
-            <div id="customDimensionsRow" class="hidden pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+            <div id="customDimensionsRow" class="hidden pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
                 <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Max Width (px)</label>
-                    <input type="number" id="customWidth" placeholder="e.g. 1920" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
+                    <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Max Width (px)</label>
+                    <input type="number" id="customWidth" placeholder="e.g. 1920" class="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-slate-200">
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-600 mb-1">Max Height (px)</label>
-                    <input type="number" id="customHeight" placeholder="e.g. 1080" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
+                    <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Max Height (px)</label>
+                    <input type="number" id="customHeight" placeholder="e.g. 1080" class="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-sm text-slate-800 dark:text-slate-200">
                 </div>
                 <div class="flex items-center gap-2 pt-5">
-                    <input type="checkbox" id="maintainAspectRatio" checked class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
-                    <label for="maintainAspectRatio" class="text-xs text-slate-700 font-medium cursor-pointer">Maintain aspect ratio</label>
+                    <input type="checkbox" id="maintainAspectRatio" checked class="w-4 h-4 text-brand-600 rounded focus:ring-brand-500 border-gray-300 dark:border-slate-600">
+                    <label for="maintainAspectRatio" class="text-xs text-slate-700 dark:text-slate-300 font-medium cursor-pointer">Maintain aspect ratio</label>
                 </div>
             </div>
 
             <!-- SVG Vectorization Options (Visible when Target Format is SVG) -->
-            <div id="svgOptionsPanel" class="hidden p-4 bg-brand-50/60 rounded-xl border border-brand-200/80 space-y-3">
+            <div id="svgOptionsPanel" class="hidden p-4 bg-brand-50/60 dark:bg-brand-950/40 rounded-xl border border-brand-200/80 dark:border-brand-900/60 space-y-3">
                 <div class="flex items-center justify-between">
-                    <h4 class="text-xs font-bold text-brand-900 uppercase tracking-wider flex items-center gap-1.5">
-                        <i data-lucide="vector" class="w-4 h-4 text-brand-600"></i>
+                    <h4 class="text-xs font-bold text-brand-900 dark:text-brand-200 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="vector" class="w-4 h-4 text-brand-600 dark:text-brand-400"></i>
                         Raster-to-Vector (SVG Tracing) Mode
                     </h4>
-                    <span class="text-[11px] text-brand-700 font-medium">Powered by Potrace / ImageTracer engine</span>
+                    <span class="text-[11px] text-brand-700 dark:text-brand-300 font-medium">Powered by Potrace / ImageTracer engine</span>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Preset Mode</label>
-                        <select id="vectorPreset" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-800">
+                        <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Preset Mode</label>
+                        <select id="vectorPreset" class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200">
                             <option value="default">Default Color Tracing</option>
-
-                            <option value="detailed">High Detail & Fine Curves</option>
+                            <option value="detailed">High Detail &amp; Fine Curves</option>
                             <option value="mono">Monochrome Silhouette</option>
                             <option value="posterized">Posterized (6 Colors)</option>
                             <option value="embed">SVG Wrapper (Lossless Original)</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Color Palette Size</label>
-                        <select id="vectorColors" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-800">
+                        <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Color Palette Size</label>
+                        <select id="vectorColors" class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200">
                             <option value="16">16 Colors (Balanced)</option>
                             <option value="8">8 Colors (Clean)</option>
                             <option value="32">32 Colors (Rich Detail)</option>
-                            <option value="2">2 Colors (Black & White)</option>
+                            <option value="2">2 Colors (Black &amp; White)</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block font-medium text-slate-700 mb-1">Curve Smoothness</label>
-                        <select id="vectorBlur" class="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-800">
-                            <option value="0">Sharpe / Exact (0px blur)</option>
+                        <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Curve Smoothness</label>
+                        <select id="vectorBlur" class="w-full px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-200">
+                            <option value="0">Sharp / Exact (0px blur)</option>
                             <option value="1">Subtle Smooth (1px)</option>
                             <option value="2">Medium Smooth (2px)</option>
                         </select>
@@ -336,9 +492,9 @@
             </div>
 
             <!-- ICO Options Panel (Visible when Target Format is ICO) -->
-            <div id="icoOptionsPanel" class="hidden p-4 bg-teal-50/60 rounded-xl border border-teal-200/80 space-y-2">
-                <h4 class="text-xs font-bold text-teal-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <i data-lucide="app-window" class="w-4 h-4 text-teal-600"></i>
+            <div id="icoOptionsPanel" class="hidden p-4 bg-teal-50/60 dark:bg-teal-950/40 rounded-xl border border-teal-200/80 dark:border-teal-900/60 space-y-2">
+                <h4 class="text-xs font-bold text-teal-900 dark:text-teal-200 uppercase tracking-wider flex items-center gap-1.5">
+                    <i data-lucide="app-window" class="w-4 h-4 text-teal-600 dark:text-teal-400"></i>
                     Favicon (.ICO) Target Resolution
                 </h4>
                 <div class="flex flex-wrap gap-4 text-xs">
@@ -366,14 +522,14 @@
         <div id="queueContainer" class="hidden space-y-4">
             <div class="flex justify-between items-center px-1">
                 <div class="flex items-center gap-2">
-                    <h3 class="text-base font-bold text-slate-900">Conversion Queue</h3>
-                    <span id="queueCountBadge" class="px-2 py-0.5 text-xs font-bold bg-slate-200 text-slate-700 rounded-full">0 files</span>
+                    <h3 class="text-base font-bold text-slate-900 dark:text-white">Conversion Queue</h3>
+                    <span id="queueCountBadge" class="px-2 py-0.5 text-xs font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full">0 files</span>
                 </div>
                 <div id="overallProgress" class="hidden flex items-center gap-3">
-                    <div class="w-32 bg-slate-200 rounded-full h-2 overflow-hidden">
+                    <div class="w-32 bg-slate-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
                         <div id="progressBar" class="bg-brand-600 h-full w-0 transition-all duration-300"></div>
                     </div>
-                    <span id="progressText" class="text-xs font-mono text-slate-500">0%</span>
+                    <span id="progressText" class="text-xs font-mono text-slate-500 dark:text-slate-400">0%</span>
                 </div>
             </div>
 
@@ -385,72 +541,101 @@
 
         <!-- Interactive Format Guide & Features -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-                <div class="w-9 h-9 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
+                <div class="w-9 h-9 bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center">
                     <i data-lucide="vector" class="w-5 h-5"></i>
                 </div>
-                <h4 class="text-sm font-bold text-slate-900">Vector vs. Raster</h4>
-                <p class="text-xs text-slate-500 leading-relaxed">
-                    Convert resolution-independent SVG vector graphics into crisp PNG/WebP rasters at any DPI scale, or trace bitmap logos into SVG vector paths.
+                <h4 class="text-sm font-bold text-slate-900 dark:text-white">Publication &amp; Vector Fidelity</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Convert figures to IEEE/ACM column widths at 300 DPI, auto-trim MATLAB/Python white borders, or trace raster plots into crisp SVG vector curves.
                 </p>
             </div>
 
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-                <div class="w-9 h-9 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
-                    <i data-lucide="zap" class="w-5 h-5"></i>
-                    <h4 class="text-sm font-bold text-slate-900 inline">Modern WebP & AVIF</h4>
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
+                <div class="w-9 h-9 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center">
+                    <i data-lucide="file-text" class="w-5 h-5"></i>
                 </div>
-                <p class="text-xs text-slate-500 leading-relaxed">
-                    Shrink PNG and JPEG image file sizes by up to 80% with next-gen WebP compression while retaining full transparency and crisp visual fidelity.
+                <h4 class="text-sm font-bold text-slate-900 dark:text-white">PDF Figures &amp; Binder Export</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Export standalone figures directly as PDF files for LaTeX inclusion, or bundle all figures with clean captions into a multi-page PDF binder.
                 </p>
             </div>
 
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-                <div class="w-9 h-9 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
+                <div class="w-9 h-9 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center">
                     <i data-lucide="lock" class="w-5 h-5"></i>
                 </div>
-                <h4 class="text-sm font-bold text-slate-900">100% Private & In-Browser</h4>
-                <p class="text-xs text-slate-500 leading-relaxed">
-                    All image rendering and vector math takes place directly in your browser's HTML5 Canvas. Your images are never uploaded to any external server.
+                <h4 class="text-sm font-bold text-slate-900 dark:text-white">100% Private &amp; Double-Blind Safe</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    All image rendering occurs entirely within your browser's memory. Camera EXIF, GPS coordinates, and author tags are permanently removed.
                 </p>
             </div>
         </div>
 
     </main>
 
-    <!-- Preview Modal -->
-    <div id="previewModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
-            <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+    <!-- Interactive Before / After Split Comparison Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 bg-slate-900/70 dark:bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/70">
                 <div class="flex items-center gap-2">
-                    <i data-lucide="eye" class="w-5 h-5 text-brand-600"></i>
-                    <h3 id="previewTitle" class="text-sm font-bold text-slate-900 truncate max-w-md">Image Preview</h3>
+                    <i data-lucide="split" class="w-5 h-5 text-brand-600 dark:text-brand-400"></i>
+                    <div>
+                        <h3 id="previewTitle" class="text-sm font-bold text-slate-900 dark:text-white truncate max-w-md">Figure Inspection</h3>
+                        <p class="text-[11px] text-slate-400">Drag the central vertical slider to compare Original vs. Converted result</p>
+                    </div>
                 </div>
-                <button onclick="closePreviewModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200 transition-colors">
+                <button onclick="closePreviewModal()" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
-            <div class="p-6 overflow-y-auto flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-100">
-                <!-- Original Image Column -->
-                <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center">
-                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Original</span>
-                    <div class="w-full h-64 bg-checkerboard rounded-lg flex items-center justify-center overflow-hidden border border-slate-200 mb-3">
-                        <img id="previewOriginalImg" class="max-w-full max-h-full object-contain">
+
+            <!-- Preview Body with Split Screen Comparison -->
+            <div class="p-6 overflow-y-auto flex-grow flex flex-col gap-4 bg-slate-100 dark:bg-slate-950">
+                
+                <!-- Interactive Split Container -->
+                <div id="splitContainer" class="relative w-full h-80 sm:h-96 bg-checkerboard rounded-xl overflow-hidden select-none border border-slate-300 dark:border-slate-700 shadow-inner flex items-center justify-center">
+                    
+                    <!-- Original Image (Background) -->
+                    <img id="previewOriginalImg" class="absolute inset-0 w-full h-full object-contain pointer-events-none" alt="Original">
+
+                    <!-- Converted Image (Clipped Left Layer) -->
+                    <div id="splitClipWrapper" class="absolute inset-0 overflow-hidden w-1/2 border-r-2 border-brand-500 shadow-2xl pointer-events-none">
+                        <img id="previewConvertedImg" class="absolute inset-0 w-full h-full object-contain pointer-events-none" alt="Converted">
                     </div>
-                    <div id="previewOriginalMeta" class="text-xs text-slate-500 font-mono text-center"></div>
+
+                    <!-- Draggable Slider Handle -->
+                    <div id="splitDividerHandle" class="absolute top-0 bottom-0 w-8 -ml-4 flex items-center justify-center cursor-ew-resize z-20" style="left: 50%;">
+                        <div class="w-7 h-7 bg-brand-600 text-white rounded-full shadow-lg flex items-center justify-center text-xs font-bold ring-2 ring-white dark:ring-slate-900">
+                            <i data-lucide="chevrons-left-right" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+
+                    <!-- Overlay Labels -->
+                    <span class="absolute top-3 left-3 px-2 py-1 bg-black/75 text-white text-[10px] font-bold rounded-md z-10 pointer-events-none shadow-sm">
+                        Converted
+                    </span>
+                    <span class="absolute top-3 right-3 px-2 py-1 bg-black/75 text-white text-[10px] font-bold rounded-md z-10 pointer-events-none shadow-sm">
+                        Original
+                    </span>
                 </div>
 
-                <!-- Converted Image Column -->
-                <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-col items-center justify-center">
-                    <span class="text-xs font-semibold text-brand-600 uppercase tracking-wider mb-2">Converted Result</span>
-                    <div class="w-full h-64 bg-checkerboard rounded-lg flex items-center justify-center overflow-hidden border border-slate-200 mb-3">
-                        <img id="previewConvertedImg" class="max-w-full max-h-full object-contain">
+                <!-- Inspection Metadata Metrics Comparison -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Original Specs</span>
+                        <div id="previewOriginalMeta" class="text-xs font-mono font-medium text-slate-700 dark:text-slate-300"></div>
                     </div>
-                    <div id="previewConvertedMeta" class="text-xs text-slate-600 font-mono text-center"></div>
+                    <div class="bg-white dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                        <span class="text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-wider block mb-1">Converted Result</span>
+                        <div id="previewConvertedMeta" class="text-xs font-mono font-bold text-slate-900 dark:text-white"></div>
+                    </div>
                 </div>
+
             </div>
-            <div class="p-4 border-t border-slate-200 bg-white flex justify-end gap-3">
-                <button onclick="closePreviewModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs rounded-xl">Close</button>
+
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex justify-end gap-3">
+                <button onclick="closePreviewModal()" class="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium text-xs rounded-xl">Close</button>
                 <a id="previewDownloadBtn" download class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs rounded-xl flex items-center gap-1.5 shadow-sm">
                     <i data-lucide="download" class="w-4 h-4"></i> Download Converted
                 </a>
@@ -466,17 +651,84 @@
 
     <!-- Application Script -->
     <script>
-        // State management for image queue
+        // -------------------------------------------------------------
+        // STATE & INITIALIZATION
+        // -------------------------------------------------------------
+
         let queue = [];
         let fileIdCounter = 0;
 
-        // Initialize Lucide icons on DOM ready
         document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
             lucide.createIcons();
             setupDropzone();
+            setupClipboardPaste();
+            setupSplitSlider();
         });
 
-        // Setup Drag & Drop Handlers
+        // -------------------------------------------------------------
+        // THEME MANAGEMENT
+        // -------------------------------------------------------------
+
+        function initTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            updateThemeIcon(isDark);
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcon(isDark);
+        }
+
+        function updateThemeIcon(isDark) {
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                lucide.createIcons();
+            }
+        }
+
+        function toggleAccordion(panelId) {
+            const el = document.getElementById(panelId);
+            if (el) el.classList.toggle('hidden');
+        }
+
+        // -------------------------------------------------------------
+        // CLIPBOARD PASTE (CTRL+V) & DRAG-AND-DROP
+        // -------------------------------------------------------------
+
+        function setupClipboardPaste() {
+            window.addEventListener('paste', async (e) => {
+                const items = e.clipboardData?.items;
+                if (!items || items.length === 0) return;
+
+                const files = [];
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const blob = items[i].getAsFile();
+                        if (blob) {
+                            const now = new Date();
+                            const stamp = now.getFullYear() +
+                                String(now.getMonth() + 1).padStart(2, '0') +
+                                String(now.getDate()).padStart(2, '0') + '_' +
+                                String(now.getHours()).padStart(2, '0') +
+                                String(now.getMinutes()).padStart(2, '0') +
+                                String(now.getSeconds()).padStart(2, '0');
+                            const file = new File([blob], `Pasted_Figure_${stamp}.png`, { type: 'image/png' });
+                            files.push(file);
+                        }
+                    }
+                }
+
+                if (files.length > 0) {
+                    e.preventDefault();
+                    showToast(`Captured ${files.length} screenshot(s) from clipboard!`);
+                    processInputFiles(files);
+                }
+            });
+        }
+
         function setupDropzone() {
             const dropzone = document.getElementById('dropzone');
 
@@ -505,7 +757,7 @@
             });
 
             dropzone.addEventListener('click', (e) => {
-                if (e.target.closest('button')) return; // Ignore button clicks inside dropzone
+                if (e.target.closest('button')) return;
                 document.getElementById('fileInput').click();
             });
         }
@@ -515,12 +767,12 @@
             if (files.length > 0) {
                 processInputFiles(files);
             }
-            event.target.value = ''; // Reset input
+            event.target.value = '';
         }
 
-        // Process uploaded files and build queue items
+        // Process uploaded/pasted files and populate queue
         async function processInputFiles(files) {
-            showToast(`Loading ${files.length} file(s)...`);
+            showToast(`Loading ${files.length} file(s)... `);
 
             for (const file of files) {
                 const fileId = ++fileIdCounter;
@@ -534,7 +786,7 @@
                     size: file.size,
                     ext: extension,
                     targetFormat: globalFmt,
-                    status: 'pending', // pending, converting, done, error
+                    status: 'pending',
                     originalWidth: 0,
                     originalHeight: 0,
                     previewUrl: '',
@@ -544,13 +796,11 @@
                     errorMsg: ''
                 };
 
-                // Read image preview and dimensions
                 try {
                     const dataUrl = await readFileAsDataURL(file);
                     queueItem.previewUrl = dataUrl;
 
                     if (extension === 'svg') {
-                        // Parse SVG for dimensions
                         const svgText = await readFileAsText(file);
                         const parser = new DOMParser();
                         const doc = parser.parseFromString(svgText, "image/svg+xml");
@@ -563,13 +813,12 @@
                             queueItem.originalHeight = 600;
                         }
                     } else {
-                        // Standard raster image loading
                         const img = await loadImage(dataUrl);
                         queueItem.originalWidth = img.naturalWidth || img.width;
                         queueItem.originalHeight = img.naturalHeight || img.height;
                     }
                 } catch (err) {
-                    console.warn("Image preview read warning:", err);
+                    console.warn("Preview load error:", err);
                     queueItem.previewUrl = '';
                 }
 
@@ -581,7 +830,10 @@
             showToast(`Added ${files.length} file(s) to queue`);
         }
 
-        // Render queue cards
+        // -------------------------------------------------------------
+        // QUEUE RENDERING
+        // -------------------------------------------------------------
+
         function renderQueue() {
             const queueList = document.getElementById('queueList');
             const queueCountBadge = document.getElementById('queueCountBadge');
@@ -593,25 +845,27 @@
                 return;
             }
 
-            queueList.innerHTML = queue.map(item => {
+            queueList.innerHTML = queue.map((item, index) => {
                 const formattedOrigSize = formatFileSize(item.size);
                 const isConverted = item.status === 'done';
                 const formattedConvSize = isConverted ? formatFileSize(item.convertedSize) : '';
                 const diffPercent = isConverted ? Math.round(((item.convertedSize - item.size) / item.size) * 100) : 0;
-                const diffBadgeClass = diffPercent <= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800';
+                const diffBadgeClass = diffPercent <= 0 ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300' : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300';
                 const diffText = diffPercent <= 0 ? `${diffPercent}%` : `+${diffPercent}%`;
 
+                const cleanDownloadName = getConvertedFileName(item.name, item.targetFormat, index);
+
                 return `
-                    <div id="queue-item-${item.id}" class="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-slate-300 transition-all">
+                    <div id="queue-item-${item.id}" class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-slate-300 dark:hover:border-slate-700 transition-all">
                         <!-- Thumbnail & Info -->
                         <div class="flex items-center gap-3 min-w-0 flex-grow">
-                            <div class="w-14 h-14 bg-checkerboard rounded-lg border border-slate-200 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                            <div class="w-14 h-14 bg-checkerboard rounded-lg border border-slate-200 dark:border-slate-700 flex-shrink-0 flex items-center justify-center overflow-hidden">
                                 ${item.previewUrl ? `<img src="${item.previewUrl}" class="max-w-full max-h-full object-contain">` : `<i data-lucide="file-image" class="w-6 h-6 text-slate-400"></i>`}
                             </div>
                             <div class="min-w-0 flex-grow">
-                                <h4 class="text-sm font-bold text-slate-900 truncate" title="${item.name}">${item.name}</h4>
-                                <div class="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-slate-500">
-                                    <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[11px] uppercase">${item.ext}</span>
+                                <h4 class="text-sm font-bold text-slate-900 dark:text-white truncate" title="${item.name}">${item.name}</h4>
+                                <div class="flex flex-wrap items-center gap-2 mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                                    <span class="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[11px] uppercase">${item.ext}</span>
                                     <span>${item.originalWidth > 0 ? `${item.originalWidth}×${item.originalHeight}px` : ''}</span>
                                     <span>• ${formattedOrigSize}</span>
                                 </div>
@@ -619,14 +873,15 @@
                         </div>
 
                         <!-- Per-File Settings & Status -->
-                        <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100">
+                        <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100 dark:border-slate-800">
                             <div class="flex items-center gap-2">
                                 <span class="text-xs text-slate-400 font-medium hidden md:inline">To:</span>
-                                <select onchange="updateItemTargetFormat(${item.id}, this.value)" class="px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-800 focus:ring-1 focus:ring-brand-500 outline-none">
+                                <select onchange="updateItemTargetFormat(${item.id}, this.value)" class="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-semibold text-slate-800 dark:text-slate-100 focus:ring-1 focus:ring-brand-500 outline-none">
                                     <option value="webp" ${item.targetFormat === 'webp' ? 'selected' : ''}>WEBP</option>
                                     <option value="png" ${item.targetFormat === 'png' ? 'selected' : ''}>PNG</option>
                                     <option value="jpeg" ${item.targetFormat === 'jpeg' ? 'selected' : ''}>JPEG</option>
                                     <option value="svg" ${item.targetFormat === 'svg' ? 'selected' : ''}>SVG (Vector)</option>
+                                    <option value="pdf" ${item.targetFormat === 'pdf' ? 'selected' : ''}>PDF</option>
                                     <option value="gif" ${item.targetFormat === 'gif' ? 'selected' : ''}>GIF</option>
                                     <option value="ico" ${item.targetFormat === 'ico' ? 'selected' : ''}>ICO</option>
                                     <option value="bmp" ${item.targetFormat === 'bmp' ? 'selected' : ''}>BMP</option>
@@ -636,31 +891,31 @@
 
                             <!-- Status Badge -->
                             <div>
-                                ${item.status === 'pending' ? `<span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">Ready</span>` : ''}
-                                ${item.status === 'converting' ? `<span class="px-2.5 py-1 bg-brand-100 text-brand-700 text-xs font-medium rounded-full flex items-center gap-1"><i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> Processing...</span>` : ''}
+                                ${item.status === 'pending' ? `<span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-medium rounded-full">Ready</span>` : ''}
+                                ${item.status === 'converting' ? `<span class="px-2.5 py-1 bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 text-xs font-medium rounded-full flex items-center gap-1"><i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> Processing...</span>` : ''}
                                 ${item.status === 'done' ? `
                                     <div class="flex items-center gap-2">
                                         <span class="px-2 py-0.5 text-xs font-bold font-mono rounded ${diffBadgeClass}">${diffText} (${formattedConvSize})</span>
                                     </div>
                                 ` : ''}
-                                ${item.status === 'error' ? `<span class="px-2.5 py-1 bg-rose-100 text-rose-700 text-xs font-medium rounded-full" title="${item.errorMsg}">Error</span>` : ''}
+                                ${item.status === 'error' ? `<span class="px-2.5 py-1 bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-xs font-medium rounded-full" title="${item.errorMsg}">Error</span>` : ''}
                             </div>
 
                             <!-- Action Buttons -->
                             <div class="flex items-center gap-1">
                                 ${isConverted ? `
-                                    <button onclick="openPreviewModal(${item.id})" class="p-1.5 text-slate-500 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="Preview Result">
-                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    <button onclick="openPreviewModal(${item.id})" class="p-1.5 text-slate-500 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-slate-800 rounded-lg transition-colors" title="Split Compare Result">
+                                        <i data-lucide="split" class="w-4 h-4"></i>
                                     </button>
-                                    <a href="${item.convertedUrl}" download="${getConvertedFileName(item.name, item.targetFormat)}" class="p-1.5 text-brand-600 hover:text-brand-700 hover:bg-brand-50 rounded-lg transition-colors" title="Download">
+                                    <a href="${item.convertedUrl}" download="${cleanDownloadName}" class="p-1.5 text-brand-600 hover:text-brand-700 hover:bg-brand-50 dark:hover:bg-slate-800 rounded-lg transition-colors" title="Download">
                                         <i data-lucide="download" class="w-4 h-4"></i>
                                     </a>
                                 ` : `
-                                    <button onclick="convertSingleItem(${item.id})" class="p-1.5 text-slate-600 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors" title="Convert Now">
+                                    <button onclick="convertSingleItem(${item.id})" class="p-1.5 text-slate-600 dark:text-slate-300 hover:text-brand-600 hover:bg-brand-50 dark:hover:bg-slate-800 rounded-lg transition-colors" title="Convert Now">
                                         <i data-lucide="play" class="w-4 h-4"></i>
                                     </button>
                                 `}
-                                <button onclick="removeFromQueue(${item.id})" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Remove">
+                                <button onclick="removeFromQueue(${item.id})" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors" title="Remove">
                                     <i data-lucide="x" class="w-4 h-4"></i>
                                 </button>
                             </div>
@@ -672,7 +927,6 @@
             lucide.createIcons();
         }
 
-        // UI state toggles
         function updateUIState() {
             const hasItems = queue.length > 0;
             document.getElementById('settingsContainer').classList.toggle('hidden', !hasItems);
@@ -680,24 +934,29 @@
             document.getElementById('clearAllBtn').classList.toggle('hidden', !hasItems);
             document.getElementById('clearAllBtn').classList.toggle('flex', hasItems);
 
-            // Update Download ZIP button
             const hasConverted = queue.some(i => i.status === 'done');
             const downloadZipBtn = document.getElementById('downloadZipBtn');
+            const combinePdfBtn = document.getElementById('combinePdfBtn');
+
             if (hasConverted) {
                 downloadZipBtn.disabled = false;
-                downloadZipBtn.className = "px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer";
+                downloadZipBtn.className = "px-4 py-2.5 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 text-white font-semibold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer";
+                
+                combinePdfBtn.disabled = false;
+                combinePdfBtn.className = "px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm rounded-xl shadow-md hover:shadow-lg transition-all flex items-center gap-2 cursor-pointer";
             } else {
                 downloadZipBtn.disabled = true;
-                downloadZipBtn.className = "px-5 py-2.5 bg-slate-100 text-slate-400 font-semibold text-sm rounded-xl cursor-not-allowed transition-all flex items-center gap-2 border border-slate-200";
+                downloadZipBtn.className = "px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-400 font-semibold text-sm rounded-xl cursor-not-allowed transition-all flex items-center gap-2 border border-slate-200 dark:border-slate-700";
+                
+                combinePdfBtn.disabled = true;
+                combinePdfBtn.className = "px-4 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-400 font-semibold text-sm rounded-xl cursor-not-allowed transition-all flex items-center gap-2 border border-slate-200 dark:border-slate-700";
             }
         }
 
-        // Global Format change handler
         function updateGlobalFormat(fmt) {
             queue.forEach(item => item.targetFormat = fmt);
             renderQueue();
 
-            // Toggle SVG Tracing Options & ICO Options
             document.getElementById('svgOptionsPanel').classList.toggle('hidden', fmt !== 'svg');
             document.getElementById('icoOptionsPanel').classList.toggle('hidden', fmt !== 'ico');
             document.getElementById('qualitySettingGroup').style.opacity = (fmt === 'jpeg' || fmt === 'webp' || fmt === 'avif') ? '1' : '0.4';
@@ -717,8 +976,38 @@
             document.getElementById('qualityVal').textContent = `${val}%`;
         }
 
-        function toggleCustomDimensions(val) {
-            document.getElementById('customDimensionsRow').classList.toggle('hidden', val !== 'custom');
+        function applyPublicationPreset(preset) {
+            const customRow = document.getElementById('customDimensionsRow');
+            const customW = document.getElementById('customWidth');
+            const customH = document.getElementById('customHeight');
+            const maintainAspect = document.getElementById('maintainAspectRatio');
+
+            if (preset === 'custom') {
+                customRow.classList.remove('hidden');
+                return;
+            }
+
+            customRow.classList.add('hidden');
+            maintainAspect.checked = true;
+
+            const presetMap = {
+                'ieee_single': { width: 1050, height: '' },
+                'ieee_1.5': { width: 1500, height: '' },
+                'ieee_double': { width: 2100, height: '' },
+                'nature_single': { width: 1050, height: '' },
+                'nature_double': { width: 2161, height: '' },
+                'slide_16_9': { width: 1920, height: 1080 },
+                'lineart_600': { width: 2100, height: '' }
+            };
+
+            const setting = presetMap[preset];
+            if (setting) {
+                customW.value = setting.width || '';
+                customH.value = setting.height || '';
+            } else {
+                customW.value = '';
+                customH.value = '';
+            }
         }
 
         function syncBgColor(val) {
@@ -741,37 +1030,112 @@
             showToast('Queue cleared');
         }
 
-        // Core Image Conversion Engine
+        // -------------------------------------------------------------
+        // AUTO-TRIM MARGINS (MATLAB / PYTHON / R PLOTS)
+        // -------------------------------------------------------------
+
+        function autoTrimCanvas(canvas) {
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            if (w <= 2 || h <= 2) return canvas;
+
+            const imgData = ctx.getImageData(0, 0, w, h);
+            const data = imgData.data;
+
+            const bgR = data[0];
+            const bgG = data[1];
+            const bgB = data[2];
+            const bgA = data[3];
+
+            const isBg = (r, g, b, a) => {
+                if (bgA === 0 || a < 15) return a < 15;
+                if (bgR > 240 && bgG > 240 && bgB > 240) {
+                    return r > 240 && g > 240 && b > 240 && a > 200;
+                }
+                return Math.abs(r - bgR) < 18 && Math.abs(g - bgG) < 18 && Math.abs(b - bgB) < 18;
+            };
+
+            let minX = w, minY = h, maxX = 0, maxY = 0;
+            let hasContent = false;
+
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const idx = (y * w + x) * 4;
+                    const r = data[idx];
+                    const g = data[idx + 1];
+                    const b = data[idx + 2];
+                    const a = data[idx + 3];
+
+                    if (!isBg(r, g, b, a)) {
+                        hasContent = true;
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            }
+
+            if (!hasContent) return canvas;
+
+            const pad = 8;
+            const cropX = Math.max(0, minX - pad);
+            const cropY = Math.max(0, minY - pad);
+            const cropW = Math.min(w - cropX, (maxX - minX + 1) + pad * 2);
+            const cropH = Math.min(h - cropY, (maxY - minY + 1) + pad * 2);
+
+            const croppedCanvas = document.createElement('canvas');
+            croppedCanvas.width = cropW;
+            croppedCanvas.height = cropH;
+            const cCtx = croppedCanvas.getContext('2d');
+            cCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+            return croppedCanvas;
+        }
+
+        // -------------------------------------------------------------
+        // CONVERSION CORE ENGINE
+        // -------------------------------------------------------------
+
         async function convertItem(item) {
             item.status = 'converting';
             renderQueue();
 
             const targetFmt = item.targetFormat;
             const quality = parseInt(document.getElementById('globalQuality').value) / 100;
-            const scaleOption = document.getElementById('globalScale').value;
+            const pubPreset = document.getElementById('pubPreset').value;
             const bgColorVal = document.getElementById('bgColorSelect').value;
             const bgColor = bgColorVal === 'custom' ? document.getElementById('bgColorPicker').value : bgColorVal;
+            const doAutoTrim = document.getElementById('autoTrimMargins').checked;
+            const isGrayscale = document.getElementById('grayscalePrintMode').checked;
+            const brightness = parseInt(document.getElementById('adjustBrightness').value || 0);
+            const contrast = parseInt(document.getElementById('adjustContrast').value || 0);
+            const invert = document.getElementById('invertColors').checked;
 
             try {
                 let blob;
 
-                // Handle SVG Vectorization (Raster -> SVG)
+                // 1. Handle SVG Vectorization (Raster -> SVG)
                 if (targetFmt === 'svg' && item.ext !== 'svg') {
                     blob = await convertRasterToSVG(item);
                 } 
-                // Handle SVG Source -> SVG Target (optimization / wrapping)
+                // 2. Handle SVG Source -> SVG Target
                 else if (targetFmt === 'svg' && item.ext === 'svg') {
                     const svgText = await readFileAsText(item.file);
                     blob = new Blob([svgText], { type: 'image/svg+xml' });
                 }
-                // Handle ICO Favicon Creation
+                // 3. Handle ICO Favicon
                 else if (targetFmt === 'ico') {
                     const icoSize = parseInt(document.querySelector('input[name="icoSize"]:checked')?.value || '32');
                     blob = await convertToICO(item, icoSize);
                 }
-                // Handle Canvas-based conversion (PNG, WebP, JPEG, GIF, BMP, AVIF, or SVG->Raster)
+                // 4. Handle PDF Export (Vector / Raster Document)
+                else if (targetFmt === 'pdf') {
+                    blob = await convertToPDF(item, pubPreset, bgColor, doAutoTrim, isGrayscale, brightness, contrast, invert);
+                }
+                // 5. Canvas-Based Standard Conversion
                 else {
-                    blob = await convertViaCanvas(item, targetFmt, quality, scaleOption, bgColor);
+                    blob = await convertViaCanvas(item, targetFmt, quality, pubPreset, bgColor, doAutoTrim, isGrayscale, brightness, contrast, invert);
                 }
 
                 item.convertedBlob = blob;
@@ -779,7 +1143,7 @@
                 item.convertedUrl = URL.createObjectURL(blob);
                 item.status = 'done';
             } catch (err) {
-                console.error("Conversion error for file", item.name, err);
+                console.error("Conversion error:", err);
                 item.status = 'error';
                 item.errorMsg = err.message || 'Conversion failed';
             }
@@ -788,13 +1152,11 @@
             updateUIState();
         }
 
-        // Convert via HTML5 Canvas
-        async function convertViaCanvas(item, targetFmt, quality, scaleOption, bgColor) {
+        async function convertViaCanvas(item, targetFmt, quality, pubPreset, bgColor, doAutoTrim, isGrayscale, brightness, contrast, invert) {
             return new Promise(async (resolve, reject) => {
                 try {
                     let img;
                     if (item.ext === 'svg') {
-                        // Render SVG to Image
                         const svgText = await readFileAsText(item.file);
                         const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
                         const svgUrl = URL.createObjectURL(svgBlob);
@@ -803,50 +1165,57 @@
                         img = await loadImage(item.previewUrl);
                     }
 
-                    // Calculate target dimensions
                     let targetW = img.naturalWidth || img.width || 800;
                     let targetH = img.naturalHeight || img.height || 600;
 
-                    if (scaleOption === 'custom') {
-                        const customW = parseInt(document.getElementById('customWidth').value);
-                        const customH = parseInt(document.getElementById('customHeight').value);
-                        const lockRatio = document.getElementById('maintainAspectRatio').checked;
+                    // Apply Publication Preset Sizing
+                    const customW = parseInt(document.getElementById('customWidth').value);
+                    const customH = parseInt(document.getElementById('customHeight').value);
+                    const lockRatio = document.getElementById('maintainAspectRatio').checked;
 
-                        if (customW && customH) {
-                            targetW = customW;
-                            targetH = customH;
-                        } else if (customW) {
-                            if (lockRatio) targetH = Math.round((customW / targetW) * targetH);
-                            targetW = customW;
-                        } else if (customH) {
-                            if (lockRatio) targetW = Math.round((customH / targetH) * targetW);
-                            targetH = customH;
-                        }
-                    } else {
-                        const scale = parseFloat(scaleOption);
-                        targetW = Math.round(targetW * scale);
-                        targetH = Math.round(targetH * scale);
+                    if (customW && customH) {
+                        targetW = customW;
+                        targetH = customH;
+                    } else if (customW) {
+                        if (lockRatio) targetH = Math.round((customW / targetW) * targetH);
+                        targetW = customW;
+                    } else if (customH) {
+                        if (lockRatio) targetW = Math.round((customH / targetH) * targetW);
+                        targetH = customH;
                     }
 
-                    const canvas = document.createElement('canvas');
+                    let canvas = document.createElement('canvas');
                     canvas.width = targetW;
                     canvas.height = targetH;
-                    const ctx = canvas.getContext('2d');
+                    let ctx = canvas.getContext('2d');
 
-                    // Fill background color if set (or JPEG requirement)
+                    // Fill background color if required
                     if (targetFmt === 'jpeg' || (bgColor !== 'transparent' && bgColor)) {
                         ctx.fillStyle = (targetFmt === 'jpeg' && bgColor === 'transparent') ? '#ffffff' : bgColor;
                         ctx.fillRect(0, 0, targetW, targetH);
                     }
 
-                    // High-quality image smoothing
+                    // Apply Visual Adjustments Filters
+                    const filters = [];
+                    if (isGrayscale) filters.push('grayscale(100%)');
+                    if (brightness !== 0) filters.push(`brightness(${100 + brightness}%)`);
+                    if (contrast !== 0) filters.push(`contrast(${100 + contrast}%)`);
+                    if (invert) filters.push('invert(100%)');
+
+                    if (filters.length > 0) {
+                        ctx.filter = filters.join(' ');
+                    }
+
                     ctx.imageSmoothingEnabled = true;
                     ctx.imageSmoothingQuality = 'high';
-
-                    // Draw image onto canvas
                     ctx.drawImage(img, 0, 0, targetW, targetH);
+                    ctx.filter = 'none';
 
-                    // Mime type mapping
+                    // Auto-Trim Margins if requested
+                    if (doAutoTrim) {
+                        canvas = autoTrimCanvas(canvas);
+                    }
+
                     let mimeType = 'image/png';
                     if (targetFmt === 'jpeg') mimeType = 'image/jpeg';
                     if (targetFmt === 'webp') mimeType = 'image/webp';
@@ -858,13 +1227,11 @@
                         if (blob) {
                             resolve(blob);
                         } else {
-                            // Fallback for formats canvas.toBlob might not support natively (e.g. BMP/AVIF on older browsers)
                             try {
                                 const dataUrl = canvas.toDataURL(mimeType, quality);
                                 const fallbackBlob = dataURLToBlob(dataUrl);
                                 resolve(fallbackBlob);
                             } catch (e) {
-                                // Final fallback to PNG
                                 canvas.toBlob((pngBlob) => resolve(pngBlob), 'image/png');
                             }
                         }
@@ -876,12 +1243,119 @@
             });
         }
 
-        // Convert Raster image to SVG (Vectorization via ImageTracer or Canvas Path Posterizer)
+        // Direct Figure-to-PDF Conversion via PDF-Lib
+        async function convertToPDF(item, pubPreset, bgColor, doAutoTrim, isGrayscale, brightness, contrast, invert) {
+            // First render into canvas to apply filters/trimming
+            const pngBlob = await convertViaCanvas(item, 'png', 1.0, pubPreset, bgColor, doAutoTrim, isGrayscale, brightness, contrast, invert);
+            const pngBuffer = await pngBlob.arrayBuffer();
+
+            if (!window.PDFLib) {
+                throw new Error('PDF-Lib is not available.');
+            }
+
+            const { PDFDocument } = window.PDFLib;
+            const doc = await PDFDocument.create();
+            const embedded = await doc.embedPng(pngBuffer);
+
+            // Calculate points: 72 points per inch (assume 150-300 dpi display scaling)
+            const pointW = embedded.width * (72 / 150);
+            const pointH = embedded.height * (72 / 150);
+
+            const page = doc.addPage([pointW, pointH]);
+            page.drawImage(embedded, {
+                x: 0,
+                y: 0,
+                width: pointW,
+                height: pointH
+            });
+
+            const pdfBytes = await doc.save();
+            return new Blob([pdfBytes], { type: 'application/pdf' });
+        }
+
+        // Combine All Converted Figures into Multi-Page PDF Binder
+        async function combineIntoMultiPagePDF() {
+            const doneItems = queue.filter(i => i.status === 'done');
+            if (doneItems.length === 0) {
+                showToast('Please convert files first before combining into PDF.', true);
+                return;
+            }
+
+            showToast('Assembling multi-page PDF binder...');
+
+            try {
+                const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+                const doc = await PDFDocument.create();
+                const font = await doc.embedFont(StandardFonts.HelveticaBold);
+
+                const pageW = 612; // Standard Letter width (points)
+                const pageH = 792; // Standard Letter height
+                const margin = 45;
+                const usableW = pageW - margin * 2;
+                const usableH = pageH - margin * 2 - 35; // 35 pt for caption
+
+                for (let i = 0; i < doneItems.length; i++) {
+                    const item = doneItems[i];
+                    const page = doc.addPage([pageW, pageH]);
+
+                    const canvas = document.createElement('canvas');
+                    const img = await loadImage(item.convertedUrl || item.previewUrl);
+                    canvas.width = img.naturalWidth || img.width;
+                    canvas.height = img.naturalHeight || img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+
+                    const pngBlob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+                    const pngBuffer = await pngBlob.arrayBuffer();
+                    const embedded = await doc.embedPng(pngBuffer);
+
+                    const scale = Math.min(usableW / embedded.width, usableH / embedded.height, 1);
+                    const drawW = embedded.width * scale;
+                    const drawH = embedded.height * scale;
+                    const drawX = margin + (usableW - drawW) / 2;
+                    const drawY = margin + 35 + (usableH - drawH) / 2;
+
+                    page.drawImage(embedded, {
+                        x: drawX,
+                        y: drawY,
+                        width: drawW,
+                        height: drawH
+                    });
+
+                    // Add clean caption at bottom
+                    const cleanName = getConvertedFileName(item.name, item.targetFormat, i);
+                    const caption = `Figure ${i + 1}: ${cleanName}`;
+                    page.drawText(caption, {
+                        x: margin,
+                        y: margin + 12,
+                        size: 11,
+                        font: font,
+                        color: rgb(0.2, 0.2, 0.2)
+                    });
+                }
+
+                const pdfBytes = await doc.save();
+                const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const url = URL.createObjectURL(pdfBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `Academic_Figures_Binder_${new Date().toISOString().slice(0, 10)}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showToast(`Combined ${doneItems.length} figures into PDF binder!`);
+            } catch (err) {
+                console.error("PDF Binder Error:", err);
+                showToast("Error assembling PDF: " + err.message, true);
+            }
+        }
+
+        // SVG Vectorization
         async function convertRasterToSVG(item) {
             const vectorPreset = document.getElementById('vectorPreset').value;
 
             if (vectorPreset === 'embed') {
-                // Return SVG wrapper containing base64 embedded image
                 const dataUrl = item.previewUrl;
                 const svgString = `<svg xmlns="http://www.w3.org/2000/svg" width="${item.originalWidth}" height="${item.originalHeight}" viewBox="0 0 ${item.originalWidth} ${item.originalHeight}">
                     <image href="${dataUrl}" width="100%" height="100%" />
@@ -894,7 +1368,6 @@
                 const colorCount = parseInt(document.getElementById('vectorColors').value);
                 const blur = parseInt(document.getElementById('vectorBlur').value);
 
-                // Check if ImageTracerJS is loaded
                 if (window.ImageTracer) {
                     try {
                         const options = {
@@ -910,7 +1383,6 @@
                             options.pal = [{r:0,g:0,b:0,a:255},{r:255,g:255,b:255,a:255}];
                         }
 
-                        // Create offscreen canvas to get ImageData
                         const canvas = document.createElement('canvas');
                         canvas.width = img.naturalWidth || img.width;
                         canvas.height = img.naturalHeight || img.height;
@@ -922,17 +1394,16 @@
                         resolve(new Blob([svgString], { type: 'image/svg+xml' }));
                         return;
                     } catch (e) {
-                        console.warn("ImageTracer failed, falling back to built-in vectorizer", e);
+                        console.warn("ImageTracer fallback:", e);
                     }
                 }
 
-                // Built-in fallback SVG posterization vectorizer
+                // Fallback wrapper
                 const svgString = generateFallbackPosterizedSVG(img, colorCount);
                 resolve(new Blob([svgString], { type: 'image/svg+xml' }));
             });
         }
 
-        // Built-in posterized SVG generator
         function generateFallbackPosterizedSVG(img, colorCount = 8) {
             const canvas = document.createElement('canvas');
             const w = Math.min(img.naturalWidth || 300, 300);
@@ -948,9 +1419,8 @@
             </svg>`;
         }
 
-        // Convert Image to ICO Favicon binary file format
+        // Convert to ICO Favicon
         async function convertToICO(item, targetSize = 32) {
-            // Draw image on canvas resized to targetSize x targetSize
             const canvas = document.createElement('canvas');
             canvas.width = targetSize;
             canvas.height = targetSize;
@@ -958,49 +1428,42 @@
             const img = await loadImage(item.previewUrl);
             ctx.drawImage(img, 0, 0, targetSize, targetSize);
 
-            // Get PNG data blob
             const pngBlob = await new Promise(r => canvas.toBlob(r, 'image/png'));
             const pngBuffer = await pngBlob.arrayBuffer();
             const pngBytes = new Uint8Array(pngBuffer);
 
-            // Construct 22-byte ICO header + directory entry
             const headerSize = 6;
             const dirSize = 16;
             const icoBuffer = new Uint8Array(headerSize + dirSize + pngBytes.length);
 
-            // ICO Header
-            icoBuffer[0] = 0; icoBuffer[1] = 0; // Reserved
-            icoBuffer[2] = 1; icoBuffer[3] = 0; // Type: 1 = ICO
-            icoBuffer[4] = 1; icoBuffer[5] = 0; // Number of images: 1
+            icoBuffer[0] = 0; icoBuffer[1] = 0;
+            icoBuffer[2] = 1; icoBuffer[3] = 0;
+            icoBuffer[4] = 1; icoBuffer[5] = 0;
 
-            // Directory entry
-            icoBuffer[6] = targetSize >= 256 ? 0 : targetSize; // Width
-            icoBuffer[7] = targetSize >= 256 ? 0 : targetSize; // Height
-            icoBuffer[8] = 0; // Palette colors
-            icoBuffer[9] = 0; // Reserved
-            icoBuffer[10] = 1; icoBuffer[11] = 0; // Color planes
-            icoBuffer[12] = 32; icoBuffer[13] = 0; // Bits per pixel
+            icoBuffer[6] = targetSize >= 256 ? 0 : targetSize;
+            icoBuffer[7] = targetSize >= 256 ? 0 : targetSize;
+            icoBuffer[8] = 0;
+            icoBuffer[9] = 0;
+            icoBuffer[10] = 1; icoBuffer[11] = 0;
+            icoBuffer[12] = 32; icoBuffer[13] = 0;
             
-            // Image size (4 bytes)
             const size = pngBytes.length;
             icoBuffer[14] = size & 0xFF;
             icoBuffer[15] = (size >> 8) & 0xFF;
             icoBuffer[16] = (size >> 16) & 0xFF;
             icoBuffer[17] = (size >> 24) & 0xFF;
 
-            // Offset to image data (4 bytes: header 6 + dir 16 = 22)
             icoBuffer[18] = 22;
             icoBuffer[19] = 0;
             icoBuffer[20] = 0;
             icoBuffer[21] = 0;
 
-            // Copy PNG bytes into ICO payload
             icoBuffer.set(pngBytes, 22);
 
             return new Blob([icoBuffer], { type: 'image/x-icon' });
         }
 
-        // Convert all pending files in queue
+        // Batch Execution
         async function convertAll() {
             const pendingItems = queue.filter(i => i.status !== 'converting');
             if (pendingItems.length === 0) return;
@@ -1021,7 +1484,7 @@
                 progressText.textContent = `${percent}%`;
             }
 
-            showToast(`Converted ${pendingItems.length} file(s) successfully!`);
+            showToast(`Converted ${pendingItems.length} figure(s) successfully!`);
         }
 
         async function convertSingleItem(id) {
@@ -1040,8 +1503,8 @@
             showToast('Creating ZIP archive...');
             const zip = new JSZip();
 
-            convertedItems.forEach(item => {
-                const fileName = getConvertedFileName(item.name, item.targetFormat);
+            convertedItems.forEach((item, idx) => {
+                const fileName = getConvertedFileName(item.name, item.targetFormat, idx);
                 zip.file(fileName, item.convertedBlob);
             });
 
@@ -1050,7 +1513,7 @@
             
             const link = document.createElement('a');
             link.href = zipUrl;
-            link.download = `Converted_Images_${new Date().toISOString().slice(0,10)}.zip`;
+            link.download = `Academic_Figures_${new Date().toISOString().slice(0,10)}.zip`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -1058,35 +1521,119 @@
             showToast('ZIP Download started!');
         }
 
-        // Modal Preview
+        // -------------------------------------------------------------
+        // INTERACTIVE BEFORE / AFTER SPLIT COMPARISON SLIDER
+        // -------------------------------------------------------------
+
+        let isDraggingSplit = false;
+
+        function setupSplitSlider() {
+            const container = document.getElementById('splitContainer');
+            const divider = document.getElementById('splitDividerHandle');
+            const clipWrapper = document.getElementById('splitClipWrapper');
+
+            const moveDivider = (clientX) => {
+                const rect = container.getBoundingClientRect();
+                let x = clientX - rect.left;
+                x = Math.max(0, Math.min(x, rect.width));
+                const pct = (x / rect.width) * 100;
+
+                clipWrapper.style.width = `${pct}%`;
+                divider.style.left = `${pct}%`;
+            };
+
+            const startDrag = (e) => {
+                isDraggingSplit = true;
+                e.preventDefault();
+            };
+
+            const endDrag = () => {
+                isDraggingSplit = false;
+            };
+
+            const onMove = (e) => {
+                if (!isDraggingSplit) return;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                moveDivider(clientX);
+            };
+
+            divider.addEventListener('mousedown', startDrag);
+            window.addEventListener('mouseup', endDrag);
+            window.addEventListener('mousemove', onMove);
+
+            divider.addEventListener('touchstart', startDrag);
+            window.addEventListener('touchend', endDrag);
+            window.addEventListener('touchmove', onMove);
+
+            container.addEventListener('click', (e) => {
+                moveDivider(e.clientX);
+            });
+        }
+
         function openPreviewModal(id) {
             const item = queue.find(i => i.id === id);
             if (!item || !item.convertedUrl) return;
 
-            document.getElementById('previewTitle').textContent = item.name;
+            const index = queue.indexOf(item);
+            const cleanName = getConvertedFileName(item.name, item.targetFormat, index);
+
+            document.getElementById('previewTitle').textContent = cleanName;
             document.getElementById('previewOriginalImg').src = item.previewUrl;
             document.getElementById('previewOriginalMeta').textContent = `${item.ext.toUpperCase()} | ${formatFileSize(item.size)} | ${item.originalWidth}×${item.originalHeight}px`;
 
             document.getElementById('previewConvertedImg').src = item.convertedUrl;
-            document.getElementById('previewConvertedMeta').textContent = `${item.targetFormat.toUpperCase()} | ${formatFileSize(item.convertedSize)}`;
+            const diffPercent = Math.round(((item.convertedSize - item.size) / item.size) * 100);
+            const savingsText = diffPercent <= 0 ? `${diffPercent}% size reduction` : `+${diffPercent}% size`;
+            document.getElementById('previewConvertedMeta').textContent = `${item.targetFormat.toUpperCase()} | ${formatFileSize(item.convertedSize)} (${savingsText})`;
 
             const downloadBtn = document.getElementById('previewDownloadBtn');
             downloadBtn.href = item.convertedUrl;
-            downloadBtn.download = getConvertedFileName(item.name, item.targetFormat);
+            downloadBtn.download = cleanName;
+
+            // Reset split slider to 50%
+            document.getElementById('splitClipWrapper').style.width = '50%';
+            document.getElementById('splitDividerHandle').style.left = '50%';
 
             document.getElementById('previewModal').classList.remove('hidden');
+            lucide.createIcons();
         }
 
         function closePreviewModal() {
             document.getElementById('previewModal').classList.add('hidden');
         }
 
-        // Helper functions
-        function getConvertedFileName(origName, targetFmt) {
-            const base = origName.substring(0, origName.lastIndexOf('.')) || origName;
+        // -------------------------------------------------------------
+        // FILENAME SANITIZATION & HELPERS
+        // -------------------------------------------------------------
+
+        function getConvertedFileName(origName, targetFmt, index = 0) {
+            const prefix = document.getElementById('renamePrefix')?.value || '';
+            const suffix = document.getElementById('renameSuffix')?.value || '';
+            const numbering = document.getElementById('renameNumbering')?.value || 'none';
+            const sanitizeLatex = document.getElementById('sanitizeLatexCheckbox')?.checked ?? true;
+
+            let base = origName.substring(0, origName.lastIndexOf('.')) || origName;
+
+            if (numbering === '1') {
+                base = `${base}_${index + 1}`;
+            } else if (numbering === '01') {
+                base = `${base}_${String(index + 1).padStart(2, '0')}`;
+            } else if (numbering === '001') {
+                base = `${base}_${String(index + 1).padStart(3, '0')}`;
+            }
+
+            base = `${prefix}${base}${suffix}`;
+
+            if (sanitizeLatex) {
+                base = base.replace(/[\s\(\)\[\]\{\}\+\,\;\:\!\?\'\"\`\~\@\#\$\%\^\&\*\/\\\|\<\>\=]/g, '-')
+                           .replace(/-+/g, '-')
+                           .replace(/^-|-$/g, '')
+                           .toLowerCase();
+            }
+
             const extMap = {
                 'jpeg': 'jpg', 'webp': 'webp', 'png': 'png', 'svg': 'svg',
-                'gif': 'gif', 'ico': 'ico', 'bmp': 'bmp', 'avif': 'avif'
+                'pdf': 'pdf', 'gif': 'gif', 'ico': 'ico', 'bmp': 'bmp', 'avif': 'avif'
             };
             return `${base}.${extMap[targetFmt] || targetFmt}`;
         }
@@ -1137,10 +1684,21 @@
             return new Blob([uInt8Array], { type: contentType });
         }
 
-        function showToast(message) {
+        function showToast(message, isError = false) {
             const toast = document.getElementById('toast');
             const msgEl = document.getElementById('toastMessage');
+            const icon = document.getElementById('toastIcon');
+
             msgEl.textContent = message;
+            if (isError) {
+                icon.className = 'w-5 h-5 text-rose-400';
+                icon.setAttribute('data-lucide', 'alert-circle');
+            } else {
+                icon.className = 'w-5 h-5 text-brand-400';
+                icon.setAttribute('data-lucide', 'info');
+            }
+            lucide.createIcons();
+
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
@@ -1149,44 +1707,79 @@
         async function loadSampleImages(event) {
             event.stopPropagation();
 
-            // Create canvas sample logo
+            // 1. Synthetic Scientific Chart with White Borders (to test Auto-Trim & 300 DPI)
             const canvas = document.createElement('canvas');
-            canvas.width = 400;
-            canvas.height = 300;
+            canvas.width = 700;
+            canvas.height = 500;
             const ctx = canvas.getContext('2d');
 
-            // Draw vibrant background gradient
-            const grad = ctx.createLinearGradient(0, 0, 400, 300);
-            grad.addColorStop(0, '#7c3aed');
-            grad.addColorStop(1, '#06b6d4');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, 400, 300);
-
-            // Draw white logo shapes
+            // Draw white background with excess margin
             ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(200, 130, 50, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillRect(0, 0, 700, 500);
 
-            ctx.font = 'bold 20px Inter, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('FACULTY TOOLS', 200, 230);
-            ctx.font = '14px Inter, sans-serif';
-            ctx.fillStyle = '#e0f2fe';
-            ctx.fillText('Sample Vector & Raster Test Image', 200, 255);
+            // Draw scientific chart box
+            const chartX = 80, chartY = 70, chartW = 540, chartH = 360;
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(chartX, chartY, chartW, chartH);
+
+            // Grid lines
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            for (let y = chartY + 60; y < chartY + chartH; y += 60) {
+                ctx.beginPath();
+                ctx.moveTo(chartX, y);
+                ctx.lineTo(chartX + chartW, y);
+                ctx.stroke();
+            }
+
+            // Curve 1: Signal
+            ctx.strokeStyle = '#7c3aed';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let x = 0; x <= chartW; x += 5) {
+                const normX = x / chartW;
+                const normY = 0.5 + 0.35 * Math.sin(normX * Math.PI * 4) * Math.exp(-normX * 1.5);
+                const py = chartY + chartH - (normY * chartH);
+                if (x === 0) ctx.moveTo(chartX + x, py);
+                else ctx.lineTo(chartX + x, py);
+            }
+            ctx.stroke();
+
+            // Curve 2: Fit
+            ctx.strokeStyle = '#f43f5e';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 6]);
+            ctx.beginPath();
+            for (let x = 0; x <= chartW; x += 10) {
+                const normX = x / chartW;
+                const normY = 0.5 + 0.32 * Math.sin(normX * Math.PI * 4) * Math.exp(-normX * 1.4);
+                const py = chartY + chartH - (normY * chartH);
+                if (x === 0) ctx.moveTo(chartX + x, py);
+                else ctx.lineTo(chartX + x, py);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Chart Labels
+            ctx.fillStyle = '#0f172a';
+            ctx.font = 'bold 16px Inter, sans-serif';
+            ctx.fillText('Figure 1: Transient Frequency Response vs Time', chartX + 15, chartY - 20);
+            ctx.font = '12px Inter, sans-serif';
+            ctx.fillText('Sample Scientific Plot (Auto-Trim Test)', chartX + 15, chartY - 5);
 
             const pngBlob = await new Promise(r => canvas.toBlob(r, 'image/png'));
-            const pngFile = new File([pngBlob], 'sample-faculty-logo.png', { type: 'image/png' });
+            const pngFile = new File([pngBlob], 'sample_scientific_plot.png', { type: 'image/png' });
 
-            // Sample SVG vector content
-            const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
-                <rect width="400" height="300" rx="20" fill="#0f172a"/>
-                <circle cx="200" cy="120" r="60" fill="none" stroke="#38bdf8" stroke-width="8"/>
-                <polygon points="200,80 230,150 170,150" fill="#f43f5e"/>
-                <text x="200" y="230" font-family="Inter, sans-serif" font-weight="bold" font-size="22" fill="#ffffff" text-anchor="middle">Sample Vector Icon</text>
+            // 2. Sample Vector Graphic
+            const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="500" height="350" viewBox="0 0 500 350">
+                <rect width="500" height="350" rx="16" fill="#0f172a"/>
+                <circle cx="250" cy="140" r="70" fill="none" stroke="#38bdf8" stroke-width="8"/>
+                <polygon points="250,90 285,170 215,170" fill="#f43f5e"/>
+                <text x="250" y="270" font-family="Inter, sans-serif" font-weight="bold" font-size="20" fill="#ffffff" text-anchor="middle">Vector Schematic Benchmark</text>
             </svg>`;
             const svgBlob = new Blob([svgContent], { type: 'image/svg+xml' });
-            const svgFile = new File([svgBlob], 'sample-vector-badge.svg', { type: 'image/svg+xml' });
+            const svgFile = new File([svgBlob], 'sample_vector_schematic.svg', { type: 'image/svg+xml' });
 
             processInputFiles([pngFile, svgFile]);
         }

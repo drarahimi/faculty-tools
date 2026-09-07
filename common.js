@@ -27,7 +27,7 @@ const FACULTY_TOOLS = [
 
     // Data & Utilities
     { id: 'uwindsor-academic-calendar', title: 'Academic Calendar & Deadlines', description: 'Semester deadlines cheat-sheet, syllabus blurbs, Google/Outlook calendar sync, and registrar dates.', category: 'Data & Utilities', icon: 'calendar', path: 'academic-calendar.html' },
-    { id: 'image-converter', title: 'Universal Image Converter', description: 'Batch convert images between SVG, WebP, PNG, JPEG, GIF, BMP, ICO, AVIF.', category: 'Data & Utilities', icon: 'file-image', path: 'image-converter.html' },
+    { id: 'image-converter', title: 'Universal Image Studio', description: 'Publication presets (300 DPI), auto-trim plot margins, vector tracing, PDF figure export, and batch WebP/PNG/AVIF converter.', category: 'Data & Utilities', icon: 'file-image', path: 'image-converter.html' },
     { id: 'case-converter', title: 'Case Converter', description: 'Convert text to sentence case, title case, camelCase, snake_case, UPPERCASE, and more.', category: 'Data & Utilities', icon: 'case-sensitive', path: 'case-converter.html' },
     { id: 'json-deduplicator-tool', title: 'JSON Deduplicator', description: 'Remove duplicate entries from JSON arrays.', category: 'Data & Utilities', icon: 'file-code', path: 'json-deduplicator.html' },
 
