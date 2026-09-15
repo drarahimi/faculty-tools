@@ -23,7 +23,7 @@ const FACULTY_TOOLS = [
     // PDF & Document Suite
     { id: 'pdf-editor', title: 'PDF Suite & Editor', description: 'Extract pages, combine multiple PDFs, add rubber stamps & watermarks, rotate/reorder pages.', category: 'PDF & Document Suite', icon: 'file-edit', path: 'pdf-editor.html' },
     { id: 'pdf-redactor', title: 'Secure PDF Redactor', description: 'Redact sensitive info from bank statements or locked PDFs by secure flattening.', category: 'PDF & Document Suite', icon: 'shield-alert', path: 'pdf-redactor.html' },
-    { id: 'pdf-fill-sign', title: 'PDF Fill & Sign', description: 'Fill out PDF forms, add checkmarks, and sign documents securely in-browser.', category: 'PDF & Document Suite', icon: 'signature', path: 'pdf-fill-sign.html' },
+    { id: 'pdf-fill-sign', title: 'PDF Fill & Sign', description: 'Fill forms, add text, highlights, sticky notes, images, and sign documents securely in-browser.', category: 'PDF & Document Suite', icon: 'signature', path: 'pdf-fill-sign.html' },
 
     // Data & Utilities
     { id: 'uwindsor-academic-calendar', title: 'Academic Calendar & Deadlines', description: 'Semester deadlines cheat-sheet, syllabus blurbs, Google/Outlook calendar sync, and registrar dates.', category: 'Data & Utilities', icon: 'calendar', path: 'academic-calendar.html' },
